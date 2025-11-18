@@ -42,7 +42,7 @@ const modules = [
     icon: "monitoring",
     title: "Monitoreo",
     description: "Visualizar seguimiento en tiempo real",
-    href: "#",
+    href: "/monitoreo",
   },
 ];
 
