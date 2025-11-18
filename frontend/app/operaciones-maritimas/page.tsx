@@ -11,7 +11,7 @@ const actions = [
     icon: "add_box",
     title: "Nueva Operación Marítima",
     description: "Iniciar un nuevo registro de operación.",
-    href: "#",
+    href: "/operaciones-maritimas/nueva",
   },
   {
     icon: "report",
