@@ -14,6 +14,14 @@ type Buque = {
 type NuevaOperacionMaritimaPageProps = {
   searchParams: Promise<{
     id_buque?: string;
+    routeId?: string;
+    routeCode?: string;
+    originName?: string;
+    destinationName?: string;
+    distance?: string;
+    duration?: string;
+    originDockCode?: string;
+    destinationDockCode?: string;
   }>;
 };
 
@@ -22,6 +30,35 @@ export default async function NuevaOperacionMaritimaPage({
 }: NuevaOperacionMaritimaPageProps) {
   const resolvedSearchParams = await searchParams;
   const idBuque = resolvedSearchParams.id_buque;
+  const routeId = resolvedSearchParams.routeId;
+  const routeCode = resolvedSearchParams.routeCode ?? "-";
+  const routeOriginName = resolvedSearchParams.originName ?? "-";
+  const routeDestinationName = resolvedSearchParams.destinationName ?? "-";
+  const routeDistance = resolvedSearchParams.distance ?? "-";
+  const routeDuration = resolvedSearchParams.duration ?? "-";
+  const routeOriginDockCode = resolvedSearchParams.originDockCode ?? "-";
+  const routeDestinationDockCode = resolvedSearchParams.destinationDockCode ?? "-";
+
+  const routeQuery = new URLSearchParams();
+  if (routeId) routeQuery.set("routeId", routeId);
+  if (routeCode && routeCode !== "-") routeQuery.set("routeCode", routeCode);
+  if (routeOriginName && routeOriginName !== "-") routeQuery.set("originName", routeOriginName);
+  if (routeDestinationName && routeDestinationName !== "-")
+    routeQuery.set("destinationName", routeDestinationName);
+  if (routeDistance && routeDistance !== "-") routeQuery.set("distance", routeDistance);
+  if (routeDuration && routeDuration !== "-") routeQuery.set("duration", routeDuration);
+  if (routeOriginDockCode && routeOriginDockCode !== "-")
+    routeQuery.set("originDockCode", routeOriginDockCode);
+  if (routeDestinationDockCode && routeDestinationDockCode !== "-")
+    routeQuery.set("destinationDockCode", routeDestinationDockCode);
+  if (idBuque) routeQuery.set("id_buque", idBuque);
+
+  const cambiarEmbarcacionHref = (() => {
+    const qs = routeQuery.toString();
+    return qs
+      ? `/operaciones-maritimas/nueva/embarcacion?${qs}`
+      : "/operaciones-maritimas/nueva/embarcacion";
+  })();
 
   let buque: Buque | null = null;
 
@@ -183,7 +220,7 @@ export default async function NuevaOperacionMaritimaPage({
                 </div>
                 <div className="mt-6">
                   <Link
-                    href="/operaciones-maritimas/nueva/embarcacion"
+                    href={cambiarEmbarcacionHref}
                     className="flex items-center gap-2 px-4 py-2 bg-[#e6f0fa] text-[#0459af] text-sm font-semibold rounded-lg hover:bg-[#0459af]/20 transition-colors"
                   >
                     <span className="material-symbols-outlined text-lg">
@@ -267,7 +304,7 @@ export default async function NuevaOperacionMaritimaPage({
                       Código
                     </label>
                     <p className="block w-full rounded-lg bg-gray-100 dark:bg-slate-700 border-transparent px-4 py-2.5 text-sm">
-                      -
+                      {routeCode}
                     </p>
                   </div>
                   <div>
@@ -278,7 +315,7 @@ export default async function NuevaOperacionMaritimaPage({
                       Distancia
                     </label>
                     <p className="block w-full rounded-lg bg-gray-100 dark:bg-slate-700 border-transparent px-4 py-2.5 text-sm">
-                      -
+                      {routeDistance}
                     </p>
                   </div>
                   <div>
@@ -289,7 +326,7 @@ export default async function NuevaOperacionMaritimaPage({
                       Puerto de Origen
                     </label>
                     <p className="block w-full rounded-lg bg-gray-100 dark:bg-slate-700 border-transparent px-4 py-2.5 text-sm">
-                      -
+                      {routeOriginName}
                     </p>
                   </div>
                   <div>
@@ -300,7 +337,7 @@ export default async function NuevaOperacionMaritimaPage({
                       Muelle de Origen
                     </label>
                     <p className="block w-full rounded-lg bg-gray-100 dark:bg-slate-700 border-transparent px-4 py-2.5 text-sm">
-                      -
+                      {routeOriginDockCode}
                     </p>
                   </div>
                   <div>
@@ -311,7 +348,7 @@ export default async function NuevaOperacionMaritimaPage({
                       Puerto de Destino
                     </label>
                     <p className="block w-full rounded-lg bg-gray-100 dark:bg-slate-700 border-transparent px-4 py-2.5 text-sm">
-                      -
+                      {routeDestinationName}
                     </p>
                   </div>
                   <div>
@@ -322,7 +359,7 @@ export default async function NuevaOperacionMaritimaPage({
                       Muelle de Destino
                     </label>
                     <p className="block w-full rounded-lg bg-gray-100 dark:bg-slate-700 border-transparent px-4 py-2.5 text-sm">
-                      -
+                      {routeDestinationDockCode}
                     </p>
                   </div>
                   <Link
@@ -348,6 +385,15 @@ export default async function NuevaOperacionMaritimaPage({
                   <p className="text-sm text-gray-600 dark:text-gray-400">
                     Todavía no se ha asignado tripulación
                   </p>
+                  <button
+                    type="button"
+                    className="inline-flex items-center gap-2 px-4 py-2 bg-[#e6f0fa] text-[#0459af] text-sm font-semibold rounded-lg hover:bg-[#0459af]/20 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#0459af] transition-colors"
+                  >
+                    <span className="material-symbols-outlined text-lg">
+                      group_add
+                    </span>
+                    <span>Asignar Tripulación</span>
+                  </button>
                 </div>
               </div>
             </div>
@@ -364,7 +410,7 @@ export default async function NuevaOperacionMaritimaPage({
                 </h2>
                 <Link
                   href="/operaciones-maritimas/nueva/contenedores"
-                  className="flex items-center gap-2 px-4 py-2 bg-[#0459af] text-white text-sm font-semibold rounded-lg hover:bg-[#0459af]/90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#0459af] transition-colors self-start md:self-center"
+                  className="flex items-center gap-2 px-4 py-2 bg-[#e6f0fa] text-[#0459af] text-sm font-semibold rounded-lg hover:bg-[#0459af]/20 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#0459af] transition-colors self-start md:self-center"
                 >
                   <span className="material-symbols-outlined text-lg">
                     settings

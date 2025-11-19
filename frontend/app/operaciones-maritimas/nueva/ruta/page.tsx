@@ -65,6 +65,10 @@ export default function SeleccionRutasMaritimasPage() {
   const selectedRouteIdFromQuery = searchParams.get("routeId");
   const originPortIdFromQuery = searchParams.get("originId");
   const destinationPortIdFromQuery = searchParams.get("destinationId");
+  const originNameFromQuery = searchParams.get("originName") || "";
+  const destinationNameFromQuery = searchParams.get("destinationName") || "";
+  const distanceFromQuery = searchParams.get("distance") || "";
+  const durationFromQuery = searchParams.get("duration") || "";
   const mapContainerRef = useRef<HTMLDivElement | null>(null);
   const mapRef = useRef<L.Map | null>(null);
   const markersRef = useRef<L.Marker[]>([]);
@@ -254,18 +258,45 @@ export default function SeleccionRutasMaritimasPage() {
       baseLatLngs.push([punto.lat, punto.lng]);
     });
 
-    // Generar puntos intermedios para suavizar visualmente la ruta
+    // Generar puntos intermedios con una curva Bézier cuadrática sencilla
     const detailedLatLngs: [number, number][] = [];
-    const segments = 16; // cantidad de pasos entre cada par de puertos
+    const segments = 32; // cantidad de pasos entre cada par de puertos
 
     for (let i = 0; i < baseLatLngs.length - 1; i++) {
       const [lat1, lng1] = baseLatLngs[i];
       const [lat2, lng2] = baseLatLngs[i + 1];
 
+      // Punto medio base
+      const midLat = (lat1 + lat2) / 2;
+      const midLng = (lng1 + lng2) / 2;
+
+      // Desplazar el punto de control ligeramente para "curvar" hacia el mar
+      const dLat = lat2 - lat1;
+      const dLng = lng2 - lng1;
+
+      // Vector perpendicular (rotar 90 grados)
+      const perpLat = -dLng;
+      const perpLng = dLat;
+
+      const scale = 0.2; // qué tanto curvamos la ruta
+      const controlLat = midLat + perpLat * scale * 0.01;
+      const controlLng = midLng + perpLng * scale * 0.01;
+
       for (let step = 0; step <= segments; step++) {
         const t = step / segments;
-        const lat = lat1 + (lat2 - lat1) * t;
-        const lng = lng1 + (lng2 - lng1) * t;
+        const oneMinusT = 1 - t;
+
+        // Bézier cuadrática: B(t) = (1-t)^2 * P0 + 2(1-t)t * C + t^2 * P1
+        const lat =
+          oneMinusT * oneMinusT * lat1 +
+          2 * oneMinusT * t * controlLat +
+          t * t * lat2;
+
+        const lng =
+          oneMinusT * oneMinusT * lng1 +
+          2 * oneMinusT * t * controlLng +
+          t * t * lng2;
+
         detailedLatLngs.push([lat, lng]);
       }
     }
@@ -677,6 +708,38 @@ export default function SeleccionRutasMaritimasPage() {
                 <button
                   type="button"
                   className="px-4 py-2 text-sm font-bold text-white bg-[#F98C00] rounded-md hover:bg-orange-500 shadow-lg"
+                  onClick={() => {
+                    if (!originDockId || !destinationDockId) {
+                      if (typeof window !== "undefined") {
+                        window.alert(
+                          "Debes seleccionar los muelles de origen y destino antes de confirmar la ruta."
+                        );
+                      }
+                      return;
+                    }
+
+                    const routeCode = rutaMapa?.codigo ?? "";
+                    const distance = distanceFromQuery || "";
+                    const duration = durationFromQuery || "";
+                    const originDock = originDocks.find((d) => d.id_muelle === originDockId);
+                    const destinationDock = destinationDocks.find((d) => d.id_muelle === destinationDockId);
+                    const originDockCode = originDock?.codigo ?? "";
+                    const destinationDockCode = destinationDock?.codigo ?? "";
+
+                    router.push(
+                      `/operaciones-maritimas/nueva?id_buque=${""}` +
+                      `&routeId=${selectedRouteIdFromQuery ?? ""}` +
+                      `&routeCode=${encodeURIComponent(routeCode)}` +
+                      `&originId=${originPortIdFromQuery ?? ""}` +
+                      `&destinationId=${destinationPortIdFromQuery ?? ""}` +
+                      `&originName=${encodeURIComponent(originNameFromQuery)}` +
+                      `&destinationName=${encodeURIComponent(destinationNameFromQuery)}` +
+                      `&distance=${encodeURIComponent(distance)}` +
+                      `&duration=${encodeURIComponent(duration)}` +
+                      `&originDockCode=${encodeURIComponent(originDockCode)}` +
+                      `&destinationDockCode=${encodeURIComponent(destinationDockCode)}`
+                    );
+                  }}
                 >
                   Confirmar Ruta
                 </button>
@@ -701,23 +764,29 @@ export default function SeleccionRutasMaritimasPage() {
                   className="flex items-center justify-between font-bold text-gray-800 dark:text-gray-100 cursor-pointer"
                   onClick={() => setIsDetailsOpen(!isDetailsOpen)}
                 >
-                  <span>Información de Ruta Activa: HL-ES-DE-001</span>
+                  <span>
+                    Información de Ruta Activa: {rutaMapa?.codigo ?? "-"}
+                  </span>
                   <span className="material-symbols-outlined">
                     {isDetailsOpen ? "expand_less" : "expand_more"}
                   </span>
                 </summary>
                 <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mt-4 text-sm text-gray-700 dark:text-gray-300">
                   <div>
-                    <strong>Origen:</strong> Puerto de Valencia
+                    <strong>Origen:</strong>{" "}
+                    {originNameFromQuery || "-"}
                   </div>
                   <div>
-                    <strong>Destino:</strong> Puerto de Hamburgo
+                    <strong>Destino:</strong>{" "}
+                    {destinationNameFromQuery || "-"}
                   </div>
                   <div>
-                    <strong>Distancia Total:</strong> 1500 MN
+                    <strong>Distancia Total:</strong>{" "}
+                    {distanceFromQuery || "-"}
                   </div>
                   <div>
-                    <strong>Tiempo Estimado:</strong> 5 días 4 horas
+                    <strong>Tiempo Estimado:</strong>{" "}
+                    {durationFromQuery || "-"}
                   </div>
                 </div>
               </details>

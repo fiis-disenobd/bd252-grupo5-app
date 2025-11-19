@@ -197,8 +197,11 @@ export default function RutasDisponiblesPage() {
               disabled={!selectedRouteId}
               onClick={() => {
                 if (!selectedRouteId) return;
+                const selectedRuta = rutas.find((r) => r.id === selectedRouteId);
+                const distancia = selectedRuta?.distancia ?? "";
+                const duracion = selectedRuta?.duracion ?? "";
                 router.push(
-                  `/operaciones-maritimas/nueva/ruta?routeId=${selectedRouteId}&originId=${originId ?? ""}&destinationId=${destinationId ?? ""}&originName=${encodeURIComponent(originName)}&destinationName=${encodeURIComponent(destinationName)}`
+                  `/operaciones-maritimas/nueva/ruta?routeId=${selectedRouteId}&originId=${originId ?? ""}&destinationId=${destinationId ?? ""}&originName=${encodeURIComponent(originName)}&destinationName=${encodeURIComponent(destinationName)}&distance=${encodeURIComponent(String(distancia))}&duration=${encodeURIComponent(duracion || "")}`
                 );
               }}
             >

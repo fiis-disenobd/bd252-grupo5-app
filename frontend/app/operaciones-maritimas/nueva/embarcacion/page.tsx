@@ -2,8 +2,8 @@
 
 import { Header } from "@/components/Header";
 import Link from "next/link";
-import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
+import { useEffect, useMemo, useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 
 type Buque = {
   id_buque: string;
@@ -21,6 +21,14 @@ export default function SeleccionarEmbarcacionPage() {
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
   const router = useRouter();
+  const searchParams = useSearchParams();
+
+  const baseQueryString = useMemo(() => {
+    const params = new URLSearchParams(searchParams.toString());
+    // id_buque se sobreescribe solo en Confirmar
+    params.delete("id_buque");
+    return params.toString();
+  }, [searchParams]);
 
   useEffect(() => {
     const loadVessels = async () => {
@@ -171,7 +179,11 @@ export default function SeleccionarEmbarcacionPage() {
 
             <div className="flex justify-end items-center mt-6 gap-4">
               <Link
-                href="/operaciones-maritimas/nueva"
+                href={
+                  baseQueryString
+                    ? `/operaciones-maritimas/nueva?${baseQueryString}`
+                    : "/operaciones-maritimas/nueva"
+                }
                 className="px-6 py-2 text-sm font-medium text-gray-700 bg-transparent rounded-lg border border-gray-300 hover:bg-gray-100 dark:text-gray-300 dark:border-gray-600 dark:hover:bg-gray-700"
               >
                 Volver
@@ -188,7 +200,14 @@ export default function SeleccionarEmbarcacionPage() {
                 disabled={!selectedVessel}
                 onClick={() => {
                   if (selectedVessel) {
-                    router.push(`/operaciones-maritimas/nueva?id_buque=${selectedVessel}`);
+                    const params = new URLSearchParams(baseQueryString);
+                    params.set("id_buque", selectedVessel);
+                    const qs = params.toString();
+                    router.push(
+                      qs
+                        ? `/operaciones-maritimas/nueva?${qs}`
+                        : "/operaciones-maritimas/nueva"
+                    );
                   }
                 }}
                 className="px-6 py-2 text-sm font-medium text-white bg-[#0459af] rounded-lg hover:bg-[#0459af]/90 focus:ring-4 focus:ring-[#0459af]/30 disabled:opacity-50 disabled:cursor-not-allowed"
