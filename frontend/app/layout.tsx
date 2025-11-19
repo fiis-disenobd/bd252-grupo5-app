@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 import { Work_Sans } from "next/font/google";
 import "./globals.css";
+import { AuthProvider } from "@/context/AuthContext";
+import { ThemeProvider } from "@/context/ThemeContext";
 
 const workSans = Work_Sans({
   variable: "--font-work-sans",
@@ -10,9 +12,9 @@ const workSans = Work_Sans({
 });
 
 export const metadata: Metadata = {
-  title: "Hapag-Lloyd - Selección de Módulo",
+  title: "Hapag-Lloyd - Sistema Integrado",
   description:
-    "Pantalla principal para la selección de módulos de Hapag-Lloyd.",
+    "Sistema integrado de gestión para Hapag-Lloyd.",
 };
 
 export default function RootLayout({
@@ -29,7 +31,11 @@ export default function RootLayout({
         />
       </head>
       <body className={`${workSans.variable} antialiased`}>
-        {children}
+        <AuthProvider>
+          <ThemeProvider>
+            {children}
+          </ThemeProvider>
+        </AuthProvider>
       </body>
     </html>
   );
