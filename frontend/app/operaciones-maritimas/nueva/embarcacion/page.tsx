@@ -2,74 +2,47 @@
 
 import { Header } from "@/components/Header";
 import Link from "next/link";
-import { useState } from "react";
+import { useEffect, useState } from "react";
+
+type Buque = {
+  id_buque: string;
+  matricula: string;
+  nombre: string;
+  capacidad: number;
+  id_estado_embarcacion: string;
+  peso: number;
+  ubicacion_actual: string | null;
+};
 
 export default function SeleccionarEmbarcacionPage() {
   const [selectedVessel, setSelectedVessel] = useState<string | null>(null);
+  const [vessels, setVessels] = useState<Buque[]>([]);
+  const [loading, setLoading] = useState<boolean>(true);
+  const [error, setError] = useState<string | null>(null);
 
-  const vessels = [
-    {
-      id: "vessel-1",
-      matricula: "IMO-9347438",
-      nombre: "La Esmeralda",
-      capacidad: "12000",
-      estado: "Mantenimiento",
-      estadoColor: "yellow",
-      peso: "150000.00",
-      ubicacion: "8.9824 N, 79.5199 W",
-    },
-    {
-      id: "vessel-2",
-      matricula: "IMO-9436444",
-      nombre: "El Diamante",
-      capacidad: "11500",
-      estado: "En Operación",
-      estadoColor: "green",
-      peso: "145000.00",
-      ubicacion: "34.0522 N, 118.2437 W",
-    },
-    {
-      id: "vessel-3",
-      matricula: "IMO-9708847",
-      nombre: "La Perla del Pacífico",
-      capacidad: "13000",
-      estado: "Fuera de Servicio",
-      estadoColor: "red",
-      peso: "160000.00",
-      ubicacion: "35.6895 N, 139.6917 E",
-    },
-    {
-      id: "vessel-4",
-      matricula: "IMO-9321499",
-      nombre: "El Zafiro",
-      capacidad: "10000",
-      estado: "En Operación",
-      estadoColor: "green",
-      peso: "130000.00",
-      ubicacion: "51.5074 N, 0.1278 W",
-    },
-    {
-      id: "vessel-5",
-      matricula: "IMO-9408818",
-      nombre: "El Rubí",
-      capacidad: "12500",
-      estado: "Mantenimiento",
-      estadoColor: "yellow",
-      peso: "155000.00",
-      ubicacion: "1.3521 S, 103.8198 E",
-    },
-  ];
-
-  const getEstadoStyles = (color: string) => {
-    const styles = {
-      yellow:
-        "px-2 py-1 text-xs font-medium rounded-full bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-300",
-      green:
-        "px-2 py-1 text-xs font-medium rounded-full bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300",
-      red: "px-2 py-1 text-xs font-medium rounded-full bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300",
+  useEffect(() => {
+    const loadVessels = async () => {
+      try {
+        setLoading(true);
+        setError(null);
+        const response = await fetch("http://localhost:3001/monitoreo/buques");
+        const data = await response.json();
+        if (Array.isArray(data)) {
+          setVessels(data as Buque[]);
+        } else {
+          setVessels([]);
+        }
+      } catch (e) {
+        console.error("Error al cargar buques", e);
+        setError("No se pudieron cargar los buques");
+        setVessels([]);
+      } finally {
+        setLoading(false);
+      }
     };
-    return styles[color as keyof typeof styles] || styles.yellow;
-  };
+
+    loadVessels();
+  }, []);
 
   return (
     <div className="flex flex-col min-h-screen bg-[#f5f7f8] dark:bg-[#0f1923] font-display">
@@ -112,65 +85,86 @@ export default function SeleccionarEmbarcacionPage() {
             </div>
 
             <div className="overflow-x-auto">
-              <table className="w-full text-sm text-left text-gray-500 dark:text-gray-400">
-                <thead className="text-xs text-gray-700 dark:text-gray-300 uppercase bg-[#f5f7f8] dark:bg-gray-800">
-                  <tr>
-                    <th className="px-6 py-3" scope="col"></th>
-                    <th className="px-6 py-3" scope="col">
-                      Matrícula
-                    </th>
-                    <th className="px-6 py-3" scope="col">
-                      Nombre
-                    </th>
-                    <th className="px-6 py-3" scope="col">
-                      Capacidad
-                    </th>
-                    <th className="px-6 py-3" scope="col">
-                      Estado
-                    </th>
-                    <th className="px-6 py-3" scope="col">
-                      Peso
-                    </th>
-                    <th className="px-6 py-3" scope="col">
-                      Ubicación actual
-                    </th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {vessels.map((vessel) => (
-                    <tr
-                      key={vessel.id}
-                      className="bg-white dark:bg-slate-800 border-b dark:border-gray-800 hover:bg-[#f5f7f8] dark:hover:bg-gray-800/50"
-                    >
-                      <td className="px-6 py-4">
-                        <input
-                          className="h-4 w-4 rounded border-gray-300 text-[#0459af] focus:ring-[#0459af] dark:bg-gray-700 dark:border-gray-600 dark:focus:ring-[#0459af]"
-                          id={vessel.id}
-                          name="vessel-selection"
-                          type="radio"
-                          checked={selectedVessel === vessel.id}
-                          onChange={() => setSelectedVessel(vessel.id)}
-                        />
-                      </td>
-                      <td className="px-6 py-4">{vessel.matricula}</td>
-                      <th
-                        className="px-6 py-4 font-medium text-gray-900 dark:text-white whitespace-nowrap"
-                        scope="row"
-                      >
-                        {vessel.nombre}
+              {loading ? (
+                <p className="px-6 py-4 text-sm text-gray-600 dark:text-gray-400">
+                  Cargando buques...
+                </p>
+              ) : error ? (
+                <p className="px-6 py-4 text-sm text-red-600 dark:text-red-400">
+                  {error}
+                </p>
+              ) : (
+                <table className="w-full text-sm text-left text-gray-500 dark:text-gray-400">
+                  <thead className="text-xs text-gray-700 dark:text-gray-300 uppercase bg-[#f5f7f8] dark:bg-gray-800">
+                    <tr>
+                      <th className="px-6 py-3" scope="col"></th>
+                      <th className="px-6 py-3" scope="col">
+                        Matrícula
                       </th>
-                      <td className="px-6 py-4">{vessel.capacidad}</td>
-                      <td className="px-6 py-4">
-                        <span className={getEstadoStyles(vessel.estadoColor)}>
-                          {vessel.estado}
-                        </span>
-                      </td>
-                      <td className="px-6 py-4">{vessel.peso}</td>
-                      <td className="px-6 py-4">{vessel.ubicacion}</td>
+                      <th className="px-6 py-3" scope="col">
+                        Nombre
+                      </th>
+                      <th className="px-6 py-3" scope="col">
+                        Capacidad
+                      </th>
+                      <th className="px-6 py-3" scope="col">
+                        Estado
+                      </th>
+                      <th className="px-6 py-3" scope="col">
+                        Peso
+                      </th>
+                      <th className="px-6 py-3" scope="col">
+                        Ubicación actual
+                      </th>
                     </tr>
-                  ))}
-                </tbody>
-              </table>
+                  </thead>
+                  <tbody>
+                    {vessels.length === 0 ? (
+                      <tr className="bg-white dark:bg-slate-800">
+                        <td
+                          className="px-6 py-6 text-center text-gray-600 dark:text-gray-400"
+                          colSpan={7}
+                        >
+                          No hay buques disponibles
+                        </td>
+                      </tr>
+                    ) : (
+                      vessels.map((vessel) => (
+                        <tr
+                          key={vessel.id_buque}
+                          className="bg-white dark:bg-slate-800 border-b dark:border-gray-800 hover:bg-[#f5f7f8] dark:hover:bg-gray-800/50"
+                        >
+                          <td className="px-6 py-4">
+                            <input
+                              className="h-4 w-4 rounded border-gray-300 text-[#0459af] focus:ring-[#0459af] dark:bg-gray-700 dark:border-gray-600 dark:focus:ring-[#0459af]"
+                              id={vessel.id_buque}
+                              name="vessel-selection"
+                              type="radio"
+                              checked={selectedVessel === vessel.id_buque}
+                              onChange={() => setSelectedVessel(vessel.id_buque)}
+                            />
+                          </td>
+                          <td className="px-6 py-4">{vessel.matricula}</td>
+                          <th
+                            className="px-6 py-4 font-medium text-gray-900 dark:text-white whitespace-nowrap"
+                            scope="row"
+                          >
+                            {vessel.nombre}
+                          </th>
+                          <td className="px-6 py-4">{vessel.capacidad}</td>
+                          <td className="px-6 py-4">
+                            {vessel.id_estado_embarcacion || "-"}
+                          </td>
+                          <td className="px-6 py-4">{vessel.peso}</td>
+                          <td className="px-6 py-4">
+                            {vessel.ubicacion_actual || "-"}
+                          </td>
+                        </tr>
+                      ))
+                    )}
+                  </tbody>
+                </table>
+              )}
             </div>
 
             <div className="flex justify-end items-center mt-6 gap-4">

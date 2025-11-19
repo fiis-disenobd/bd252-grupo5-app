@@ -87,7 +87,7 @@ export default function NuevaOperacionMaritimaPage() {
                       Nombre
                     </label>
                     <p className="block w-full rounded-lg bg-gray-100 dark:bg-slate-700 border-transparent px-4 py-2.5 text-sm">
-                      HMM Algeciras
+                      Sin embarcación seleccionada
                     </p>
                   </div>
                   <div>
@@ -98,7 +98,7 @@ export default function NuevaOperacionMaritimaPage() {
                       Número de matrícula/IMO
                     </label>
                     <p className="block w-full rounded-lg bg-gray-100 dark:bg-slate-700 border-transparent px-4 py-2.5 text-sm">
-                      9863297
+                      -
                     </p>
                   </div>
                   <div>
@@ -109,7 +109,7 @@ export default function NuevaOperacionMaritimaPage() {
                       Capacidad (TEUs)
                     </label>
                     <p className="block w-full rounded-lg bg-gray-100 dark:bg-slate-700 border-transparent px-4 py-2.5 text-sm">
-                      12000
+                      -
                     </p>
                   </div>
                   <div>
@@ -120,7 +120,7 @@ export default function NuevaOperacionMaritimaPage() {
                       Peso (t)
                     </label>
                     <p className="block w-full rounded-lg bg-gray-100 dark:bg-slate-700 border-transparent px-4 py-2.5 text-sm">
-                      150000.00
+                      -
                     </p>
                   </div>
                   <div className="md:col-span-2">
@@ -131,7 +131,7 @@ export default function NuevaOperacionMaritimaPage() {
                       Ubicación actual
                     </label>
                     <p className="block w-full rounded-lg bg-gray-100 dark:bg-slate-700 border-transparent px-4 py-2.5 text-sm">
-                      8.9824 N, 79.5199 W
+                      -
                     </p>
                   </div>
                 </div>
@@ -160,9 +160,14 @@ export default function NuevaOperacionMaritimaPage() {
                     <label className="block text-sm font-medium mb-2">
                       Estado
                     </label>
-                    <span className="block w-full rounded-lg bg-yellow-100 dark:bg-yellow-900/30 border border-yellow-200 dark:border-yellow-800/50 px-4 py-2.5 text-sm font-semibold text-yellow-700 dark:text-yellow-400">
-                      Planificada
-                    </span>
+                    <select className="block w-full rounded-lg bg-[#f5f7f8] dark:bg-slate-700 border-gray-200 dark:border-slate-700 shadow-sm focus:border-[#0459af] focus:ring focus:ring-[#0459af] focus:ring-opacity-50 text-sm py-2.5 px-4">
+                      <option>Seleccione estado</option>
+                      <option>En Planificación</option>
+                      <option>En Progreso</option>
+                      <option>Completada</option>
+                      <option>Cancelada</option>
+                      <option>En Espera</option>
+                    </select>
                   </div>
                   <div>
                     <label
@@ -175,7 +180,6 @@ export default function NuevaOperacionMaritimaPage() {
                       className="block w-full rounded-lg bg-[#f5f7f8] dark:bg-slate-700 border-gray-200 dark:border-slate-700 shadow-sm focus:border-[#0459af] focus:ring focus:ring-[#0459af] focus:ring-opacity-50 text-sm py-2.5 px-4"
                       id="start-time"
                       type="datetime-local"
-                      defaultValue="2024-05-21T15:00"
                     />
                   </div>
                   <div>
@@ -189,7 +193,6 @@ export default function NuevaOperacionMaritimaPage() {
                       className="block w-full rounded-lg bg-[#f5f7f8] dark:bg-slate-700 border-gray-200 dark:border-slate-700 shadow-sm focus:border-[#0459af] focus:ring focus:ring-[#0459af] focus:ring-opacity-50 text-sm py-2.5 px-4"
                       id="end-time"
                       type="datetime-local"
-                      defaultValue="2024-05-21T23:00"
                     />
                   </div>
                   <div>
@@ -202,8 +205,8 @@ export default function NuevaOperacionMaritimaPage() {
                     <select
                       className="block w-full rounded-lg bg-[#f5f7f8] dark:bg-slate-700 border-gray-200 dark:border-slate-700 shadow-sm focus:border-[#0459af] focus:ring focus:ring-[#0459af] focus:ring-opacity-50 text-sm py-2.5 px-4"
                       id="origin-dock"
-                      defaultValue="Muelle 7B"
                     >
+                      <option>Seleccione un muelle</option>
                       <option>Muelle 5A</option>
                       <option>Muelle 7B</option>
                       <option>Muelle 3C</option>
@@ -247,7 +250,7 @@ export default function NuevaOperacionMaritimaPage() {
                       Código
                     </label>
                     <p className="block w-full rounded-lg bg-gray-100 dark:bg-slate-700 border-transparent px-4 py-2.5 text-sm">
-                      RM-CALLAO-VALPO
+                      -
                     </p>
                   </div>
                   <div>
@@ -258,7 +261,7 @@ export default function NuevaOperacionMaritimaPage() {
                       Distancia
                     </label>
                     <p className="block w-full rounded-lg bg-gray-100 dark:bg-slate-700 border-transparent px-4 py-2.5 text-sm">
-                      10500
+                      -
                     </p>
                   </div>
                   <div>
@@ -269,7 +272,7 @@ export default function NuevaOperacionMaritimaPage() {
                       Puerto de Origen
                     </label>
                     <p className="block w-full rounded-lg bg-gray-100 dark:bg-slate-700 border-transparent px-4 py-2.5 text-sm">
-                      Puerto de Singapur (SGSIN)
+                      -
                     </p>
                   </div>
                   <div>
@@ -280,7 +283,7 @@ export default function NuevaOperacionMaritimaPage() {
                       Puerto de Destino
                     </label>
                     <p className="block w-full rounded-lg bg-gray-100 dark:bg-slate-700 border-transparent px-4 py-2.5 text-sm">
-                      Puerto de Algeciras (ESALG)
+                      -
                     </p>
                   </div>
                   <Link
@@ -303,45 +306,9 @@ export default function NuevaOperacionMaritimaPage() {
                   Tripulación Asignada
                 </h2>
                 <div className="space-y-6">
-                  <div>
-                    <ul className="space-y-3 text-sm">
-                      <li className="flex items-center justify-between">
-                        <span className="font-medium text-gray-900 dark:text-gray-100">
-                          Capitán:
-                        </span>
-                        <span className="text-gray-600 dark:text-gray-400">
-                          Juan Rodriguez
-                        </span>
-                      </li>
-                      <li className="flex items-center justify-between">
-                        <span className="font-medium text-gray-900 dark:text-gray-100">
-                          Jefe de Máquinas:
-                        </span>
-                        <span className="text-gray-600 dark:text-gray-400">
-                          Carlos Sánchez
-                        </span>
-                      </li>
-                      <li className="flex items-center justify-between">
-                        <span className="font-medium text-gray-900 dark:text-gray-100">
-                          Primer Oficial:
-                        </span>
-                        <span className="text-gray-600 dark:text-gray-400">
-                          Maria López
-                        </span>
-                      </li>
-                    </ul>
-                    <div className="mt-6">
-                      <button
-                        type="button"
-                        className="w-full flex items-center justify-center gap-2 px-4 py-2.5 bg-[#e6f0fa] text-[#0459af] text-sm font-semibold rounded-lg hover:bg-[#0459af]/20 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#0459af] transition-colors"
-                      >
-                        <span className="material-symbols-outlined text-lg">
-                          group_add
-                        </span>
-                        Asignar tripulación
-                      </button>
-                    </div>
-                  </div>
+                  <p className="text-sm text-gray-600 dark:text-gray-400">
+                    Todavía no se ha asignado tripulación
+                  </p>
                 </div>
               </div>
             </div>
@@ -394,32 +361,10 @@ export default function NuevaOperacionMaritimaPage() {
                     </tr>
                   </thead>
                   <tbody>
-                    <tr className="bg-white dark:bg-slate-800 border-b dark:border-slate-700 hover:bg-gray-50 dark:hover:bg-slate-700/50">
-                      <td className="px-6 py-4">CONT-123</td>
-                      <td className="px-6 py-4">2500.00</td>
-                      <td className="px-6 py-4">33500.00</td>
-                      <td className="px-6 py-4">20x8x8.5</td>
-                      <td className="px-6 py-4">Productos electrónicos</td>
-                      <td className="px-6 py-4">En tránsito</td>
-                      <td className="px-6 py-4">Refrigerado</td>
-                    </tr>
-                    <tr className="bg-white dark:bg-slate-800 border-b dark:border-slate-700 hover:bg-gray-50 dark:hover:bg-slate-700/50">
-                      <td className="px-6 py-4">CONT-456</td>
-                      <td className="px-6 py-4">2800.50</td>
-                      <td className="px-6 py-4">33500.00</td>
-                      <td className="px-6 py-4">20x8x8.5</td>
-                      <td className="px-6 py-4">Textiles</td>
-                      <td className="px-6 py-4">En puerto</td>
-                      <td className="px-6 py-4">Carga seca</td>
-                    </tr>
                     <tr className="bg-white dark:bg-slate-800 hover:bg-gray-50 dark:hover:bg-slate-700/50">
-                      <td className="px-6 py-4">CONT-789</td>
-                      <td className="px-6 py-4">5500.00</td>
-                      <td className="px-6 py-4">67000.00</td>
-                      <td className="px-6 py-4">40x8x8.5</td>
-                      <td className="px-6 py-4">Automóviles</td>
-                      <td className="px-6 py-4">En tránsito</td>
-                      <td className="px-6 py-4">Open Top</td>
+                      <td className="px-6 py-6 text-center text-gray-600 dark:text-gray-400" colSpan={7}>
+                        Sin contenedores seleccionados aún
+                      </td>
                     </tr>
                   </tbody>
                 </table>
