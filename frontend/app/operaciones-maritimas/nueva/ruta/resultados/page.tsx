@@ -1,7 +1,65 @@
+"use client";
+
 import { Header } from "@/components/Header";
 import Link from "next/link";
+import { useEffect, useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
+
+type RutaResultado = {
+  id: string;
+  codigo: string;
+  distancia: number | string;
+  duracion: string | null;
+  tarifa: number | string | null;
+  puertosIntermedios: string[];
+};
 
 export default function RutasDisponiblesPage() {
+  const searchParams = useSearchParams();
+  const originId = searchParams.get("originId");
+  const destinationId = searchParams.get("destinationId");
+  const originName = searchParams.get("originName") || "Origen";
+  const destinationName = searchParams.get("destinationName") || "Destino";
+
+  const router = useRouter();
+
+  const [rutas, setRutas] = useState<RutaResultado[]>([]);
+  const [loading, setLoading] = useState<boolean>(false);
+  const [error, setError] = useState<string | null>(null);
+  const [selectedRouteId, setSelectedRouteId] = useState<string | null>(null);
+
+  useEffect(() => {
+    const loadRutas = async () => {
+      if (!originId || !destinationId) {
+        return;
+      }
+      try {
+        setLoading(true);
+        setError(null);
+        const response = await fetch(
+          `http://localhost:3001/monitoreo/rutas-maritimas?origen=${originId}&destino=${destinationId}`
+        );
+        if (!response.ok) {
+          throw new Error("No se pudieron obtener las rutas marítimas.");
+        }
+        const data = await response.json();
+        if (Array.isArray(data)) {
+          setRutas(data as RutaResultado[]);
+        } else {
+          setRutas([]);
+        }
+      } catch (e) {
+        console.error(e);
+        setError("No se pudieron cargar las rutas disponibles.");
+        setRutas([]);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadRutas();
+  }, [originId, destinationId]);
+
   return (
     <div className="relative flex min-h-screen w-full flex-col bg-[#f5f7f8] dark:bg-[#0f1923] font-display">
       <Header />
@@ -13,11 +71,11 @@ export default function RutasDisponiblesPage() {
             </h1>
             <p className="mt-1 text-lg text-gray-600 dark:text-gray-400">
               <span className="font-semibold text-gray-800 dark:text-gray-200">
-                Callao
+                {originName}
               </span>
               <span className="mx-2 text-[#0459af]">→</span>
               <span className="font-semibold text-gray-800 dark:text-gray-200">
-                Valparaíso
+                {destinationName}
               </span>
             </p>
             <p className="mt-2 text-sm text-gray-500 dark:text-gray-400">
@@ -62,74 +120,66 @@ export default function RutasDisponiblesPage() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
-                <tr className="hover:bg-gray-50 dark:hover:bg-white/5 transition-colors">
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
-                    RM-CALLAO-VALPO1
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
-                    3,400 km
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
-                    5 días
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
-                    N/A
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
-                    4,850.75
-                  </td>
-                </tr>
-                <tr className="bg-[#0459af]/10 hover:bg-[#0459af]/20 dark:bg-[#0459af]/20 dark:hover:bg-[#0459af]/30 transition-colors">
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-[#0459af]/80 dark:text-gray-300">
-                    RM-CALLAO-VALPO2
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-[#0459af]/80 dark:text-gray-300">
-                    3,550 km
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-[#0459af]/80 dark:text-gray-300">
-                    6 días
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-[#0459af]/80 dark:text-gray-300">
-                    Arica
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-[#0459af]/80 dark:text-gray-300">
-                    5,120.00
-                  </td>
-                </tr>
-                <tr className="hover:bg-gray-50 dark:hover:bg-white/5 transition-colors">
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
-                    RM-CALLAO-VALPO3
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
-                    3,800 km
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
-                    7 días
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
-                    Iquique, Antofagasta
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
-                    5,300.50
-                  </td>
-                </tr>
-                <tr className="hover:bg-gray-50 dark:hover:bg-white/5 transition-colors">
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
-                    RM-CALLAO-VALPO4
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
-                    3,450 km
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
-                    5.5 días
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
-                    Mejillones
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
-                    4,990.25
-                  </td>
-                </tr>
+                {loading && (
+                  <tr>
+                    <td
+                      className="px-6 py-4 text-sm text-gray-500 dark:text-gray-400"
+                      colSpan={5}
+                    >
+                      Cargando rutas disponibles...
+                    </td>
+                  </tr>
+                )}
+                {!loading && error && (
+                  <tr>
+                    <td
+                      className="px-6 py-4 text-sm text-red-600 dark:text-red-400"
+                      colSpan={5}
+                    >
+                      {error}
+                    </td>
+                  </tr>
+                )}
+                {!loading && !error && rutas.length === 0 && (
+                  <tr>
+                    <td
+                      className="px-6 py-4 text-sm text-gray-500 dark:text-gray-400"
+                      colSpan={5}
+                    >
+                      No hay rutas disponibles entre los puertos seleccionados.
+                    </td>
+                  </tr>
+                )}
+                {!loading && !error &&
+                  rutas.map((ruta) => (
+                    <tr
+                      key={ruta.id}
+                      onClick={() => setSelectedRouteId(ruta.id)}
+                      className={`cursor-pointer transition-colors ${
+                        selectedRouteId === ruta.id
+                          ? "bg-[#0459af]/10 dark:bg-[#0459af]/20"
+                          : "hover:bg-gray-50 dark:hover:bg-white/5"
+                      }`}
+                    >
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
+                        {ruta.codigo}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
+                        {ruta.distancia}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
+                        {ruta.duracion ?? "-"}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
+                        {ruta.puertosIntermedios.length > 0
+                          ? ruta.puertosIntermedios.join(", ")
+                          : "N/A"}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
+                        {ruta.tarifa ?? "-"}
+                      </td>
+                    </tr>
+                  ))}
               </tbody>
             </table>
           </div>
@@ -143,7 +193,14 @@ export default function RutasDisponiblesPage() {
             </Link>
             <button
               type="button"
-              className="rounded-lg bg-[#0459af] px-4 py-2 text-sm font-medium text-white hover:bg-[#0459af]/90"
+              className="rounded-lg bg-[#0459af] px-4 py-2 text-sm font-medium text-white hover:bg-[#0459af]/90 disabled:bg-gray-400 disabled:cursor-not-allowed"
+              disabled={!selectedRouteId}
+              onClick={() => {
+                if (!selectedRouteId) return;
+                router.push(
+                  `/operaciones-maritimas/nueva/ruta?routeId=${selectedRouteId}&originId=${originId ?? ""}&destinationId=${destinationId ?? ""}&originName=${encodeURIComponent(originName)}&destinationName=${encodeURIComponent(destinationName)}`
+                );
+              }}
             >
               Confirmar Ruta Seleccionada
             </button>

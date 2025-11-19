@@ -24,6 +24,11 @@ import { Operacion } from '../shared/entities/operacion.entity';
 import { Contenedor } from '../shared/entities/contenedor.entity';
 import { Vehiculo } from '../shared/entities/vehiculo.entity';
 import { Buque } from '../shared/entities/buque.entity';
+import { Ruta } from '../shared/entities/ruta.entity';
+import { Puerto } from '../gestion_maritima/entities/puerto.entity';
+import { Muelle } from '../gestion_maritima/entities/muelle.entity';
+import { RutaMaritima } from '../gestion_maritima/entities/ruta-maritima.entity';
+import { RutaPuertoIntermedio } from '../gestion_maritima/entities/ruta-puerto-intermedio.entity';
 import { EstadoOperacion } from '../shared/entities/estado-operacion.entity';
 import { EstadoContenedor } from '../shared/entities/estado-contenedor.entity';
 import { TipoContenedor } from '../shared/entities/tipo-contenedor.entity';
@@ -78,6 +83,11 @@ import { RecursosService } from './services/recursos.service';
       EstadoContenedor,
       TipoContenedor,
       EstadoEntrega,
+      Ruta,
+      Puerto,
+      Muelle,
+      RutaMaritima,
+      RutaPuertoIntermedio,
     ]),
   ],
   controllers: [

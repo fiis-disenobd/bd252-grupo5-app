@@ -2,7 +2,53 @@ import { Header } from "@/components/Header";
 import Image from "next/image";
 import Link from "next/link";
 
-export default function NuevaOperacionMaritimaPage() {
+type Buque = {
+  id_buque: string;
+  matricula: string;
+  nombre: string;
+  capacidad: number;
+  peso: number | string;
+  ubicacion_actual: string | null;
+};
+
+type NuevaOperacionMaritimaPageProps = {
+  searchParams: Promise<{
+    id_buque?: string;
+  }>;
+};
+
+export default async function NuevaOperacionMaritimaPage({
+  searchParams,
+}: NuevaOperacionMaritimaPageProps) {
+  const resolvedSearchParams = await searchParams;
+  const idBuque = resolvedSearchParams.id_buque;
+
+  let buque: Buque | null = null;
+
+  if (idBuque) {
+    try {
+      const response = await fetch(
+        `http://localhost:3001/monitoreo/buques/${idBuque}`,
+        { cache: "no-store" }
+      );
+      if (response.ok) {
+        buque = (await response.json()) as Buque | null;
+      }
+    } catch (error) {
+      console.error("Error al obtener buque para la operación:", error);
+    }
+  }
+
+  const vesselNombre = buque?.nombre ?? "Sin embarcación seleccionada";
+  const vesselMatricula = buque?.matricula ?? "-";
+  const vesselCapacidad =
+    typeof buque?.capacidad === "number" ? buque?.capacidad.toString() : "-";
+  const vesselPeso =
+    buque?.peso !== undefined && buque?.peso !== null
+      ? buque.peso.toString()
+      : "-";
+  const vesselUbicacion = buque?.ubicacion_actual ?? "-";
+
   return (
     <div className="flex min-h-screen flex-col bg-[#f5f7f8] text-gray-900 dark:bg-[#0f1923] dark:text-gray-100">
       <Header />
@@ -87,7 +133,7 @@ export default function NuevaOperacionMaritimaPage() {
                       Nombre
                     </label>
                     <p className="block w-full rounded-lg bg-gray-100 dark:bg-slate-700 border-transparent px-4 py-2.5 text-sm">
-                      Sin embarcación seleccionada
+                      {vesselNombre}
                     </p>
                   </div>
                   <div>
@@ -98,7 +144,7 @@ export default function NuevaOperacionMaritimaPage() {
                       Número de matrícula/IMO
                     </label>
                     <p className="block w-full rounded-lg bg-gray-100 dark:bg-slate-700 border-transparent px-4 py-2.5 text-sm">
-                      -
+                      {vesselMatricula}
                     </p>
                   </div>
                   <div>
@@ -109,7 +155,7 @@ export default function NuevaOperacionMaritimaPage() {
                       Capacidad (TEUs)
                     </label>
                     <p className="block w-full rounded-lg bg-gray-100 dark:bg-slate-700 border-transparent px-4 py-2.5 text-sm">
-                      -
+                      {vesselCapacidad}
                     </p>
                   </div>
                   <div>
@@ -120,7 +166,7 @@ export default function NuevaOperacionMaritimaPage() {
                       Peso (t)
                     </label>
                     <p className="block w-full rounded-lg bg-gray-100 dark:bg-slate-700 border-transparent px-4 py-2.5 text-sm">
-                      -
+                      {vesselPeso}
                     </p>
                   </div>
                   <div className="md:col-span-2">
@@ -131,7 +177,7 @@ export default function NuevaOperacionMaritimaPage() {
                       Ubicación actual
                     </label>
                     <p className="block w-full rounded-lg bg-gray-100 dark:bg-slate-700 border-transparent px-4 py-2.5 text-sm">
-                      -
+                      {vesselUbicacion}
                     </p>
                   </div>
                 </div>
@@ -156,7 +202,8 @@ export default function NuevaOperacionMaritimaPage() {
                   Detalles de la Operación
                 </h2>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-6">
-                  <div>
+                  {/* Estado */}
+                  <div className="md:col-span-2">
                     <label className="block text-sm font-medium mb-2">
                       Estado
                     </label>
@@ -169,12 +216,14 @@ export default function NuevaOperacionMaritimaPage() {
                       <option>En Espera</option>
                     </select>
                   </div>
+
+                  {/* Fecha y hora estimada de inicio / fin */}
                   <div>
                     <label
                       className="block text-sm font-medium mb-2"
                       htmlFor="start-time"
                     >
-                      Hora Inicio Estimada
+                      Fecha y hora estimada de inicio
                     </label>
                     <input
                       className="block w-full rounded-lg bg-[#f5f7f8] dark:bg-slate-700 border-gray-200 dark:border-slate-700 shadow-sm focus:border-[#0459af] focus:ring focus:ring-[#0459af] focus:ring-opacity-50 text-sm py-2.5 px-4"
@@ -187,7 +236,7 @@ export default function NuevaOperacionMaritimaPage() {
                       className="block text-sm font-medium mb-2"
                       htmlFor="end-time"
                     >
-                      Hora Fin Estimada
+                      Fecha y hora estimada de fin
                     </label>
                     <input
                       className="block w-full rounded-lg bg-[#f5f7f8] dark:bg-slate-700 border-gray-200 dark:border-slate-700 shadow-sm focus:border-[#0459af] focus:ring focus:ring-[#0459af] focus:ring-opacity-50 text-sm py-2.5 px-4"
@@ -195,40 +244,8 @@ export default function NuevaOperacionMaritimaPage() {
                       type="datetime-local"
                     />
                   </div>
-                  <div>
-                    <label
-                      className="block text-sm font-medium mb-2"
-                      htmlFor="origin-dock"
-                    >
-                      Muelle de origen
-                    </label>
-                    <select
-                      className="block w-full rounded-lg bg-[#f5f7f8] dark:bg-slate-700 border-gray-200 dark:border-slate-700 shadow-sm focus:border-[#0459af] focus:ring focus:ring-[#0459af] focus:ring-opacity-50 text-sm py-2.5 px-4"
-                      id="origin-dock"
-                    >
-                      <option>Seleccione un muelle</option>
-                      <option>Muelle 5A</option>
-                      <option>Muelle 7B</option>
-                      <option>Muelle 3C</option>
-                    </select>
-                  </div>
-                  <div className="md:col-span-2">
-                    <label
-                      className="block text-sm font-medium mb-2"
-                      htmlFor="destination-dock"
-                    >
-                      Muelle de destino
-                    </label>
-                    <select
-                      className="block w-full rounded-lg bg-[#f5f7f8] dark:bg-slate-700 border-gray-200 dark:border-slate-700 shadow-sm focus:border-[#0459af] focus:ring focus:ring-[#0459af] focus:ring-opacity-50 text-sm py-2.5 px-4"
-                      id="destination-dock"
-                    >
-                      <option>Seleccione un muelle</option>
-                      <option>Muelle 1A</option>
-                      <option>Muelle 2B</option>
-                      <option>Muelle 4D</option>
-                    </select>
-                  </div>
+
+                  {/* (Se han eliminado Puerto/Muelle de origen y destino según solicitud) */}
                 </div>
               </div>
             </div>
@@ -278,9 +295,31 @@ export default function NuevaOperacionMaritimaPage() {
                   <div>
                     <label
                       className="block text-sm font-medium mb-2"
+                      htmlFor="origin-dock-route"
+                    >
+                      Muelle de Origen
+                    </label>
+                    <p className="block w-full rounded-lg bg-gray-100 dark:bg-slate-700 border-transparent px-4 py-2.5 text-sm">
+                      -
+                    </p>
+                  </div>
+                  <div>
+                    <label
+                      className="block text-sm font-medium mb-2"
                       htmlFor="destination-port"
                     >
                       Puerto de Destino
+                    </label>
+                    <p className="block w-full rounded-lg bg-gray-100 dark:bg-slate-700 border-transparent px-4 py-2.5 text-sm">
+                      -
+                    </p>
+                  </div>
+                  <div>
+                    <label
+                      className="block text-sm font-medium mb-2"
+                      htmlFor="destination-dock-route"
+                    >
+                      Muelle de Destino
                     </label>
                     <p className="block w-full rounded-lg bg-gray-100 dark:bg-slate-700 border-transparent px-4 py-2.5 text-sm">
                       -

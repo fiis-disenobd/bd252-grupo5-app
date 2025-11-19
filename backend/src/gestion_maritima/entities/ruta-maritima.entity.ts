@@ -10,6 +10,7 @@ import {
 import { Puerto } from './puerto.entity';
 import { RutaPuertoIntermedio } from './ruta-puerto-intermedio.entity';
 import { OperacionRutaMaritima } from './operacion-ruta-maritima.entity';
+import { Ruta } from '../../shared/entities/ruta.entity';
 
 @Entity({ schema: 'gestion_maritima', name: 'rutamaritima' })
 @Unique('uq_ruta_maritima_ruta', ['id_ruta'])
@@ -26,6 +27,10 @@ export class RutaMaritima {
 
   @Column({ type: 'decimal', precision: 10, scale: 2 })
   distancia: number;
+
+  @ManyToOne(() => Ruta, (ruta) => ruta.rutas_maritimas)
+  @JoinColumn({ name: 'id_ruta' })
+  ruta: Ruta;
 
   @Column({ type: 'uuid' })
   id_puerto_origen: string;

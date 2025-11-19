@@ -3,6 +3,7 @@
 import { Header } from "@/components/Header";
 import Link from "next/link";
 import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 
 type Buque = {
   id_buque: string;
@@ -19,6 +20,7 @@ export default function SeleccionarEmbarcacionPage() {
   const [vessels, setVessels] = useState<Buque[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
+  const router = useRouter();
 
   useEffect(() => {
     const loadVessels = async () => {
@@ -184,6 +186,11 @@ export default function SeleccionarEmbarcacionPage() {
               <button
                 type="button"
                 disabled={!selectedVessel}
+                onClick={() => {
+                  if (selectedVessel) {
+                    router.push(`/operaciones-maritimas/nueva?id_buque=${selectedVessel}`);
+                  }
+                }}
                 className="px-6 py-2 text-sm font-medium text-white bg-[#0459af] rounded-lg hover:bg-[#0459af]/90 focus:ring-4 focus:ring-[#0459af]/30 disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 Confirmar
