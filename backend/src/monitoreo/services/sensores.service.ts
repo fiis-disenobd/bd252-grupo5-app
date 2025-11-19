@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { Repository, MoreThanOrEqual } from 'typeorm';
 import { Sensor } from '../entities/sensor.entity';
 import { Notificacion } from '../entities/notificacion.entity';
 
@@ -18,6 +18,92 @@ export class SensoresService {
       where: { id_contenedor },
       relations: ['tipo_sensor', 'rol_sensor'],
     });
+  }
+
+  async findNotificaciones(filtros: any = {}) {
+    try {
+      const { tipo, estado, fecha_desde, fecha_hasta, limite = 50, pagina = 1 } = filtros;
+      
+      const query = this.notificacionRepository
+        .createQueryBuilder('notificacion')
+        .leftJoinAndSelect('notificacion.tipo_notificacion', 'tipo_notificacion')
+        .leftJoinAndSelect('notificacion.sensor', 'sensor')
+        .leftJoinAndSelect('sensor.tipo_sensor', 'tipo_sensor')
+        .leftJoinAndSelect('sensor.contenedor', 'contenedor')
+        .orderBy('notificacion.fecha_hora', 'DESC');
+
+      // Aplicar filtros
+      if (tipo) {
+        query.andWhere('tipo_notificacion.id_tipo_notificacion = :tipo', { tipo });
+      }
+
+      if (fecha_desde) {
+        query.andWhere('notificacion.fecha_hora >= :fecha_desde', { fecha_desde });
+      }
+
+      if (fecha_hasta) {
+        query.andWhere('notificacion.fecha_hora <= :fecha_hasta', { fecha_hasta });
+      }
+
+      // Paginación
+      const skip = (pagina - 1) * limite;
+      query.skip(skip).take(limite);
+
+      const [notificaciones, total] = await query.getManyAndCount();
+
+      return {
+        notificaciones,
+        total,
+        pagina: Number(pagina),
+        total_paginas: Math.ceil(total / limite),
+        por_pagina: Number(limite),
+      };
+    } catch (error) {
+      console.error('Error en findNotificaciones:', error.message);
+      return {
+        notificaciones: [],
+        total: 0,
+        pagina: 1,
+        total_paginas: 0,
+        por_pagina: 50,
+      };
+    }
+  }
+
+  async getEstadisticasNotificaciones() {
+    try {
+      const total = await this.notificacionRepository.count();
+      
+      const porTipo = await this.notificacionRepository
+        .createQueryBuilder('notificacion')
+        .leftJoin('notificacion.tipo_notificacion', 'tipo')
+        .select('tipo.nombre', 'tipo')
+        .addSelect('COUNT(*)', 'cantidad')
+        .groupBy('tipo.nombre')
+        .getRawMany();
+
+      const ultimaSemana = new Date();
+      ultimaSemana.setDate(ultimaSemana.getDate() - 7);
+      
+      const recientes = await this.notificacionRepository.count({
+        where: {
+          fecha_hora: MoreThanOrEqual(ultimaSemana),
+        },
+      });
+
+      return {
+        total,
+        por_tipo: porTipo,
+        ultima_semana: recientes,
+      };
+    } catch (error) {
+      console.error('Error en getEstadisticasNotificaciones:', error.message);
+      return {
+        total: 0,
+        por_tipo: [],
+        ultima_semana: 0,
+      };
+    }
   }
 
   async findOne(id_sensor: string) {
@@ -107,14 +193,6 @@ export class SensoresService {
       console.error('Error en getAnaliticas:', error.message);
       return null;
     }
-  }
-
-  async findNotificaciones(filtros: any) {
-    return await this.notificacionRepository.find({
-      relations: ['tipo_notificacion', 'sensor'],
-      order: { fecha_hora: 'DESC' },
-      take: 50,
-    });
   }
 
   // Métodos auxiliares para generar datos simulados

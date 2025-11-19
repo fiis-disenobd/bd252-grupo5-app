@@ -1,3 +1,22 @@
+# 🔔 IMPLEMENTACIÓN DE NOTIFICACIONES
+
+## Archivos a Modificar/Crear:
+
+1. ✅ **Backend completado:**
+   - `sensores.service.ts` - Métodos agregados
+   - `sensores.controller.ts` - Endpoints agregados
+
+2. **Frontend:**
+   - `app/monitoreo/notificaciones/page.tsx` - Página principal (REEMPLAZAR)
+   - `components/monitoreo/MapHeader.tsx` - Agregar botón + scroll (MODIFICAR)
+
+---
+
+## 📄 CÓDIGO 1: Página de Notificaciones
+
+**Archivo:** `frontend/app/monitoreo/notificaciones/page.tsx`
+
+```typescript
 "use client";
 
 import { useState, useEffect } from "react";
@@ -430,3 +449,18 @@ export default function NotificacionesPage() {
     </div>
   );
 }
+```
+
+---
+
+✅ **Copia este código en:** `frontend/app/monitoreo/notificaciones/page.tsx`
+
+---
+
+## 🔧 PRÓXIMOS PASOS:
+
+Cuando termines de copiar este código, dime y te doy:
+
+2. **Código para modificar MapHeader** (agregar botón de notificaciones + scroll horizontal)
+
+¿Listo para continuar?

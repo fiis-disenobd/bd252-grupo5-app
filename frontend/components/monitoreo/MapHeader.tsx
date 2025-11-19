@@ -11,6 +11,10 @@ export function MapHeader() {
 
   // Determinar título según la ruta
   const getTitle = () => {
+    if (pathname?.includes('/entregas')) return { icon: 'local_shipping', title: 'Gestión de Entregas', subtitle: 'Control de entregas' };
+    if (pathname?.includes('/reportes')) return { icon: 'description', title: 'Gestión de Reportes', subtitle: 'Generación y consulta' };
+    if (pathname?.includes('/incidencias')) return { icon: 'report', title: 'Gestión de Incidencias', subtitle: 'Registro y seguimiento' };
+    if (pathname?.includes('/notificaciones')) return { icon: 'notifications', title: 'Centro de Notificaciones', subtitle: 'Alertas del sistema' };
     if (pathname?.includes('/mapa')) return { icon: 'map', title: 'Monitoreo GPS en Tiempo Real', subtitle: 'Seguimiento de activos' };
     if (pathname?.includes('/contenedores')) return { icon: 'inventory_2', title: 'Gestión de Contenedores', subtitle: 'Monitoreo y control' };
     if (pathname?.includes('/operaciones')) return { icon: 'list_alt', title: 'Operaciones de Transporte', subtitle: 'Gestión de operaciones' };
@@ -21,9 +25,9 @@ export function MapHeader() {
 
   return (
     <header className="sticky top-0 z-40 w-full border-b border-zinc-200 bg-white shadow-sm">
-      <div className="flex h-16 items-center justify-between px-6">
-        {/* Logo y Título Dinámico */}
-        <div className="flex items-center gap-4">
+      <div className="flex h-16 items-center gap-4 px-6">
+        {/* Logo y Título Dinámico - FIJOS (no se comprimen) */}
+        <div className="flex flex-shrink-0 items-center gap-4">
           <Link
             href="/monitoreo"
             className="flex items-center gap-2 text-xl font-bold text-[#002b5c] transition-colors hover:text-[#ff8c00]"
@@ -35,7 +39,7 @@ export function MapHeader() {
               height={32}
               className="h-8 w-8"
             />
-            <span>Hapag-Lloyd</span>
+            <span className="whitespace-nowrap">Hapag-Lloyd</span>
           </Link>
           
           <div className="h-8 w-px bg-zinc-300"></div>
@@ -43,14 +47,24 @@ export function MapHeader() {
           <div className="flex items-center gap-2">
             <span className="material-symbols-outlined text-2xl text-primary">{pageInfo.icon}</span>
             <div>
-              <h1 className="text-sm font-bold text-zinc-900">{pageInfo.title}</h1>
-              <p className="text-xs text-zinc-500">{pageInfo.subtitle}</p>
+              <h1 className="whitespace-nowrap text-sm font-bold text-zinc-900">{pageInfo.title}</h1>
+              <p className="whitespace-nowrap text-xs text-zinc-500">{pageInfo.subtitle}</p>
             </div>
           </div>
         </div>
 
-        {/* Navegación Rápida */}
-        <nav className="hidden items-center gap-2 lg:flex">
+        {/* Navegación Rápida con Scroll Horizontal - SCROLLEABLE */}
+        <nav className="hidden flex-1 overflow-hidden lg:block">
+          <div className="flex items-center gap-2 overflow-x-auto scrollbar-hide">
+            <style jsx>{`
+              .scrollbar-hide::-webkit-scrollbar {
+                display: none;
+              }
+              .scrollbar-hide {
+                -ms-overflow-style: none;
+                scrollbar-width: none;
+              }
+            `}</style>
           <Link
             href="/monitoreo"
             className={`flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium transition-colors ${
@@ -95,10 +109,55 @@ export function MapHeader() {
             <span className="material-symbols-outlined text-lg">map</span>
             <span>Mapa GPS</span>
           </Link>
+          <Link
+            href="/monitoreo/notificaciones"
+            className={`flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium transition-colors ${
+              pathname?.includes('/notificaciones')
+                ? 'bg-primary/10 text-primary'
+                : 'text-gray-700 hover:bg-gray-100 hover:text-[#ff8c00]'
+            }`}
+          >
+            <span className="material-symbols-outlined text-lg">notifications</span>
+            <span>Notificaciones</span>
+          </Link>
+          <Link
+            href="/monitoreo/incidencias"
+            className={`flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium transition-colors ${
+              pathname?.includes('/incidencias')
+                ? 'bg-primary/10 text-primary'
+                : 'text-gray-700 hover:bg-gray-100 hover:text-[#ff8c00]'
+            }`}
+          >
+            <span className="material-symbols-outlined text-lg">report</span>
+            <span>Incidencias</span>
+          </Link>
+          <Link
+            href="/monitoreo/reportes"
+            className={`flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium transition-colors ${
+              pathname?.includes('/reportes')
+                ? 'bg-primary/10 text-primary'
+                : 'text-gray-700 hover:bg-gray-100 hover:text-[#ff8c00]'
+            }`}
+          >
+            <span className="material-symbols-outlined text-lg">description</span>
+            <span>Reportes</span>
+          </Link>
+          <Link
+            href="/monitoreo/entregas"
+            className={`flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium transition-colors ${
+              pathname?.includes('/entregas')
+                ? 'bg-primary/10 text-primary'
+                : 'text-gray-700 hover:bg-gray-100 hover:text-[#ff8c00]'
+            }`}
+          >
+            <span className="material-symbols-outlined text-lg">local_shipping</span>
+            <span>Entregas</span>
+          </Link>
+          </div>
         </nav>
 
-        {/* Right Section */}
-        <div className="flex items-center gap-3">
+        {/* Right Section - FIJA (no se comprime) */}
+        <div className="flex flex-shrink-0 items-center gap-3">
           {/* Indicador de actualización en vivo */}
           <div className="hidden items-center gap-2 rounded-lg border border-green-200 bg-green-50 px-3 py-1.5 sm:flex">
             <span className="relative flex h-2 w-2">
@@ -109,14 +168,14 @@ export function MapHeader() {
           </div>
 
           {/* Notificaciones */}
-          <button
+          <Link
+            href="/monitoreo/notificaciones"
             aria-label="Notificaciones"
             className="relative flex h-10 w-10 items-center justify-center rounded-lg text-gray-600 transition-colors hover:bg-gray-100 hover:text-[#ff8c00]"
-            type="button"
           >
             <span className="material-symbols-outlined text-2xl">notifications</span>
             <span className="absolute right-2 top-2 h-2 w-2 rounded-full bg-[#ff8c00]" />
-          </button>
+          </Link>
 
           {/* User Menu */}
           <div className="relative">

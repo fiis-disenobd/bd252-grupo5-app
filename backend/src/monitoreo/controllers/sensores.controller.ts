@@ -15,6 +15,11 @@ export class SensoresController {
     return this.sensoresService.findNotificaciones(filtros);
   }
 
+  @Get('notificaciones/estadisticas')
+  getEstadisticasNotificaciones() {
+    return this.sensoresService.getEstadisticasNotificaciones();
+  }
+
   @Get(':id/analiticas')
   getAnaliticas(@Param('id') id: string) {
     return this.sensoresService.getAnaliticas(id);

@@ -1,6 +1,7 @@
 import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, JoinColumn } from 'typeorm';
 import { Contenedor } from '../../shared/entities/contenedor.entity';
 import { Importador } from './importador.entity';
+import { EstadoEntrega } from '../../shared/entities/estado-entrega.entity';
 
 @Entity({ schema: 'monitoreo', name: 'entrega' })
 export class Entrega {
@@ -24,6 +25,10 @@ export class Entrega {
 
   @Column({ type: 'uuid' })
   id_importador: string;
+
+  @ManyToOne(() => EstadoEntrega)
+  @JoinColumn({ name: 'id_estado_entrega' })
+  estado_entrega: EstadoEntrega;
 
   @ManyToOne(() => Contenedor)
   @JoinColumn({ name: 'id_contenedor' })

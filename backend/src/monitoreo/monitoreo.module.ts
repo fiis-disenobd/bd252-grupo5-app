@@ -13,6 +13,8 @@ import { PosicionContenedor } from './entities/posicion-contenedor.entity';
 import { PosicionVehiculo } from './entities/posicion-vehiculo.entity';
 import { PosicionBuque } from './entities/posicion-buque.entity';
 import { Incidencia } from './entities/incidencia.entity';
+import { TipoIncidencia } from './entities/tipo-incidencia.entity';
+import { EstadoIncidencia } from './entities/estado-incidencia.entity';
 import { Reporte } from './entities/reporte.entity';
 import { Entrega } from './entities/entrega.entity';
 import { Importador } from './entities/importador.entity';
@@ -25,6 +27,7 @@ import { Buque } from '../shared/entities/buque.entity';
 import { EstadoOperacion } from '../shared/entities/estado-operacion.entity';
 import { EstadoContenedor } from '../shared/entities/estado-contenedor.entity';
 import { TipoContenedor } from '../shared/entities/tipo-contenedor.entity';
+import { EstadoEntrega } from '../shared/entities/estado-entrega.entity';
 
 // Controllers
 import { OperacionesController } from './controllers/operaciones.controller';
@@ -61,6 +64,8 @@ import { RecursosService } from './services/recursos.service';
       PosicionVehiculo,
       PosicionBuque,
       Incidencia,
+      TipoIncidencia,
+      EstadoIncidencia,
       Reporte,
       Entrega,
       Importador,
@@ -72,6 +77,7 @@ import { RecursosService } from './services/recursos.service';
       EstadoOperacion,
       EstadoContenedor,
       TipoContenedor,
+      EstadoEntrega,
     ]),
   ],
   controllers: [

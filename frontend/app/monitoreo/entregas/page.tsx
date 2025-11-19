@@ -4,24 +4,37 @@ import { useState, useEffect } from "react";
 import Link from "next/link";
 import { MapHeader } from "@/components/monitoreo/MapHeader";
 
-interface Reporte {
-  id_reporte: string;
+interface Entrega {
+  id_entrega: string;
   codigo: string;
-  fecha_reporte: string;
-  detalle: string;
+  fecha_entrega: string;
+  lugar_entrega: string;
+  estado_entrega: {
+    id_estado_entrega: string;
+    nombre: string;
+  };
+  contenedor: {
+    id_contenedor: string;
+    codigo: string;
+  };
+  importador: {
+    id_importador: string;
+    razon_social: string;
+  };
 }
 
-export default function ReportesPage() {
-  const [data, setData] = useState<any>({ reportes: [], total: 0 });
+export default function EntregasPage() {
+  const [data, setData] = useState<any>({ entregas: [], total: 0 });
   const [estadisticas, setEstadisticas] = useState<any>({});
   const [loading, setLoading] = useState(true);
   const [paginaActual, setPaginaActual] = useState(1);
   const [filtros, setFiltros] = useState({
+    estado: "",
     desde: "",
     hasta: "",
   });
   const [showDeleteModal, setShowDeleteModal] = useState(false);
-  const [reporteAEliminar, setReporteAEliminar] = useState<string | null>(null);
+  const [entregaAEliminar, setEntregaAEliminar] = useState<string | null>(null);
 
   useEffect(() => {
     cargarDatos();
@@ -29,7 +42,7 @@ export default function ReportesPage() {
 
   useEffect(() => {
     // Cargar estadísticas
-    fetch("http://localhost:3001/monitoreo/reportes/estadisticas")
+    fetch("http://localhost:3001/monitoreo/entregas/estadisticas")
       .then((res) => res.json())
       .then((data) => setEstadisticas(data))
       .catch((err) => console.error("Error cargando estadísticas:", err));
@@ -40,11 +53,12 @@ export default function ReportesPage() {
     const params = new URLSearchParams({
       pagina: paginaActual.toString(),
       limite: "10",
+      ...(filtros.estado && { estado: filtros.estado }),
       ...(filtros.desde && { desde: filtros.desde }),
       ...(filtros.hasta && { hasta: filtros.hasta }),
     });
 
-    fetch(`http://localhost:3001/monitoreo/reportes?${params}`)
+    fetch(`http://localhost:3001/monitoreo/entregas?${params}`)
       .then((res) => res.json())
       .then((data) => {
         setData(data);
@@ -57,30 +71,49 @@ export default function ReportesPage() {
   };
 
   const handleEliminar = (id: string) => {
-    setReporteAEliminar(id);
+    setEntregaAEliminar(id);
     setShowDeleteModal(true);
   };
 
   const confirmarEliminar = () => {
-    if (!reporteAEliminar) return;
+    if (!entregaAEliminar) return;
 
-    fetch(`http://localhost:3001/monitoreo/reportes/${reporteAEliminar}`, {
+    fetch(`http://localhost:3001/monitoreo/entregas/${entregaAEliminar}`, {
       method: "DELETE",
     })
       .then(() => {
         setShowDeleteModal(false);
-        setReporteAEliminar(null);
+        setEntregaAEliminar(null);
         cargarDatos();
       })
       .catch((err) => {
         console.error("Error eliminando:", err);
-        alert("Error al eliminar el reporte");
+        alert("Error al eliminar la entrega");
       });
   };
 
   const limpiarFiltros = () => {
-    setFiltros({ desde: "", hasta: "" });
+    setFiltros({ estado: "", desde: "", hasta: "" });
     setPaginaActual(1);
+  };
+
+  const getEstadoColor = (estado: string) => {
+    switch (estado) {
+      case "Entregada":
+        return "bg-green-100 text-green-700 border-green-200";
+      case "En Transito":
+        return "bg-blue-100 text-blue-700 border-blue-200";
+      case "En Almacen":
+        return "bg-purple-100 text-purple-700 border-purple-200";
+      case "Pendiente":
+        return "bg-yellow-100 text-yellow-700 border-yellow-200";
+      case "Cancelada":
+        return "bg-red-100 text-red-700 border-red-200";
+      case "Con Incidencia":
+        return "bg-orange-100 text-orange-700 border-orange-200";
+      default:
+        return "bg-zinc-100 text-zinc-700 border-zinc-200";
+    }
   };
 
   return (
@@ -91,15 +124,15 @@ export default function ReportesPage() {
         {/* Header */}
         <div className="mb-6 flex items-center justify-between">
           <div>
-            <h1 className="text-2xl font-bold text-zinc-900">Gestión de Reportes</h1>
-            <p className="text-sm text-zinc-500">Crea, visualiza y administra reportes del sistema</p>
+            <h1 className="text-2xl font-bold text-zinc-900">Gestión de Entregas</h1>
+            <p className="text-sm text-zinc-500">Administra las entregas de contenedores a importadores</p>
           </div>
           <Link
-            href="/monitoreo/reportes/nuevo"
+            href="/monitoreo/entregas/nueva"
             className="flex items-center gap-2 rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-primary/90"
           >
             <span className="material-symbols-outlined text-lg">add</span>
-            Nuevo Reporte
+            Nueva Entrega
           </Link>
         </div>
 
@@ -108,10 +141,10 @@ export default function ReportesPage() {
           <div className="rounded-lg border border-zinc-200 bg-white p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-zinc-500">Total de Reportes</p>
+                <p className="text-sm font-medium text-zinc-500">Total de Entregas</p>
                 <p className="mt-2 text-3xl font-bold text-zinc-900">{estadisticas.total || 0}</p>
               </div>
-              <span className="material-symbols-outlined text-4xl text-primary">description</span>
+              <span className="material-symbols-outlined text-4xl text-primary">local_shipping</span>
             </div>
           </div>
 
@@ -128,12 +161,10 @@ export default function ReportesPage() {
           <div className="rounded-lg border border-zinc-200 bg-white p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-zinc-500">Último Reporte</p>
-                <p className="mt-2 text-lg font-bold text-zinc-900">
-                  {estadisticas.ultimo_reporte?.codigo || "N/A"}
-                </p>
+                <p className="text-sm font-medium text-zinc-500">Pendientes</p>
+                <p className="mt-2 text-3xl font-bold text-zinc-900">{estadisticas.pendientes || 0}</p>
               </div>
-              <span className="material-symbols-outlined text-4xl text-blue-600">history</span>
+              <span className="material-symbols-outlined text-4xl text-yellow-600">pending_actions</span>
             </div>
           </div>
         </div>
@@ -141,7 +172,23 @@ export default function ReportesPage() {
         {/* Filtros */}
         <div className="mb-6 rounded-lg border border-zinc-200 bg-white p-6">
           <h3 className="mb-4 text-lg font-semibold text-zinc-900">Filtros</h3>
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-4">
+            <div>
+              <label className="mb-2 block text-sm font-medium text-zinc-700">Estado</label>
+              <select
+                value={filtros.estado}
+                onChange={(e) => setFiltros({ ...filtros, estado: e.target.value })}
+                className="w-full rounded-lg border border-zinc-300 px-4 py-2 text-sm focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20"
+              >
+                <option value="">Todos</option>
+                <option value="Pendiente">Pendiente</option>
+                <option value="En Transito">En Tránsito</option>
+                <option value="En Almacen">En Almacén</option>
+                <option value="Entregada">Entregada</option>
+                <option value="Cancelada">Cancelada</option>
+                <option value="Con Incidencia">Con Incidencia</option>
+              </select>
+            </div>
             <div>
               <label className="mb-2 block text-sm font-medium text-zinc-700">Desde</label>
               <input
@@ -177,50 +224,70 @@ export default function ReportesPage() {
             <div className="flex items-center justify-center py-12">
               <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent"></div>
             </div>
-          ) : data.reportes.length > 0 ? (
+          ) : data.entregas.length > 0 ? (
             <>
               <div className="overflow-x-auto">
                 <table className="w-full">
                   <thead className="border-b border-zinc-200 bg-zinc-50">
                     <tr>
                       <th className="px-6 py-3 text-left text-xs font-semibold uppercase text-zinc-600">Código</th>
+                      <th className="px-6 py-3 text-left text-xs font-semibold uppercase text-zinc-600">Contenedor</th>
+                      <th className="px-6 py-3 text-left text-xs font-semibold uppercase text-zinc-600">Importador</th>
+                      <th className="px-6 py-3 text-left text-xs font-semibold uppercase text-zinc-600">Lugar</th>
                       <th className="px-6 py-3 text-left text-xs font-semibold uppercase text-zinc-600">Fecha</th>
-                      <th className="px-6 py-3 text-left text-xs font-semibold uppercase text-zinc-600">Detalle</th>
+                      <th className="px-6 py-3 text-left text-xs font-semibold uppercase text-zinc-600">Estado</th>
                       <th className="px-6 py-3 text-right text-xs font-semibold uppercase text-zinc-600">Acciones</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-zinc-200">
-                    {data.reportes.map((reporte: Reporte) => (
-                      <tr key={reporte.id_reporte} className="transition-colors hover:bg-zinc-50">
+                    {data.entregas.map((entrega: Entrega) => (
+                      <tr key={entrega.id_entrega} className="transition-colors hover:bg-zinc-50">
                         <td className="px-6 py-4">
-                          <span className="font-mono text-sm font-medium text-zinc-900">{reporte.codigo}</span>
+                          <span className="font-mono text-sm font-medium text-zinc-900">{entrega.codigo}</span>
                         </td>
                         <td className="px-6 py-4">
-                          <span className="text-sm text-zinc-600">
-                            {new Date(reporte.fecha_reporte).toLocaleDateString("es-ES")}
+                          <span className="text-sm text-zinc-900">{entrega.contenedor?.codigo || "N/A"}</span>
+                        </td>
+                        <td className="px-6 py-4">
+                          <span className="line-clamp-1 text-sm text-zinc-600">
+                            {entrega.importador?.razon_social || "N/A"}
                           </span>
                         </td>
                         <td className="px-6 py-4">
-                          <span className="line-clamp-2 text-sm text-zinc-600">{reporte.detalle}</span>
+                          <span className="line-clamp-1 text-sm text-zinc-600">{entrega.lugar_entrega}</span>
+                        </td>
+                        <td className="px-6 py-4">
+                          <span className="text-sm text-zinc-600">
+                            {new Date(entrega.fecha_entrega).toLocaleDateString("es-ES")}
+                          </span>
+                        </td>
+                        <td className="px-6 py-4">
+                          <span
+                            className={`inline-flex rounded-full border px-3 py-1 text-xs font-semibold ${getEstadoColor(
+                              entrega.estado_entrega?.nombre
+                            )}`}
+                          >
+                            {entrega.estado_entrega?.nombre || "N/A"}
+                          </span>
                         </td>
                         <td className="px-6 py-4">
                           <div className="flex items-center justify-end gap-2">
                             <Link
-                              href={`/monitoreo/reportes/${reporte.id_reporte}`}
+                              href={`/monitoreo/entregas/${entrega.id_entrega}`}
                               className="rounded-lg p-2 text-blue-600 transition-colors hover:bg-blue-50"
                               title="Ver"
                             >
                               <span className="material-symbols-outlined text-lg">visibility</span>
                             </Link>
                             <Link
-                              href={`/monitoreo/reportes/${reporte.id_reporte}/editar`}
+                              href={`/monitoreo/entregas/${entrega.id_entrega}/editar`}
                               className="rounded-lg p-2 text-green-600 transition-colors hover:bg-green-50"
                               title="Editar"
                             >
                               <span className="material-symbols-outlined text-lg">edit</span>
                             </Link>
                             <button
-                              onClick={() => handleEliminar(reporte.id_reporte)}
+                              onClick={() => handleEliminar(entrega.id_entrega)}
                               className="rounded-lg p-2 text-red-600 transition-colors hover:bg-red-50"
                               title="Eliminar"
                             >
@@ -239,7 +306,7 @@ export default function ReportesPage() {
                 <div className="flex items-center justify-between border-t border-zinc-200 p-6">
                   <p className="text-sm text-zinc-600">
                     Mostrando {(data.pagina - 1) * data.por_pagina + 1} -{" "}
-                    {Math.min(data.pagina * data.por_pagina, data.total)} de {data.total} reportes
+                    {Math.min(data.pagina * data.por_pagina, data.total)} de {data.total} entregas
                   </p>
 
                   <div className="flex gap-2">
@@ -266,9 +333,9 @@ export default function ReportesPage() {
             </>
           ) : (
             <div className="flex flex-col items-center justify-center py-12">
-              <span className="material-symbols-outlined mb-4 text-6xl text-zinc-300">description</span>
-              <h3 className="mb-2 text-lg font-semibold text-zinc-900">No hay reportes</h3>
-              <p className="text-sm text-zinc-500">No se encontraron reportes con los filtros seleccionados</p>
+              <span className="material-symbols-outlined mb-4 text-6xl text-zinc-300">local_shipping</span>
+              <h3 className="mb-2 text-lg font-semibold text-zinc-900">No hay entregas</h3>
+              <p className="text-sm text-zinc-500">No se encontraron entregas con los filtros seleccionados</p>
             </div>
           )}
         </div>
@@ -280,7 +347,7 @@ export default function ReportesPage() {
           <div className="w-full max-w-md rounded-xl bg-white p-6 shadow-xl">
             <h3 className="mb-4 text-lg font-bold text-zinc-900">Confirmar Eliminación</h3>
             <p className="mb-6 text-sm text-zinc-600">
-              ¿Estás seguro de que deseas eliminar este reporte? Esta acción no se puede deshacer.
+              ¿Estás seguro de que deseas eliminar esta entrega? Esta acción no se puede deshacer.
             </p>
             <div className="flex gap-3">
               <button

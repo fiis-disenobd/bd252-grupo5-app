@@ -1,5 +1,7 @@
 import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, JoinColumn } from 'typeorm';
 import { Operacion } from '../../shared/entities/operacion.entity';
+import { TipoIncidencia } from './tipo-incidencia.entity';
+import { EstadoIncidencia } from './estado-incidencia.entity';
 
 @Entity({ schema: 'shared', name: 'incidencia' })
 export class Incidencia {
@@ -33,4 +35,12 @@ export class Incidencia {
   @ManyToOne(() => Operacion)
   @JoinColumn({ name: 'id_operacion' })
   operacion: Operacion;
+
+  @ManyToOne(() => TipoIncidencia)
+  @JoinColumn({ name: 'id_tipo_incidencia' })
+  tipo_incidencia: TipoIncidencia;
+
+  @ManyToOne(() => EstadoIncidencia)
+  @JoinColumn({ name: 'id_estado_incidencia' })
+  estado_incidencia: EstadoIncidencia;
 }
