@@ -34,7 +34,8 @@ export class SensoresService {
 
       // Aplicar filtros
       if (tipo) {
-        query.andWhere('tipo_notificacion.id_tipo_notificacion = :tipo', { tipo });
+        // El frontend envía el nombre del tipo de notificación, alineado con getEstadisticasNotificaciones
+        query.andWhere('tipo_notificacion.nombre = :tipo', { tipo });
       }
 
       if (fecha_desde) {
@@ -103,6 +104,30 @@ export class SensoresService {
         por_tipo: [],
         ultima_semana: 0,
       };
+    }
+  }
+
+  async getNotificacionesPorDia(dias = 7) {
+    try {
+      const fechaInicio = new Date();
+      fechaInicio.setDate(fechaInicio.getDate() - dias);
+      
+      const resultado = await this.notificacionRepository
+        .createQueryBuilder('notificacion')
+        .select('DATE(notificacion.fecha_hora)', 'fecha')
+        .addSelect('COUNT(*)', 'cantidad')
+        .where('notificacion.fecha_hora >= :fechaInicio', { fechaInicio })
+        .groupBy('DATE(notificacion.fecha_hora)')
+        .orderBy('fecha', 'ASC')
+        .getRawMany();
+
+      return resultado.map(item => ({
+        fecha: item.fecha,
+        cantidad: parseInt(item.cantidad),
+      }));
+    } catch (error) {
+      console.error('Error en getNotificacionesPorDia:', error.message);
+      return [];
     }
   }
 

@@ -52,6 +52,13 @@ export default function NotificacionesPage() {
   useEffect(() => {
     cargarNotificaciones();
     cargarEstadisticas();
+
+    // Refresco automático cada 60 segundos respetando filtros y página actual
+    const interval = setInterval(() => {
+      cargarNotificaciones();
+    }, 60000);
+
+    return () => clearInterval(interval);
   }, [paginaActual, tipoFiltro, fechaDesde, fechaHasta]);
 
   const cargarNotificaciones = () => {
@@ -261,7 +268,7 @@ export default function NotificacionesPage() {
               <div className="flex items-end">
                 <button
                   onClick={cargarNotificaciones}
-                  className="flex w-full items-center justify-center gap-2 rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-primary/90"
+                  className="flex w-full items-center justify-center gap-2 rounded-lg bg-orange-500 px-4 py-2 text-sm font-semibold text-white shadow-lg transition-all hover:bg-orange-600 hover:shadow-xl"
                 >
                   <span className="material-symbols-outlined text-lg">search</span>
                   Buscar
@@ -387,7 +394,7 @@ export default function NotificacionesPage() {
                               <button
                                 key={page}
                                 onClick={() => setPaginaActual(page)}
-                                className={`h-10 w-10 rounded-lg border text-sm font-medium transition-colors ${
+                                className={`h-10 w-10 rounded-lg border border-zinc-300 bg-orange-500 px-4 py-2 text-sm font-medium transition-colors ${
                                   page === paginaActual
                                     ? "border-primary bg-primary text-white"
                                     : "border-zinc-300 text-zinc-700 hover:bg-zinc-50"

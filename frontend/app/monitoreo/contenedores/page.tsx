@@ -35,6 +35,8 @@ export default function ContenedoresPage() {
   const [filtroTipo, setFiltroTipo] = useState("");
   const [busqueda, setBusqueda] = useState("");
   const [estadisticas, setEstadisticas] = useState<Estadisticas>({ total: 0, porEstado: [] });
+  const [paginaActual, setPaginaActual] = useState(1);
+  const contenedoresPorPagina = 12;
 
   // Cargar contenedores
   useEffect(() => {
@@ -86,19 +88,83 @@ export default function ContenedoresPage() {
     );
   });
 
-  // Función para obtener color según estado
+  // Paginación local
+  const indexUltimo = paginaActual * contenedoresPorPagina;
+  const indexPrimero = indexUltimo - contenedoresPorPagina;
+  const contenedoresActuales = contenedoresFiltrados.slice(indexPrimero, indexUltimo);
+  const totalPaginas = Math.ceil(contenedoresFiltrados.length / contenedoresPorPagina) || 1;
+
+  // Función para obtener color según estado de contenedor (badge en tarjetas)
   const getEstadoColor = (estado?: string) => {
     if (!estado) return "bg-gray-100 text-gray-700";
-    
+
+    const key = estado.toLowerCase();
+
     const colors: Record<string, string> = {
-      "Disponible": "bg-green-100 text-green-800",
-      "En Tránsito": "bg-blue-100 text-blue-800",
-      "En Almacén": "bg-yellow-100 text-yellow-800",
-      "En Mantenimiento": "bg-red-100 text-red-800",
-      "Asignado": "bg-purple-100 text-purple-800",
+      // Disponible
+      "disponible": "bg-emerald-50 text-emerald-700",
+      // En Transito
+      "en transito": "bg-blue-50 text-blue-700",
+      // En Puerto
+      "en puerto": "bg-indigo-50 text-indigo-700",
+      // En Reparacion
+      "en reparacion": "bg-amber-50 text-amber-700",
+      // Fuera de Servicio
+      "fuera de servicio": "bg-red-50 text-red-700",
     };
-    
-    return colors[estado] || "bg-gray-100 text-gray-700";
+
+    return colors[key] || "bg-gray-100 text-gray-700";
+  };
+
+  // Configuración de íconos/colores para estadísticas por estado
+  const getEstadoStatsConfig = (estado: string) => {
+    const key = (estado || "").toLowerCase();
+
+    if (key === "disponible") {
+      return {
+        icon: "inventory_2",
+        iconBg: "bg-emerald-50",
+        iconColor: "text-emerald-600",
+      };
+    }
+
+    if (key === "en transito") {
+      return {
+        icon: "local_shipping",
+        iconBg: "bg-blue-50",
+        iconColor: "text-blue-600",
+      };
+    }
+
+    if (key === "en puerto") {
+      return {
+        icon: "sailing",
+        iconBg: "bg-indigo-50",
+        iconColor: "text-indigo-600",
+      };
+    }
+
+    if (key === "en reparacion") {
+      return {
+        icon: "build",
+        iconBg: "bg-amber-50",
+        iconColor: "text-amber-600",
+      };
+    }
+
+    if (key === "fuera de servicio") {
+      return {
+        icon: "report_problem",
+        iconBg: "bg-red-50",
+        iconColor: "text-red-600",
+      };
+    }
+
+    return {
+      icon: "category",
+      iconBg: "bg-zinc-100",
+      iconColor: "text-zinc-600",
+    };
   };
 
   return (
@@ -120,7 +186,7 @@ export default function ContenedoresPage() {
                 </div>
                 <Link
                   href="/monitoreo/contenedores/nuevo"
-                  className="flex items-center gap-2 rounded-lg bg-primary px-4 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-primary/90"
+                  className="flex h-11 items-center gap-2 rounded-lg bg-orange-500 px-6 text-sm font-semibold text-white shadow-lg transition-all hover:bg-orange-600 hover:shadow-xl"
                 >
                   <span className="material-symbols-outlined text-lg">add</span>
                   Nuevo Contenedor
@@ -142,19 +208,22 @@ export default function ContenedoresPage() {
                 </div>
               </div>
               
-              {estadisticas.porEstado.slice(0, 3).map((stat, index) => (
-                <div key={index} className="rounded-xl border border-zinc-200 bg-white p-4 shadow-sm">
-                  <div className="flex items-center gap-3">
-                    <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-zinc-100">
-                      <span className="material-symbols-outlined text-2xl text-zinc-600">category</span>
-                    </div>
-                    <div>
-                      <p className="text-sm text-zinc-500">{stat.estado || 'Sin estado'}</p>
-                      <p className="text-2xl font-bold text-zinc-900">{stat.cantidad}</p>
+              {estadisticas.porEstado.slice(0, 3).map((stat, index) => {
+                const cfg = getEstadoStatsConfig(stat.estado);
+                return (
+                  <div key={index} className="rounded-xl border border-zinc-200 bg-white p-4 shadow-sm">
+                    <div className="flex items-center gap-3">
+                      <div className={`flex h-12 w-12 items-center justify-center rounded-lg ${cfg.iconBg}`}>
+                        <span className={`material-symbols-outlined text-2xl ${cfg.iconColor}`}>{cfg.icon}</span>
+                      </div>
+                      <div>
+                        <p className="text-sm text-zinc-500">{stat.estado || 'Sin estado'}</p>
+                        <p className="text-2xl font-bold text-zinc-900">{stat.cantidad}</p>
+                      </div>
                     </div>
                   </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
 
             {/* Filtros y Búsqueda */}
@@ -176,28 +245,37 @@ export default function ContenedoresPage() {
               {/* Filtro Estado */}
               <select
                 value={filtroEstado}
-                onChange={(e) => setFiltroEstado(e.target.value)}
+                onChange={(e) => {
+                  setFiltroEstado(e.target.value);
+                  setPaginaActual(1);
+                }}
                 className="h-10 rounded-lg border border-zinc-300 bg-white px-3 text-sm text-zinc-900 focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20"
               >
                 <option value="">Todos los estados</option>
                 <option value="Disponible">Disponible</option>
-                <option value="En Tránsito">En Tránsito</option>
-                <option value="En Almacén">En Almacén</option>
-                <option value="En Mantenimiento">En Mantenimiento</option>
-                <option value="Asignado">Asignado</option>
+                <option value="En Transito">En Transito</option>
+                <option value="En Puerto">En Puerto</option>
+                <option value="En Reparacion">En Reparacion</option>
+                <option value="Fuera de Servicio">Fuera de Servicio</option>
               </select>
 
               {/* Filtro Tipo */}
               <select
                 value={filtroTipo}
-                onChange={(e) => setFiltroTipo(e.target.value)}
+                onChange={(e) => {
+                  setFiltroTipo(e.target.value);
+                  setPaginaActual(1);
+                }}
                 className="h-10 rounded-lg border border-zinc-300 bg-white px-3 text-sm text-zinc-900 focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20"
               >
                 <option value="">Todos los tipos</option>
-                <option value="20' Standard">20' Standard</option>
-                <option value="40' Standard">40' Standard</option>
-                <option value="40' High Cube">40' High Cube</option>
-                <option value="Refrigerado">Refrigerado</option>
+                <option value="20 Pies Estandar">20 Pies Estandar</option>
+                <option value="40 Pies Estandar">40 Pies Estandar</option>
+                <option value="40 Pies High Cube">40 Pies High Cube</option>
+                <option value="20 Pies Refrigerado">20 Pies Refrigerado</option>
+                <option value="40 Pies Refrigerado">40 Pies Refrigerado</option>
+                <option value="20 Pies Open Top">20 Pies Open Top</option>
+                <option value="40 Pies Open Top">40 Pies Open Top</option>
               </select>
 
               {/* Limpiar filtros */}
@@ -207,6 +285,7 @@ export default function ContenedoresPage() {
                     setFiltroEstado("");
                     setFiltroTipo("");
                     setBusqueda("");
+                    setPaginaActual(1);
                   }}
                   className="flex h-10 items-center gap-2 rounded-lg border border-red-200 bg-red-50 px-4 text-sm font-medium text-red-700 transition-colors hover:bg-red-100"
                 >
@@ -229,7 +308,7 @@ export default function ContenedoresPage() {
               </div>
             ) : (
               <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-                {contenedoresFiltrados.map((contenedor) => (
+                {contenedoresActuales.map((contenedor) => (
                   <div
                     key={contenedor.id_contenedor}
                     className="group rounded-xl border border-zinc-200 bg-white p-4 shadow-sm transition-all hover:shadow-md"
@@ -287,8 +366,8 @@ export default function ContenedoresPage() {
                         Ver
                       </Link>
                       <Link
-                        href={`/monitoreo/contenedores/${contenedor.id_contenedor}/sensores`}
-                        className="flex flex-1 items-center justify-center gap-1 rounded-lg bg-primary px-3 py-2 text-sm font-medium text-white transition-colors hover:bg-primary/90"
+                        href={`/monitoreo/contenedores/${contenedor.id_contenedor}`}
+                        className="flex h-11 items-center gap-2 rounded-lg bg-orange-500 px-6 text-sm font-semibold text-white shadow-lg transition-all hover:bg-orange-600 hover:shadow-xl"
                       >
                         <span className="material-symbols-outlined text-base">sensors</span>
                         Sensores
@@ -301,9 +380,123 @@ export default function ContenedoresPage() {
 
             {/* Resultados */}
             {!loading && contenedoresFiltrados.length > 0 && (
-              <div className="mt-6 text-center text-sm text-zinc-500">
-                Mostrando {contenedoresFiltrados.length} de {contenedores.length} contenedores
-              </div>
+              <>
+                <div className="mt-6 text-center text-sm text-zinc-500">
+                  Mostrando
+                  {" "}
+                  <span className="font-medium">{indexPrimero + 1}</span>
+                  {" "}
+                  a
+                  {" "}
+                  <span className="font-medium">{Math.min(indexUltimo, contenedoresFiltrados.length)}</span>
+                  {" "}
+                  de
+                  {" "}
+                  <span className="font-medium">{contenedoresFiltrados.length}</span>
+                  {" "}
+                  contenedores
+                  {busqueda && contenedoresFiltrados.length !== contenedores.length && (
+                    <span className="ml-1 text-zinc-400">(filtrado de {contenedores.length})</span>
+                  )}
+                </div>
+
+                {/* Paginación */}
+                {totalPaginas > 1 && (
+                  <div className="mt-4 flex items-center justify-center gap-2">
+                    <button
+                      onClick={() => setPaginaActual(Math.max(1, paginaActual - 1))}
+                      disabled={paginaActual === 1}
+                      className="flex h-8 w-8 items-center justify-center rounded-lg border border-zinc-300 bg-white text-zinc-600 shadow-sm transition-colors hover:bg-zinc-50 disabled:cursor-not-allowed disabled:opacity-50"
+                    >
+                      <span className="material-symbols-outlined text-xl">chevron_left</span>
+                    </button>
+
+                    <div className="flex items-center gap-1">
+                      {(() => {
+                        const maxVisibles = 5;
+                        if (totalPaginas <= maxVisibles) {
+                          return Array.from({ length: totalPaginas }, (_, i) => i + 1).map((numPagina) => (
+                            <button
+                              key={numPagina}
+                              onClick={() => setPaginaActual(numPagina)}
+                              className={`flex h-8 w-8 items-center justify-center rounded-lg text-sm font-medium shadow-sm transition-colors ${
+                                paginaActual === numPagina
+                                  ? "border border-orange-500 bg-orange-50 text-orange-600"
+                                  : "border border-transparent text-zinc-600 hover:bg-zinc-100"
+                              }`}
+                            >
+                              {numPagina}
+                            </button>
+                          ));
+                        }
+
+                        const start = Math.max(1, Math.min(paginaActual - 2, totalPaginas - maxVisibles + 1));
+                        const end = Math.min(totalPaginas, start + maxVisibles - 1);
+                        const paginas = [] as number[];
+                        for (let p = start; p <= end; p++) paginas.push(p);
+
+                        return (
+                          <>
+                            {start > 1 && (
+                              <>
+                                <button
+                                  onClick={() => setPaginaActual(1)}
+                                  className={`flex h-8 w-8 items-center justify-center rounded-lg text-sm font-medium shadow-sm transition-colors ${
+                                    paginaActual === 1
+                                      ? "border border-orange-500 bg-orange-50 text-orange-600"
+                                      : "border border-transparent text-zinc-600 hover:bg-zinc-100"
+                                  }`}
+                                >
+                                  1
+                                </button>
+                                {start > 2 && <span className="text-zinc-400">...</span>}
+                              </>
+                            )}
+
+                            {paginas.map((numPagina) => (
+                              <button
+                                key={numPagina}
+                                onClick={() => setPaginaActual(numPagina)}
+                                className={`flex h-8 w-8 items-center justify-center rounded-lg text-sm font-medium shadow-sm transition-colors ${
+                                  paginaActual === numPagina
+                                    ? "border border-orange-500 bg-orange-50 text-orange-600"
+                                    : "border border-transparent text-zinc-600 hover:bg-zinc-100"
+                                }`}
+                              >
+                                {numPagina}
+                              </button>
+                            ))}
+
+                            {end < totalPaginas && (
+                              <>
+                                {end < totalPaginas - 1 && <span className="text-zinc-400">...</span>}
+                                <button
+                                  onClick={() => setPaginaActual(totalPaginas)}
+                                  className={`flex h-8 w-8 items-center justify-center rounded-lg text-sm font-medium shadow-sm transition-colors ${
+                                    paginaActual === totalPaginas
+                                      ? "border border-orange-500 bg-orange-50 text-orange-600"
+                                      : "border border-transparent text-zinc-600 hover:bg-zinc-100"
+                                  }`}
+                                >
+                                  {totalPaginas}
+                                </button>
+                              </>
+                            )}
+                          </>
+                        );
+                      })()}
+                    </div>
+
+                    <button
+                      onClick={() => setPaginaActual(Math.min(totalPaginas, paginaActual + 1))}
+                      disabled={paginaActual === totalPaginas}
+                      className="flex h-8 w-8 items-center justify-center rounded-lg border border-zinc-300 bg-white text-zinc-600 shadow-sm transition-colors hover:bg-zinc-50 disabled:cursor-not-allowed disabled:opacity-50"
+                    >
+                      <span className="material-symbols-outlined text-xl">chevron_right</span>
+                    </button>
+                  </div>
+                )}
+              </>
             )}
           </div>
         </main>

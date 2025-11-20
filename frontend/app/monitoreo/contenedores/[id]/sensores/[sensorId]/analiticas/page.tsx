@@ -274,7 +274,8 @@ export default function SensorAnaliticasPage() {
 
           {/* Acciones */}
           <div className="mt-6 flex flex-wrap gap-3">
-            <button className="flex items-center gap-2 rounded-lg bg-primary px-4 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-primary/90">
+            <button 
+              className="flex h-11 items-center gap-2 rounded-lg bg-orange-500 px-6 text-sm font-semibold text-white shadow-lg transition-all hover:bg-orange-600 hover:shadow-xl">
               <span className="material-symbols-outlined text-lg">description</span>
               Exportar Reporte PDF
             </button>

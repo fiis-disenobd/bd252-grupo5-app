@@ -1,6 +1,6 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { MoreThanOrEqual, Repository } from 'typeorm';
 import { Operacion } from '../../shared/entities/operacion.entity';
 import { OperacionMonitoreo } from '../entities/operacion-monitoreo.entity';
 import { Contenedor } from '../../shared/entities/contenedor.entity';
@@ -8,6 +8,8 @@ import { Vehiculo } from '../../shared/entities/vehiculo.entity';
 import { Buque } from '../../shared/entities/buque.entity';
 import { EstadoOperacion } from '../../shared/entities/estado-operacion.entity';
 import { CreateOperacionDto } from '../dto/create-operacion.dto';
+import { Notificacion } from '../entities/notificacion.entity';
+import { Entrega } from '../entities/entrega.entity';
 
 @Injectable()
 export class OperacionesService {
@@ -24,6 +26,10 @@ export class OperacionesService {
     private vehiculoRepository: Repository<Vehiculo>,
     @InjectRepository(Buque)
     private buqueRepository: Repository<Buque>,
+    @InjectRepository(Notificacion)
+    private notificacionRepository: Repository<Notificacion>,
+    @InjectRepository(Entrega)
+    private entregaRepository: Repository<Entrega>,
   ) {}
 
   async findAll(estado?: string) {
@@ -145,11 +151,39 @@ export class OperacionesService {
         });
       }
 
+      // Contenedores en tránsito (estado "En Transito")
+      const contenedoresTransito = await this.contenedorRepository
+        .createQueryBuilder('c')
+        .leftJoin('c.estado_contenedor', 'ec')
+        .where('LOWER(ec.nombre) = :estado', { estado: 'en transito' })
+        .getCount();
+
+      // Alertas pendientes: notificaciones de los últimos 7 días
+      const haceSieteDias = new Date();
+      haceSieteDias.setDate(haceSieteDias.getDate() - 7);
+
+      const alertasPendientes = await this.notificacionRepository.count({
+        where: {
+          fecha_hora: MoreThanOrEqual(haceSieteDias),
+        },
+      });
+
+      // Entregas de hoy
+      const hoy = new Date();
+      const inicioDia = new Date(hoy.getFullYear(), hoy.getMonth(), hoy.getDate());
+      const finDia = new Date(hoy.getFullYear(), hoy.getMonth(), hoy.getDate(), 23, 59, 59, 999);
+
+      const entregasHoy = await this.entregaRepository
+        .createQueryBuilder('entrega')
+        .where('entrega.fecha_entrega >= :inicio', { inicio: inicioDia })
+        .andWhere('entrega.fecha_entrega <= :fin', { fin: finDia })
+        .getCount();
+
       return {
         operaciones_activas: operacionesActivas,
-        contenedores_transito: 0, // TODO: Implementar
-        alertas_pendientes: 0, // TODO: Implementar
-        entregas_hoy: 0, // TODO: Implementar
+        contenedores_transito: contenedoresTransito,
+        alertas_pendientes: alertasPendientes,
+        entregas_hoy: entregasHoy,
       };
     } catch (error) {
       console.error('Error en getKPIs:', error);
@@ -160,6 +194,27 @@ export class OperacionesService {
         alertas_pendientes: 0,
         entregas_hoy: 0,
       };
+    }
+  }
+
+  async getOperacionesPorEstado() {
+    try {
+      const resultado = await this.operacionRepository
+        .createQueryBuilder('o')
+        .leftJoin('o.estado_operacion', 'eo')
+        .select('eo.nombre', 'estado')
+        .addSelect('COUNT(o.id_operacion)', 'cantidad')
+        .groupBy('eo.nombre')
+        .orderBy('cantidad', 'DESC')
+        .getRawMany();
+
+      return resultado.map(item => ({
+        estado: item.estado,
+        cantidad: parseInt(item.cantidad),
+      }));
+    } catch (error) {
+      console.error('Error en getOperacionesPorEstado:', error);
+      return [];
     }
   }
 }

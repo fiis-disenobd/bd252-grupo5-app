@@ -48,16 +48,23 @@ export default function ContenedorDetallePage() {
 
   const getEstadoColor = (estado?: string) => {
     if (!estado) return "bg-gray-100 text-gray-700";
-    
+
+    const key = estado.toLowerCase();
+
     const colors: Record<string, string> = {
-      "Disponible": "bg-green-100 text-green-800",
-      "En Tránsito": "bg-blue-100 text-blue-800",
-      "En Almacén": "bg-yellow-100 text-yellow-800",
-      "En Mantenimiento": "bg-red-100 text-red-800",
-      "Asignado": "bg-purple-100 text-purple-800",
+      // Disponible
+      "disponible": "bg-emerald-50 text-emerald-700",
+      // En Transito
+      "en transito": "bg-blue-50 text-blue-700",
+      // En Puerto
+      "en puerto": "bg-indigo-50 text-indigo-700",
+      // En Reparacion
+      "en reparacion": "bg-amber-50 text-amber-700",
+      // Fuera de Servicio
+      "fuera de servicio": "bg-red-50 text-red-700",
     };
-    
-    return colors[estado] || "bg-gray-100 text-gray-700";
+
+    return colors[key] || "bg-gray-100 text-gray-700";
   };
 
   if (loading) {
@@ -247,7 +254,7 @@ export default function ContenedorDetallePage() {
                     </div>
                     <Link
                       href="/monitoreo/mapa"
-                      className="mt-4 flex w-full items-center justify-center gap-2 rounded-lg bg-primary px-4 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-primary/90"
+                      className="flex h-11 items-center gap-2 rounded-lg bg-orange-500 px-6 text-sm font-semibold text-white shadow-lg transition-all hover:bg-orange-600 hover:shadow-xl"
                     >
                       <span className="material-symbols-outlined text-lg">map</span>
                       Ver en Mapa GPS

@@ -102,17 +102,80 @@ export default function MapaPage() {
     setSidebarOpen(true);
   }, []);
 
-  // Función para obtener color según estado
+  // Opciones de estados por tipo de activo para el filtro
+  const getEstadoOptions = () => {
+    const base = [{ value: 'all', label: 'Todos' }];
+
+    const estadosContenedor = [
+      { value: 'Disponible', label: 'Disponible' },
+      { value: 'En Transito', label: 'En Transito' },
+      { value: 'En Puerto', label: 'En Puerto' },
+      { value: 'En Reparacion', label: 'En Reparacion' },
+      { value: 'Fuera de Servicio', label: 'Fuera de Servicio' },
+    ];
+
+    const estadosVehiculo = [
+      { value: 'Disponible', label: 'Disponible' },
+      { value: 'En Ruta', label: 'En Ruta' },
+      { value: 'En Mantenimiento', label: 'En Mantenimiento' },
+      { value: 'En Revision', label: 'En Revision' },
+      { value: 'Fuera de Servicio', label: 'Fuera de Servicio' },
+    ];
+
+    const estadosBuque = [
+      { value: 'Disponible', label: 'Disponible' },
+      { value: 'Operativo', label: 'Operativo' },
+      { value: 'En Mantenimiento', label: 'En Mantenimiento' },
+      { value: 'En Reparacion', label: 'En Reparacion' },
+      { value: 'Fuera de Servicio', label: 'Fuera de Servicio' },
+    ];
+
+    if (currentFilter.type === 'container') {
+      return [...base, ...estadosContenedor];
+    }
+
+    if (currentFilter.type === 'vehicle') {
+      return [...base, ...estadosVehiculo];
+    }
+
+    if (currentFilter.type === 'ship') {
+      return [...base, ...estadosBuque];
+    }
+
+    // Tipo "Todos": combinar sin duplicados
+    const all = [...estadosContenedor, ...estadosVehiculo, ...estadosBuque];
+    const seen = new Set<string>();
+    const unique = all.filter((e) => {
+      if (seen.has(e.value)) return false;
+      seen.add(e.value);
+      return true;
+    });
+
+    return [...base, ...unique];
+  };
+
+  // Función para obtener clases Tailwind según estado (contenedor, vehículo o buque)
   const getEstadoColorClasses = (status: string) => {
+    const key = (status || '').toLowerCase();
+
     const colors: Record<string, { bg: string; text: string; border: string }> = {
-      "En Tránsito": { bg: "bg-green-50", text: "text-green-700", border: "border-green-200" },
-      "En Almacén": { bg: "bg-yellow-50", text: "text-yellow-700", border: "border-yellow-200" },
-      "Entregado": { bg: "bg-blue-50", text: "text-blue-700", border: "border-blue-200" },
-      "Disponible": { bg: "bg-emerald-50", text: "text-emerald-700", border: "border-emerald-200" },
-      "Desconocido": { bg: "bg-gray-50", text: "text-gray-700", border: "border-gray-200" },
+      // Contenedores - EstadoContenedor
+      'disponible':        { bg: 'bg-emerald-50', text: 'text-emerald-700', border: 'border-emerald-200' },
+      'en transito':       { bg: 'bg-blue-50',    text: 'text-blue-700',    border: 'border-blue-200' },
+      'en puerto':         { bg: 'bg-indigo-50',  text: 'text-indigo-700',  border: 'border-indigo-200' },
+      'en reparacion':     { bg: 'bg-amber-50',   text: 'text-amber-700',   border: 'border-amber-200' },
+      'fuera de servicio': { bg: 'bg-red-50',     text: 'text-red-700',     border: 'border-red-200' },
+
+      // Vehículos - EstadoVehiculo
+      'en ruta':           { bg: 'bg-sky-50',     text: 'text-sky-700',     border: 'border-sky-200' },
+      'en mantenimiento':  { bg: 'bg-amber-50',   text: 'text-amber-700',   border: 'border-amber-200' },
+      'en revision':       { bg: 'bg-violet-50',  text: 'text-violet-700',  border: 'border-violet-200' },
+
+      // Buques - EstadoEmbarcacion
+      'operativo':         { bg: 'bg-emerald-50', text: 'text-emerald-700', border: 'border-emerald-200' },
     };
-    
-    return colors[status] || colors["Desconocido"];
+
+    return colors[key] || { bg: 'bg-gray-50', text: 'text-gray-700', border: 'border-gray-200' };
   };
 
   return (
@@ -218,10 +281,11 @@ export default function MapaPage() {
                   onChange={(e) => setCurrentFilter({ ...currentFilter, status: e.target.value })}
                   className="h-10 w-full rounded-lg border border-zinc-300 bg-white px-3 text-sm text-zinc-900 focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20"
                 >
-                  <option value="all">Todos</option>
-                  <option value="En Tránsito">En Tránsito</option>
-                  <option value="En Almacén">En Almacén</option>
-                  <option value="Entregado">Entregado</option>
+                  {getEstadoOptions().map((opt) => (
+                    <option key={opt.value} value={opt.value}>
+                      {opt.label}
+                    </option>
+                  ))}
                 </select>
               </div>
             </div>

@@ -20,6 +20,11 @@ export class SensoresController {
     return this.sensoresService.getEstadisticasNotificaciones();
   }
 
+  @Get('notificaciones/por-dia')
+  getNotificacionesPorDia(@Query('dias') dias?: string) {
+    return this.sensoresService.getNotificacionesPorDia(dias ? parseInt(dias) : 7);
+  }
+
   @Get(':id/analiticas')
   getAnaliticas(@Param('id') id: string) {
     return this.sensoresService.getAnaliticas(id);

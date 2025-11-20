@@ -1,4 +1,4 @@
-import { Controller, Get, Param, Query } from '@nestjs/common';
+import { Controller, Get, Post, Body, Param, Query } from '@nestjs/common';
 import { ContenedoresService } from '../services/contenedores.service';
 
 @Controller('monitoreo/contenedores')
@@ -8,6 +8,16 @@ export class ContenedoresController {
   @Get('estadisticas')
   getEstadisticas() {
     return this.contenedoresService.getEstadisticas();
+  }
+
+  @Get('estados')
+  getEstadosContenedor() {
+    return this.contenedoresService.getEstadosContenedor();
+  }
+
+  @Get('tipos')
+  getTiposContenedor() {
+    return this.contenedoresService.getTiposContenedor();
   }
 
   @Get()
@@ -29,5 +39,10 @@ export class ContenedoresController {
   @Get(':id')
   findOne(@Param('id') id: string) {
     return this.contenedoresService.findOne(id);
+  }
+
+  @Post()
+  create(@Body() data: any) {
+    return this.contenedoresService.create(data);
   }
 }

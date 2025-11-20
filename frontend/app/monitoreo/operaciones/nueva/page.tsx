@@ -149,7 +149,7 @@ export default function NuevaOperacionPage() {
       
       <main className="flex-1 overflow-y-auto bg-zinc-50 p-6">
           {/* Header */}
-          <div className="mb-6">
+          <div className="mb-6 mx-auto max-w-5xl">
             <Link
               href="/monitoreo/operaciones"
               className="mb-2 inline-flex items-center gap-1 text-sm text-zinc-600 hover:text-primary"
@@ -420,7 +420,7 @@ export default function NuevaOperacionPage() {
                   <button
                     type="submit"
                     disabled={saving}
-                    className="flex w-full items-center justify-center gap-2 rounded-lg bg-primary px-4 py-3 text-sm font-semibold text-white shadow-lg transition-all hover:bg-primary/90 hover:shadow-xl disabled:cursor-not-allowed disabled:opacity-50"
+                    className="flex w-full items-center justify-center gap-2 rounded-lg bg-orange-500 px-4 py-3 text-sm font-semibold text-white shadow-lg transition-all hover:bg-orange-600 hover:shadow-xl disabled:cursor-not-allowed disabled:opacity-50"
                   >
                     {saving ? (
                       <>

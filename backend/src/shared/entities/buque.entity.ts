@@ -1,4 +1,5 @@
 import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, JoinColumn } from 'typeorm';
+import { EstadoEmbarcacion } from './estado-embarcacion.entity';
 
 @Entity({ schema: 'shared', name: 'buque' })
 export class Buque {
@@ -22,4 +23,8 @@ export class Buque {
 
   @Column({ type: 'varchar', length: 100, nullable: true })
   ubicacion_actual: string;
+
+  @ManyToOne(() => EstadoEmbarcacion)
+  @JoinColumn({ name: 'id_estado_embarcacion' })
+  estado_embarcacion: EstadoEmbarcacion;
 }

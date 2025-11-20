@@ -104,7 +104,7 @@ export default function EditarOperacionPage() {
       
       <main className="flex-1 overflow-y-auto bg-zinc-50 p-6">
           {/* Header */}
-          <div className="mb-6">
+          <div className="mb-6 mx-auto max-w-4xl">
             <Link
               href={`/monitoreo/operaciones/${params.id}`}
               className="mb-2 inline-flex items-center gap-1 text-sm text-zinc-600 hover:text-primary"

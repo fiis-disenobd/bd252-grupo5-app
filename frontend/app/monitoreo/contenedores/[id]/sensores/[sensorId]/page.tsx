@@ -268,7 +268,7 @@ export default function SensorDetallePage() {
                 <div className="space-y-2">
                   <Link
                     href={`/monitoreo/contenedores/${params.id}/sensores/${params.sensorId}/analiticas`}
-                    className="flex w-full items-center justify-center gap-2 rounded-lg bg-primary px-4 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-primary/90"
+              className="flex h-11 items-center gap-2 rounded-lg bg-orange-500 px-6 text-sm font-semibold text-white shadow-lg transition-all hover:bg-orange-600 hover:shadow-xl"
                   >
                     <span className="material-symbols-outlined text-lg">analytics</span>
                     Ver Analíticas Avanzadas

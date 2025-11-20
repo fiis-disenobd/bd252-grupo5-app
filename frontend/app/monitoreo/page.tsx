@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import dynamic from "next/dynamic";
 import { MapHeader } from "@/components/monitoreo/MapHeader";
 import {
   Chart as ChartJS,
@@ -30,6 +31,19 @@ ChartJS.register(
   Filler
 );
 
+// Importar MapaGPS dinámicamente para evitar SSR
+const MapaGPS = dynamic(() => import("@/components/monitoreo/MapaGPSDashboard"), {
+  ssr: false,
+  loading: () => (
+    <div className="flex h-full items-center justify-center bg-zinc-100 dark:bg-zinc-800 rounded-lg">
+      <div className="flex flex-col items-center gap-2">
+        <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent"></div>
+        <p className="text-sm text-zinc-600 dark:text-zinc-400">Cargando mapa...</p>
+      </div>
+    </div>
+  ),
+});
+
 interface KPIs {
   operaciones_activas: number;
   contenedores_transito: number;
@@ -54,55 +68,53 @@ export default function MonitoreoDashboard() {
     entregas_hoy: 0,
   });
   const [loading, setLoading] = useState(true);
-  const [alertas, setAlertas] = useState<Alerta[]>([
-    {
-      id: '1',
-      titulo: 'Exceso de velocidad',
-      sensor: 'GPS',
-      contenedor: 'TRK-V987',
-      fecha: '2023-10-27 14:35:10',
-      severidad: 'alta'
-    },
-    {
-      id: '2',
-      titulo: 'Temperatura elevada',
-      sensor: 'Temp-02',
-      contenedor: 'CNT-R456',
-      fecha: '2023-10-27 14:28:45',
-      severidad: 'media'
-    },
-    {
-      id: '3',
-      titulo: 'Parada no programada',
-      sensor: 'Motor',
-      contenedor: 'TRK-V123',
-      fecha: '2023-10-27 13:50:02',
-      severidad: 'baja'
-    },
-    {
-      id: '4',
-      titulo: 'Desvío de ruta',
-      sensor: 'Geo-cerca',
-      contenedor: 'CNT-G789',
-      fecha: '2023-10-27 13:15:22',
-      severidad: 'alta'
-    }
-  ]);
+  const [alertas, setAlertas] = useState<Alerta[]>([]);
+  const [operacionesPorEstado, setOperacionesPorEstado] = useState<any[]>([]);
+  const [notificacionesPorDia, setNotificacionesPorDia] = useState<any[]>([]);
 
   useEffect(() => {
-    fetch("http://localhost:3001/monitoreo/operaciones/kpis")
-      .then((res) => {
-        if (!res.ok) {
-          throw new Error('Backend no disponible');
+    const fetchDatos = async () => {
+      try {
+        // Fetch KPIs
+        const kpisRes = await fetch("http://localhost:3001/monitoreo/operaciones/kpis");
+        if (kpisRes.ok) {
+          const kpisData = await kpisRes.json();
+          setKpis(kpisData);
         }
-        return res.json();
-      })
-      .then((data) => {
-        setKpis(data);
+
+        // Fetch operaciones por estado para gráfico de barras
+        const opEstadoRes = await fetch("http://localhost:3001/monitoreo/operaciones/por-estado");
+        if (opEstadoRes.ok) {
+          const opEstadoData = await opEstadoRes.json();
+          setOperacionesPorEstado(opEstadoData);
+        }
+
+        // Fetch notificaciones por día para gráfico de líneas
+        const notifPorDiaRes = await fetch("http://localhost:3001/monitoreo/sensores/notificaciones/por-dia?dias=7");
+        if (notifPorDiaRes.ok) {
+          const notifPorDiaData = await notifPorDiaRes.json();
+          setNotificacionesPorDia(notifPorDiaData);
+        }
+
+        // Fetch alertas recientes
+        const alertasRes = await fetch("http://localhost:3001/monitoreo/sensores/notificaciones?limite=10");
+        if (alertasRes.ok) {
+          const alertasData = await alertasRes.json();
+          // Mapear notificaciones a alertas
+          const alertasMapeadas: Alerta[] = alertasData.notificaciones?.map((notif: any) => ({
+            id: notif.id_notificacion,
+            titulo: notif.tipo_notificacion?.nombre || 'Alerta',
+            sensor: notif.sensor?.tipo_sensor?.nombre || 'N/A',
+            contenedor: notif.sensor?.contenedor?.codigo || 'N/A',
+            fecha: new Date(notif.fecha_hora).toLocaleString('es-PE'),
+            severidad: getSeveridad(notif.tipo_notificacion?.nombre)
+          })) || [];
+          setAlertas(alertasMapeadas);
+        }
+
         setLoading(false);
-      })
-      .catch((err) => {
-        console.warn("⚠️ Backend no disponible, usando datos de ejemplo:", err.message);
+      } catch (err) {
+        console.warn("⚠️ Error al cargar datos del backend:", err);
         // Usar datos de ejemplo si el backend no está disponible
         setKpis({
           operaciones_activas: 124,
@@ -111,16 +123,41 @@ export default function MonitoreoDashboard() {
           entregas_hoy: 16,
         });
         setLoading(false);
-      });
+      }
+    };
+
+    fetchDatos();
   }, []);
 
-  // Configuración del gráfico de barras
+  const getSeveridad = (tipoNotif: string): 'alta' | 'media' | 'baja' => {
+    if (!tipoNotif) return 'baja';
+    const tipo = tipoNotif.toLowerCase();
+    if (tipo.includes('crítica') || tipo.includes('critica') || tipo.includes('alerta')) return 'alta';
+    if (tipo.includes('advertencia') || tipo.includes('warning')) return 'media';
+    return 'baja';
+  };
+
+  // Estados fijos según la base de datos
+  const ESTADOS_OPERACION = [
+    'Programada',
+    'En Curso',
+    'Completada',
+    'Cancelada',
+    'En Espera',
+  ];
+
+  // Configuración del gráfico de barras (datos desde backend)
   const barChartData = {
-    labels: ['En tránsito', 'En puerto', 'Aduana', 'En bodega', 'Finalizada'],
+    labels: ESTADOS_OPERACION,
     datasets: [
       {
         label: 'Operaciones',
-        data: [89, 45, 22, 67, 127],
+        data: ESTADOS_OPERACION.map((estado) => {
+          const encontrado = operacionesPorEstado.find(
+            (op) => (op.estado || '').toLowerCase() === estado.toLowerCase()
+          );
+          return encontrado ? encontrado.cantidad || 0 : 0;
+        }),
         backgroundColor: '#3c83f6',
         borderColor: '#3c83f6',
         borderWidth: 1,
@@ -167,13 +204,16 @@ export default function MonitoreoDashboard() {
     },
   };
 
-  // Configuración del gráfico de líneas
+  // Configuración del gráfico de líneas (datos desde backend)
   const lineChartData = {
-    labels: ['Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb', 'Dom'],
+    labels: notificacionesPorDia.map(notif => {
+      const fecha = new Date(notif.fecha);
+      return fecha.toLocaleDateString('es-PE', { weekday: 'short' });
+    }),
     datasets: [
       {
         label: 'Notificaciones',
-        data: [12, 19, 8, 15, 11, 24, 18],
+        data: notificacionesPorDia.map(notif => notif.cantidad || 0),
         borderColor: '#3c83f6',
         tension: 0.4,
         fill: true,
@@ -253,52 +293,52 @@ export default function MonitoreoDashboard() {
     <div className="flex h-screen w-full flex-col overflow-hidden">
       <MapHeader />
       
-      <main className="flex-1 overflow-y-auto bg-zinc-50 p-6">
+      <main className="flex-1 overflow-y-auto bg-zinc-50 dark:bg-zinc-900 p-6">
           {/* KPIs */}
           <div className="grid grid-cols-1 gap-6 xl:grid-cols-4">
-            <div className="col-span-1 flex items-center gap-4 rounded-xl border border-slate-200 bg-white p-5">
-              <div className="flex size-12 items-center justify-center rounded-full bg-green-100 text-green-600">
+            <div className="col-span-1 flex items-center gap-4 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 p-5">
+              <div className="flex size-12 items-center justify-center rounded-full bg-green-100 dark:bg-green-900/40 text-green-600 dark:text-green-400">
                 <span className="material-symbols-outlined text-3xl">play_circle</span>
               </div>
               <div>
-                <p className="text-sm font-medium text-slate-500">Operaciones activas</p>
-                <p className="text-3xl font-bold text-slate-800">
+                <p className="text-sm font-medium text-slate-500 dark:text-slate-400">Operaciones activas</p>
+                <p className="text-3xl font-bold text-slate-800 dark:text-slate-100">
                   {loading ? "..." : kpis.operaciones_activas}
                 </p>
               </div>
             </div>
 
-            <div className="col-span-1 flex items-center gap-4 rounded-xl border border-slate-200 bg-white p-5">
-              <div className="flex size-12 items-center justify-center rounded-full bg-blue-100 text-blue-600">
+            <div className="col-span-1 flex items-center gap-4 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 p-5">
+              <div className="flex size-12 items-center justify-center rounded-full bg-blue-100 dark:bg-blue-900/40 text-blue-600 dark:text-blue-400">
                 <span className="material-symbols-outlined text-3xl">local_shipping</span>
               </div>
               <div>
-                <p className="text-sm font-medium text-slate-500">Contenedores en tránsito</p>
-                <p className="text-3xl font-bold text-slate-800">
+                <p className="text-sm font-medium text-slate-500 dark:text-slate-400">Contenedores en tránsito</p>
+                <p className="text-3xl font-bold text-slate-800 dark:text-slate-100">
                   {loading ? "..." : kpis.contenedores_transito}
                 </p>
               </div>
             </div>
 
-            <div className="col-span-1 flex items-center gap-4 rounded-xl border border-amber-500/50 bg-white p-5">
-              <div className="flex size-12 items-center justify-center rounded-full bg-amber-100 text-amber-600">
+            <div className="col-span-1 flex items-center gap-4 rounded-xl border border-amber-500/50 dark:border-amber-700/50 bg-white dark:bg-slate-900 p-5">
+              <div className="flex size-12 items-center justify-center rounded-full bg-amber-100 dark:bg-amber-900/40 text-amber-600 dark:text-amber-400">
                 <span className="material-symbols-outlined text-3xl">warning</span>
               </div>
               <div>
-                <p className="text-sm font-medium text-amber-600">Alertas pendientes</p>
-                <p className="text-3xl font-bold text-amber-600">
+                <p className="text-sm font-medium text-amber-600 dark:text-amber-400">Alertas pendientes</p>
+                <p className="text-3xl font-bold text-amber-600 dark:text-amber-400">
                   {loading ? "..." : kpis.alertas_pendientes}
                 </p>
               </div>
             </div>
 
-            <div className="col-span-1 flex items-center gap-4 rounded-xl border border-slate-200 bg-white p-5">
-              <div className="flex size-12 items-center justify-center rounded-full bg-slate-100 text-slate-600">
+            <div className="col-span-1 flex items-center gap-4 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 p-5">
+              <div className="flex size-12 items-center justify-center rounded-full bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300">
                 <span className="material-symbols-outlined text-3xl">task_alt</span>
               </div>
               <div>
-                <p className="text-sm font-medium text-slate-500">Entregas hoy</p>
-                <p className="text-3xl font-bold text-slate-800">
+                <p className="text-sm font-medium text-slate-500 dark:text-slate-400">Entregas hoy</p>
+                <p className="text-3xl font-bold text-slate-800 dark:text-slate-100">
                   {loading ? "..." : kpis.entregas_hoy}
                 </p>
               </div>
@@ -310,16 +350,16 @@ export default function MonitoreoDashboard() {
             {/* Columna Izquierda - Gráficos */}
             <div className="flex flex-col gap-6 lg:col-span-2">
               {/* Gráfico de Barras */}
-              <div className="rounded-xl border border-slate-200 bg-white p-5">
-                <h3 className="text-base font-medium text-slate-800">Operaciones por estado</h3>
+              <div className="rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 p-5">
+                <h3 className="text-base font-medium text-slate-800 dark:text-slate-100">Operaciones por estado</h3>
                 <div className="mt-4 h-[250px] w-full">
                   <Bar data={barChartData} options={barChartOptions} />
                 </div>
               </div>
 
               {/* Gráfico de Líneas */}
-              <div className="rounded-xl border border-slate-200 bg-white p-5">
-                <h3 className="text-base font-medium text-slate-800">Notificaciones por día (última semana)</h3>
+              <div className="rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 p-5">
+                <h3 className="text-base font-medium text-slate-800 dark:text-slate-100">Notificaciones por día (última semana)</h3>
                 <div className="mt-4 h-[250px] w-full">
                   <Line data={lineChartData} options={lineChartOptions} />
                 </div>
@@ -329,8 +369,8 @@ export default function MonitoreoDashboard() {
             {/* Columna Derecha - Alertas y Mapa */}
             <div className="flex flex-col gap-6 lg:col-span-1">
               {/* Alertas Recientes */}
-              <div className="rounded-xl border border-slate-200 bg-white p-5">
-                <h3 className="mb-4 text-base font-medium text-slate-800">Alertas recientes</h3>
+              <div className="rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 p-5">
+                <h3 className="mb-4 text-base font-medium text-slate-800 dark:text-slate-100">Alertas recientes</h3>
                 <div className="max-h-[300px] space-y-3 overflow-y-auto pr-2">
                   {alertas.map((alerta) => {
                     const classes = getAlertaClasses(alerta.severidad);
@@ -338,9 +378,9 @@ export default function MonitoreoDashboard() {
                       <div key={alerta.id} className={`flex gap-3 rounded-lg border p-3 ${classes.container}`}>
                         <div className={`mt-1 h-2 w-2 shrink-0 rounded-full ${classes.dot}`}></div>
                         <div>
-                          <p className="text-sm font-medium text-slate-800">{alerta.titulo}</p>
-                          <p className="text-xs text-slate-500">Sensor: {alerta.sensor} | Cont: {alerta.contenedor}</p>
-                          <p className="mt-1 text-xs text-slate-400">{alerta.fecha}</p>
+                          <p className="text-sm font-medium text-slate-800 dark:text-slate-100">{alerta.titulo}</p>
+                          <p className="text-xs text-slate-500 dark:text-slate-400">Sensor: {alerta.sensor} | Cont: {alerta.contenedor}</p>
+                          <p className="mt-1 text-xs text-slate-400 dark:text-slate-500">{alerta.fecha}</p>
                         </div>
                       </div>
                     );
@@ -349,24 +389,19 @@ export default function MonitoreoDashboard() {
               </div>
 
               {/* Mapa */}
-              <div className="flex h-[368px] flex-col rounded-xl border border-slate-200 bg-white p-5">
-                <h3 className="text-base font-medium text-slate-800">Ubicaciones actuales</h3>
-                <div className="relative mt-4 flex-1 overflow-hidden rounded-lg">
-                  <div
-                    className="absolute inset-0 bg-cover bg-center"
-                    style={{
-                      backgroundImage: "url('https://lh3.googleusercontent.com/aida-public/AB6AXuAqokaqMi6VFpUM1EjnZuGpCpz8lvMD6MF72a-c-c6IxQ9bO5070zkdy6PcrJaA3SAtEFGOItHEmEwr1bHnEgg6KLLjrlnALzU_e-q2FeiNPkCbFAb65dnllCpf2x8ih3et4_0F7ANUU4iRID6yDJV2NEfFm0gVejA8-sNjIdt1TZxz9PnAtkPkmtwqWmB5n4qxYKXECW6KWZ3XYO0L6Fj4PqQpJHG_NOcb5ZCrOcXefwHcMiHAkWdjMnOwsV-AMzqSizgY6Rl8EeOO')"
-                    }}
-                  ></div>
-                  <div className="absolute bottom-2 right-2">
-                    <Link
-                      href="/monitoreo/mapa"
-                      className="flex items-center gap-2 rounded-lg bg-primary px-3 py-2 text-sm font-medium text-white shadow-lg hover:bg-primary/90 focus:outline-none focus:ring-2 focus:ring-primary/50"
-                    >
-                      <span className="material-symbols-outlined text-base">open_in_full</span>
-                      <span>Ver mapa completo</span>
-                    </Link>
-                  </div>
+              <div className="flex h-[368px] flex-col rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 p-5">
+                <div className="flex items-center justify-between mb-4">
+                  <h3 className="text-base font-medium text-slate-800 dark:text-slate-100">Ubicaciones actuales</h3>
+                  <Link
+                    href="/monitoreo/mapa"
+                    className="flex items-center gap-1 text-xs font-medium text-primary hover:text-primary/80 transition-colors"
+                  >
+                    <span>Ver mapa completo</span>
+                    <span className="material-symbols-outlined text-sm">open_in_full</span>
+                  </Link>
+                </div>
+                <div className="flex-1 overflow-hidden rounded-lg">
+                  <MapaGPS height="100%" />
                 </div>
               </div>
             </div>

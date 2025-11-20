@@ -138,7 +138,7 @@ export default function PerfilPage() {
           {/* Header con Avatar */}
           <div className="bg-gradient-to-r from-primary to-orange-600 p-8">
             <div className="flex items-center gap-6">
-              <div className="flex h-24 w-24 items-center justify-center rounded-full bg-white text-4xl font-bold text-primary shadow-lg">
+              <div className="flex h-24 w-24 items-center justify-center rounded-full bg-orange-600 text-4xl font-bold text-white shadow-lg">
                 {usuario.empleado.nombre.charAt(0)}
                 {usuario.empleado.apellido.charAt(0)}
               </div>
@@ -229,7 +229,7 @@ export default function PerfilPage() {
                 </button>
                 <button
                   onClick={handleSaveProfile}
-                  className="flex-1 rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-primary/90"
+                  className="flex-1 rounded-lg bg-orange-600 px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-orange-400/90"
                 >
                   Guardar Cambios
                 </button>

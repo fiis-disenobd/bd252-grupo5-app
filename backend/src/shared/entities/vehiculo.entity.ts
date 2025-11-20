@@ -1,5 +1,6 @@
 import { Entity, PrimaryGeneratedColumn, Column, OneToOne, ManyToOne, JoinColumn } from 'typeorm';
 import { Activo } from './activo.entity';
+import { EstadoVehiculo } from './estado-vehiculo.entity';
 
 @Entity({ schema: 'shared', name: 'vehiculo' })
 export class Vehiculo {
@@ -24,4 +25,8 @@ export class Vehiculo {
   @OneToOne(() => Activo)
   @JoinColumn({ name: 'id_activo' })
   activo: Activo;
+
+  @ManyToOne(() => EstadoVehiculo)
+  @JoinColumn({ name: 'id_estado_vehiculo' })
+  estado_vehiculo: EstadoVehiculo;
 }

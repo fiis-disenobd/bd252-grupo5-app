@@ -16,6 +16,11 @@ export class OperacionesController {
     return this.operacionesService.getKPIs();
   }
 
+  @Get('por-estado')
+  getOperacionesPorEstado() {
+    return this.operacionesService.getOperacionesPorEstado();
+  }
+
   @Get(':id')
   findOne(@Param('id') id: string) {
     return this.operacionesService.findOne(id);

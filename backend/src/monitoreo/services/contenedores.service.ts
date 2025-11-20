@@ -4,6 +4,8 @@ import { Repository } from 'typeorm';
 import { Contenedor } from '../../shared/entities/contenedor.entity';
 import { PosicionContenedor } from '../entities/posicion-contenedor.entity';
 import { Sensor } from '../entities/sensor.entity';
+import { EstadoContenedor } from '../../shared/entities/estado-contenedor.entity';
+import { TipoContenedor } from '../../shared/entities/tipo-contenedor.entity';
 
 @Injectable()
 export class ContenedoresService {
@@ -14,7 +16,37 @@ export class ContenedoresService {
     private posicionRepository: Repository<PosicionContenedor>,
     @InjectRepository(Sensor)
     private sensorRepository: Repository<Sensor>,
+    @InjectRepository(EstadoContenedor)
+    private estadoContenedorRepository: Repository<EstadoContenedor>,
+    @InjectRepository(TipoContenedor)
+    private tipoContenedorRepository: Repository<TipoContenedor>,
   ) {}
+
+  // Crear contenedor
+  async create(data: {
+    codigo: string;
+    peso: number;
+    capacidad: number;
+    dimensiones: string;
+    id_estado_contenedor: string;
+    id_tipo_contenedor: string;
+  }) {
+    try {
+      const contenedor = this.contenedorRepository.create({
+        codigo: data.codigo,
+        peso: data.peso,
+        capacidad: data.capacidad,
+        dimensiones: data.dimensiones,
+        id_estado_contenedor: data.id_estado_contenedor,
+        id_tipo_contenedor: data.id_tipo_contenedor,
+      });
+
+      return await this.contenedorRepository.save(contenedor);
+    } catch (error) {
+      console.error('Error en create contenedor:', error.message);
+      throw error;
+    }
+  }
 
   async findAll() {
     try {
@@ -56,7 +88,7 @@ export class ContenedoresService {
       // Obtener sensores del contenedor
       const sensores = await this.sensorRepository.find({
         where: { id_contenedor: id },
-        relations: ['tipo_sensor'],
+        relations: ['tipo_sensor', 'rol_sensor'],
         order: { tipo_sensor: { nombre: 'ASC' } },
       });
 
@@ -137,6 +169,26 @@ export class ContenedoresService {
         total: 0,
         porEstado: [],
       };
+    }
+  }
+
+  // Listar estados de contenedor
+  async getEstadosContenedor() {
+    try {
+      return await this.estadoContenedorRepository.find({ order: { nombre: 'ASC' } });
+    } catch (error) {
+      console.error('Error al obtener estados de contenedor:', error.message);
+      return [];
+    }
+  }
+
+  // Listar tipos de contenedor
+  async getTiposContenedor() {
+    try {
+      return await this.tipoContenedorRepository.find({ order: { nombre: 'ASC' } });
+    } catch (error) {
+      console.error('Error al obtener tipos de contenedor:', error.message);
+      return [];
     }
   }
 }

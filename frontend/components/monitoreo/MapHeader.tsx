@@ -13,6 +13,7 @@ export function MapHeader() {
   const { usuario, logout } = useAuth();
   const { darkMode, toggleDarkMode } = useTheme();
   const userMenuRef = useRef<HTMLDivElement>(null);
+  const navScrollRef = useRef<HTMLDivElement>(null);
 
   // Cerrar menú al hacer click fuera
   useEffect(() => {
@@ -53,14 +54,33 @@ export function MapHeader() {
     { href: '/monitoreo/entregas', icon: 'local_shipping', label: 'Entregas', match: '/entregas' },
   ];
 
+  // Persistir posición de scroll horizontal del nav entre páginas
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const saved = window.sessionStorage.getItem("monitoreo-nav-scroll");
+    if (navScrollRef.current && saved) {
+      navScrollRef.current.scrollLeft = Number(saved);
+    }
+  }, []);
+
+  const handleNavScroll = () => {
+    if (typeof window === "undefined") return;
+    if (navScrollRef.current) {
+      window.sessionStorage.setItem(
+        "monitoreo-nav-scroll",
+        String(navScrollRef.current.scrollLeft)
+      );
+    }
+  };
+
   return (
-    <header className="sticky top-0 z-40 w-full border-b border-zinc-200 bg-white shadow-sm">
+    <header className="sticky top-0 z-40 w-full border-b border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 shadow-sm">
       <div className="flex h-16 items-center gap-4 px-6">
         {/* Logo y Título Dinámico - FIJOS */}
         <div className="flex flex-shrink-0 items-center gap-4">
           <Link
             href="/monitoreo"
-            className="flex items-center gap-2 text-xl font-bold text-[#002b5c] transition-colors hover:text-[#ff8c00]"
+            className="flex items-center gap-2 text-xl font-bold text-[#002b5c] dark:text-zinc-100 transition-colors hover:text-[#ff8c00]"
           >
             <Image
               src="/favicon/favicon-96x96.png"
@@ -72,13 +92,13 @@ export function MapHeader() {
             <span className="whitespace-nowrap">Hapag-Lloyd</span>
           </Link>
           
-          <div className="h-8 w-px bg-zinc-300"></div>
+          <div className="h-8 w-px bg-zinc-300 dark:bg-zinc-700"></div>
           
           <div className="flex items-center gap-2">
             <span className="material-symbols-outlined text-2xl text-primary">{pageInfo.icon}</span>
             <div>
-              <h1 className="whitespace-nowrap text-sm font-bold text-zinc-900">{pageInfo.title}</h1>
-              <p className="whitespace-nowrap text-xs text-zinc-500">{pageInfo.subtitle}</p>
+              <h1 className="whitespace-nowrap text-sm font-bold text-zinc-900 dark:text-zinc-100">{pageInfo.title}</h1>
+              <p className="whitespace-nowrap text-xs text-zinc-500 dark:text-zinc-400">{pageInfo.subtitle}</p>
             </div>
           </div>
         </div>
@@ -86,6 +106,8 @@ export function MapHeader() {
         {/* Navegación Rápida con Scroll Horizontal - SCROLLEABLE */}
         <nav className="hidden min-w-0 flex-1 lg:block">
           <div 
+            ref={navScrollRef}
+            onScroll={handleNavScroll}
             className="flex gap-2 overflow-x-auto pb-2 scrollbar-thin scrollbar-track-transparent scrollbar-thumb-zinc-300 hover:scrollbar-thumb-zinc-400"
             style={{
               scrollbarWidth: 'thin',
@@ -98,8 +120,8 @@ export function MapHeader() {
                 href={link.href}
                 className={`flex flex-shrink-0 items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium transition-colors ${
                   pathname === link.match || pathname?.includes(link.match)
-                    ? 'bg-primary/10 text-primary'
-                    : 'text-gray-700 hover:bg-gray-100 hover:text-[#ff8c00]'
+                    ? 'bg-orange-100 text-orange-600 dark:bg-orange-500/20 dark:text-orange-300'
+                    : 'text-gray-700 dark:text-zinc-300 hover:bg-gray-100 dark:hover:bg-zinc-800'
                 }`}
               >
                 <span className="material-symbols-outlined text-lg">{link.icon}</span>
@@ -112,12 +134,12 @@ export function MapHeader() {
         {/* Right Section - FIJA */}
         <div className="flex flex-shrink-0 items-center gap-3">
           {/* Indicador de actualización en vivo */}
-          <div className="hidden items-center gap-2 rounded-lg border border-green-200 bg-green-50 px-3 py-1.5 sm:flex">
+          <div className="hidden items-center gap-2 rounded-lg border border-green-200 dark:border-green-900/50 bg-green-50 dark:bg-green-900/20 px-3 py-1.5 sm:flex">
             <span className="relative flex h-2 w-2">
               <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-green-400 opacity-75"></span>
               <span className="relative inline-flex h-2 w-2 rounded-full bg-green-500"></span>
             </span>
-            <span className="text-xs font-semibold text-green-700">En vivo</span>
+            <span className="text-xs font-semibold text-green-700 dark:text-green-400">En vivo</span>
           </div>
 
           {/* Dark Mode Toggle */}
@@ -145,25 +167,18 @@ export function MapHeader() {
           <div className="relative" ref={userMenuRef}>
             <button
               onClick={() => setShowUserMenu(!showUserMenu)}
-              className="flex items-center gap-3 rounded-lg border border-gray-200 bg-gray-50 py-1.5 pl-3 pr-2 transition-colors hover:border-gray-300 hover:bg-gray-100"
+              className="flex items-center gap-3 rounded-lg border border-gray-200 dark:border-zinc-700 bg-gray-50 dark:bg-zinc-800 py-1.5 pl-3 pr-2 transition-colors hover:border-gray-300 dark:hover:border-zinc-600 hover:bg-gray-100 dark:hover:bg-zinc-700"
             >
               <div className="hidden flex-col items-end sm:flex">
-                <span className="text-sm font-semibold text-gray-900">
+                <span className="text-sm font-semibold text-gray-900 dark:text-zinc-100">
                   {usuario?.empleado?.nombre} {usuario?.empleado?.apellido}
                 </span>
-                <span className="text-xs text-gray-500">{usuario?.correo_electronico}</span>
+                <span className="text-xs text-gray-500 dark:text-zinc-400">{usuario?.correo_electronico}</span>
               </div>
-              <div className="relative h-9 w-9 flex-shrink-0">
-                <Image
-                  alt="Avatar del usuario"
-                  className="rounded-full object-cover ring-2 ring-white"
-                  src="https://lh3.googleusercontent.com/aida-public/AB6AXuAGW1RCKn4_p2DEp_nqUIMD-UhmQI0U67Tv1z3GyWNNaMEKR60x_kvU8bFyDxGuk42_6J-TUIZCA_62_OZfV2fy-6ZBK_tDTavjU8bFyDxGuk42_6J-TUIZCA_62_OZfV2fy-6ZBK_tDTavjU8mNjUxrog_KtOIAGwGKuI661uf-TRBuSBll8xexGJzX-h8riSZ4HiBmoVIM9ZiMQNKsRkCMYEBc9LP42mR80T9hDBPNC6eEBjwu4plOkwcrpxtsj1t5QMvDD8fKfRS5f1OvUB_EULragT4sbQYgVgabyRPtXiwE6JXmqhJ1ihDh"
-                  fill
-                  sizes="36px"
-                  priority
-                />
+              <div className="relative flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full bg-orange-600 text-sm font-bold text-white shadow ring-2 ring-white">
+                {`${usuario?.empleado?.nombre?.charAt(0) ?? 'U'}${usuario?.empleado?.apellido?.charAt(0) ?? ''}`}
               </div>
-              <span className="material-symbols-outlined text-lg text-gray-500">
+              <span className="material-symbols-outlined text-lg text-gray-500 dark:text-zinc-400">
                 {showUserMenu ? 'expand_less' : 'expand_more'}
               </span>
             </button>
@@ -178,19 +193,19 @@ export function MapHeader() {
                 />
                 
                 {/* Menú dropdown */}
-                <div className="absolute right-0 top-full z-20 mt-2 w-56 rounded-lg border border-zinc-200 bg-white py-2 shadow-xl">
-                  <div className="px-4 py-3 border-b border-zinc-200">
-                    <p className="text-sm font-semibold text-zinc-900">
+                <div className="absolute right-0 top-full z-20 mt-2 w-56 rounded-lg border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-900 py-2 shadow-xl">
+                  <div className="px-4 py-3 border-b border-zinc-200 dark:border-zinc-700">
+                    <p className="text-sm font-semibold text-zinc-900 dark:text-zinc-100">
                       {usuario?.empleado?.nombre} {usuario?.empleado?.apellido}
                     </p>
-                    <p className="text-xs text-zinc-500 truncate">
+                    <p className="text-xs text-zinc-500 dark:text-zinc-400 truncate">
                       {usuario?.correo_electronico}
                     </p>
                   </div>
                   
                   <Link
                     href="/perfil"
-                    className="flex items-center gap-3 px-4 py-2 text-sm text-zinc-700 transition-colors hover:bg-zinc-100"
+                    className="flex items-center gap-3 px-4 py-2 text-sm text-zinc-700 dark:text-zinc-300 transition-colors hover:bg-zinc-100 dark:hover:bg-zinc-800"
                     onClick={() => setShowUserMenu(false)}
                   >
                     <span className="material-symbols-outlined text-lg">person</span>
@@ -199,14 +214,14 @@ export function MapHeader() {
                   
                   <Link
                     href="/configuracion"
-                    className="flex items-center gap-3 px-4 py-2 text-sm text-zinc-700 transition-colors hover:bg-zinc-100"
+                    className="flex items-center gap-3 px-4 py-2 text-sm text-zinc-700 dark:text-zinc-300 transition-colors hover:bg-zinc-100 dark:hover:bg-zinc-800"
                     onClick={() => setShowUserMenu(false)}
                   >
                     <span className="material-symbols-outlined text-lg">settings</span>
                     Configuración
                   </Link>
                   
-                  <hr className="my-2 border-zinc-200" />
+                  <hr className="my-2 border-zinc-200 dark:border-zinc-700" />
                   
                   <button
                     className="flex w-full items-center gap-3 px-4 py-2 text-sm text-red-600 transition-colors hover:bg-red-50"

@@ -68,14 +68,22 @@ export default function OperacionesPage() {
   }, [filtroEstado]);
 
   const getEstadoBadge = (estado: string) => {
+    const key = (estado || "").toLowerCase();
+
     const badges: Record<string, { bg: string; text: string; dot: string }> = {
-      "Completada": { bg: "bg-green-50", text: "text-green-700", dot: "bg-green-500" },
-      "En curso": { bg: "bg-blue-50", text: "text-blue-700", dot: "bg-blue-500" },
-      "Programada": { bg: "bg-purple-50", text: "text-purple-700", dot: "bg-purple-500" },
-      "Cancelada": { bg: "bg-red-50", text: "text-red-700", dot: "bg-red-500" },
-      "En tránsito": { bg: "bg-amber-50", text: "text-amber-700", dot: "bg-amber-500" },
+      // Programada
+      "programada": { bg: "bg-purple-50", text: "text-purple-700", dot: "bg-purple-500" },
+      // En Curso
+      "en curso": { bg: "bg-blue-50", text: "text-blue-700", dot: "bg-blue-500" },
+      // Completada
+      "completada": { bg: "bg-green-50", text: "text-green-700", dot: "bg-green-500" },
+      // Cancelada
+      "cancelada": { bg: "bg-red-50", text: "text-red-700", dot: "bg-red-500" },
+      // En Espera
+      "en espera": { bg: "bg-amber-50", text: "text-amber-700", dot: "bg-amber-500" },
     };
-    const badge = badges[estado] || { bg: "bg-gray-50", text: "text-gray-700", dot: "bg-gray-500" };
+
+    const badge = badges[key] || { bg: "bg-gray-50", text: "text-gray-700", dot: "bg-gray-500" };
     return badge;
   };
 
@@ -149,7 +157,7 @@ export default function OperacionesPage() {
             </div>
             <Link
               href="/monitoreo/operaciones/nueva"
-              className="flex h-11 items-center gap-2 rounded-lg bg-primary px-6 text-sm font-semibold text-white shadow-lg transition-all hover:bg-primary/90 hover:shadow-xl"
+              className="flex h-11 items-center gap-2 rounded-lg bg-orange-500 px-6 text-sm font-semibold text-white shadow-lg transition-all hover:bg-orange-600 hover:shadow-xl"
             >
               <span className="material-symbols-outlined text-xl">add_circle</span>
               <span>Nueva Operación</span>
@@ -344,33 +352,80 @@ export default function OperacionesPage() {
                   <span className="material-symbols-outlined text-xl">chevron_left</span>
                 </button>
                 <div className="flex items-center gap-1">
-                  {[...Array(Math.min(totalPaginas, 5))].map((_, i) => {
-                    const numPagina = i + 1;
+                  {(() => {
+                    const maxVisibles = 5;
+                    if (totalPaginas <= maxVisibles) {
+                      return Array.from({ length: totalPaginas }, (_, i) => i + 1).map((numPagina) => (
+                        <button
+                          key={numPagina}
+                          onClick={() => setPaginaActual(numPagina)}
+                          className={`flex h-8 w-8 items-center justify-center rounded-lg text-sm font-medium shadow-sm transition-colors ${
+                            paginaActual === numPagina
+                              ? "border border-primary bg-primary/10 text-primary"
+                              : "border border-transparent text-zinc-600 hover:bg-zinc-100"
+                          }`}
+                        >
+                          {numPagina}
+                        </button>
+                      ));
+                    }
+
+                    // Calcular ventana móvil alrededor de la página actual
+                    const start = Math.max(1, Math.min(paginaActual - 2, totalPaginas - maxVisibles + 1));
+                    const end = Math.min(totalPaginas, start + maxVisibles - 1);
+                    const paginas = [] as number[];
+                    for (let p = start; p <= end; p++) paginas.push(p);
+
                     return (
-                      <button
-                        key={i}
-                        onClick={() => setPaginaActual(numPagina)}
-                        className={`flex h-8 w-8 items-center justify-center rounded-lg text-sm font-medium shadow-sm transition-colors ${
-                          paginaActual === numPagina
-                            ? "border border-primary bg-primary/10 text-primary"
-                            : "border border-transparent text-zinc-600 hover:bg-zinc-100"
-                        }`}
-                      >
-                        {numPagina}
-                      </button>
+                      <>
+                        {start > 1 && (
+                          <>
+                            <button
+                              onClick={() => setPaginaActual(1)}
+                              className={`flex h-8 w-8 items-center justify-center rounded-lg text-sm font-medium shadow-sm transition-colors ${
+                                paginaActual === 1
+                                  ? "border border-primary bg-primary/10 text-primary"
+                                  : "border border-transparent text-zinc-600 hover:bg-zinc-100"
+                              }`}
+                            >
+                              1
+                            </button>
+                            {start > 2 && <span className="text-zinc-400">...</span>}
+                          </>
+                        )}
+
+                        {paginas.map((numPagina) => (
+                          <button
+                            key={numPagina}
+                            onClick={() => setPaginaActual(numPagina)}
+                            className={`flex h-8 w-8 items-center justify-center rounded-lg text-sm font-medium shadow-sm transition-colors ${
+                              paginaActual === numPagina
+                                ? "border border-primary bg-primary/10 text-primary"
+                                : "border border-transparent text-zinc-600 hover:bg-zinc-100"
+                            }`}
+                          >
+                            {numPagina}
+                          </button>
+                        ))}
+
+                        {end < totalPaginas && (
+                          <>
+                            {end < totalPaginas - 1 && <span className="text-zinc-400">...</span>}
+                            <button
+                              onClick={() => setPaginaActual(totalPaginas)}
+                              className={`flex h-8 w-8 items-center justify-center rounded-lg text-sm font-medium shadow-sm transition-colors ${
+                                paginaActual === totalPaginas
+                                  ? "border border-primary bg-primary/10 text-primary"
+                                  : "border border-transparent text-zinc-600 hover:bg-zinc-100"
+                              }`}
+                            >
+                              {totalPaginas}
+                            </button>
+                          </>
+                        )}
+                      </>
                     );
-                  })}
-                  {totalPaginas > 5 && (
-                    <>
-                      <span className="text-zinc-400">...</span>
-                      <button
-                        onClick={() => setPaginaActual(totalPaginas)}
-                        className="flex h-8 w-8 items-center justify-center rounded-lg border border-transparent text-sm font-medium text-zinc-600 transition-colors hover:bg-zinc-100"
-                      >
-                        {totalPaginas}
-                      </button>
-                    </>
-                  )}
+                  })()}
                 </div>
                 <button
                   onClick={() => setPaginaActual(Math.min(totalPaginas, paginaActual + 1))}

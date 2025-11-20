@@ -23,11 +23,17 @@ interface Entrega {
   };
 }
 
+interface EstadoEntrega {
+  id_estado_entrega: string;
+  nombre: string;
+}
+
 export default function EntregasPage() {
   const [data, setData] = useState<any>({ entregas: [], total: 0 });
   const [estadisticas, setEstadisticas] = useState<any>({});
   const [loading, setLoading] = useState(true);
   const [paginaActual, setPaginaActual] = useState(1);
+  const [estados, setEstados] = useState<EstadoEntrega[]>([]);
   const [filtros, setFiltros] = useState({
     estado: "",
     desde: "",
@@ -46,6 +52,22 @@ export default function EntregasPage() {
       .then((res) => res.json())
       .then((data) => setEstadisticas(data))
       .catch((err) => console.error("Error cargando estadísticas:", err));
+
+    // Cargar estados de entrega
+    fetch("http://localhost:3001/monitoreo/entregas/estados")
+      .then((res) => res.json())
+      .then((data) => {
+        if (Array.isArray(data)) {
+          setEstados(data);
+        } else {
+          console.error("Estados de entrega no es un array:", data);
+          setEstados([]);
+        }
+      })
+      .catch((err) => {
+        console.error("Error cargando estados de entrega:", err);
+        setEstados([]);
+      });
   }, []);
 
   const cargarDatos = () => {
@@ -129,7 +151,7 @@ export default function EntregasPage() {
           </div>
           <Link
             href="/monitoreo/entregas/nueva"
-            className="flex items-center gap-2 rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-primary/90"
+            className="flex items-center gap-2 rounded-lg bg-orange-500 px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-primary/90"
           >
             <span className="material-symbols-outlined text-lg">add</span>
             Nueva Entrega
@@ -177,16 +199,18 @@ export default function EntregasPage() {
               <label className="mb-2 block text-sm font-medium text-zinc-700">Estado</label>
               <select
                 value={filtros.estado}
-                onChange={(e) => setFiltros({ ...filtros, estado: e.target.value })}
+                onChange={(e) => {
+                  setFiltros({ ...filtros, estado: e.target.value });
+                  setPaginaActual(1);
+                }}
                 className="w-full rounded-lg border border-zinc-300 px-4 py-2 text-sm focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20"
               >
                 <option value="">Todos</option>
-                <option value="Pendiente">Pendiente</option>
-                <option value="En Transito">En Tránsito</option>
-                <option value="En Almacen">En Almacén</option>
-                <option value="Entregada">Entregada</option>
-                <option value="Cancelada">Cancelada</option>
-                <option value="Con Incidencia">Con Incidencia</option>
+                {estados.map((estado) => (
+                  <option key={estado.id_estado_entrega} value={estado.id_estado_entrega}>
+                    {estado.nombre}
+                  </option>
+                ))}
               </select>
             </div>
             <div>
@@ -210,7 +234,7 @@ export default function EntregasPage() {
             <div className="flex items-end">
               <button
                 onClick={limpiarFiltros}
-                className="w-full rounded-lg border border-zinc-300 px-4 py-2 text-sm font-semibold text-zinc-700 transition-colors hover:bg-zinc-50"
+                className="w-full rounded-lg bg-orange-500 px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-orange-200"
               >
                 Limpiar Filtros
               </button>
@@ -309,7 +333,7 @@ export default function EntregasPage() {
                     {Math.min(data.pagina * data.por_pagina, data.total)} de {data.total} entregas
                   </p>
 
-                  <div className="flex gap-2">
+                  <div className="flex items-center gap-2">
                     <button
                       onClick={() => setPaginaActual(paginaActual - 1)}
                       disabled={paginaActual === 1}
@@ -318,6 +342,79 @@ export default function EntregasPage() {
                       <span className="material-symbols-outlined text-base">chevron_left</span>
                       Anterior
                     </button>
+
+                    <div className="flex items-center gap-1">
+                      {(() => {
+                        const pages: number[] = [];
+                        const total = data.total_paginas;
+                        const current = paginaActual;
+                        const windowSize = 5;
+
+                        let start = Math.max(1, current - Math.floor(windowSize / 2));
+                        let end = start + windowSize - 1;
+
+                        if (end > total) {
+                          end = total;
+                          start = Math.max(1, end - windowSize + 1);
+                        }
+
+                        for (let i = start; i <= end; i++) pages.push(i);
+
+                        return (
+                          <>
+                            {start > 1 && (
+                              <>
+                                <button
+                                  onClick={() => setPaginaActual(1)}
+                                  className={`h-10 w-10 rounded-lg border bg-orange-100 text-sm font-medium transition-colors ${
+                                    paginaActual === 1
+                                      ? "border-primary bg-primary text-white"
+                                      : "border-zinc-300 bg-orange-500 text-zinc-700 hover:bg-zinc-50"
+                                  }`}
+                                >
+                                  1
+                                </button>
+                                {start > 2 && (
+                                  <span className="px-1 text-zinc-400">...</span>
+                                )}
+                              </>
+                            )}
+
+                            {pages.map((page) => (
+                              <button
+                                key={page}
+                                onClick={() => setPaginaActual(page)}
+                                className={`h-10 w-10 rounded-lg border bg-orange-100 text-sm font-medium transition-colors ${
+                                  page === paginaActual
+                                    ? "border-primary bg-primary text-white"
+                                    : "border-zinc-300 bg-orange-500 text-zinc-700 hover:bg-zinc-50"
+                                }`}
+                              >
+                                {page}
+                              </button>
+                            ))}
+
+                            {end < total && (
+                              <>
+                                {end < total - 1 && (
+                                  <span className="px-1 text-zinc-400">...</span>
+                                )}
+                                <button
+                                  onClick={() => setPaginaActual(total)}
+                                  className={`h-10 w-10 rounded-lg border bg-orange-100 text-sm font-medium transition-colors ${
+                                    paginaActual === total
+                                      ? "border-primary bg-primary text-white"
+                                      : "border-zinc-300 bg-orange-500 text-zinc-700 hover:bg-zinc-50"
+                                  }`}
+                                >
+                                  {total}
+                                </button>
+                              </>
+                            )}
+                          </>
+                        );
+                      })()}
+                    </div>
 
                     <button
                       onClick={() => setPaginaActual(paginaActual + 1)}

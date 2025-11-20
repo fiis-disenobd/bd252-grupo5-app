@@ -108,7 +108,7 @@ export default function VerEntregaPage() {
             </Link>
             <Link
               href={`/monitoreo/entregas/${entrega.id_entrega}/editar`}
-              className="flex items-center gap-2 rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-primary/90"
+              className="flex items-center gap-2 rounded-lg bg-orange-600 px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-orange-400/90"
             >
               <span className="material-symbols-outlined text-lg">edit</span>
               Editar

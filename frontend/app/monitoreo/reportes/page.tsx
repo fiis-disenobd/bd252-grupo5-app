@@ -96,7 +96,7 @@ export default function ReportesPage() {
           </div>
           <Link
             href="/monitoreo/reportes/nuevo"
-            className="flex items-center gap-2 rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-primary/90"
+            className="flex items-center gap-2 rounded-lg bg-orange-600 px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-primary/90"
           >
             <span className="material-symbols-outlined text-lg">add</span>
             Nuevo Reporte
@@ -163,7 +163,7 @@ export default function ReportesPage() {
             <div className="flex items-end">
               <button
                 onClick={limpiarFiltros}
-                className="w-full rounded-lg border border-zinc-300 px-4 py-2 text-sm font-semibold text-zinc-700 transition-colors hover:bg-zinc-50"
+                className="w-full rounded-lg bg-orange-600 px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-orange-200"
               >
                 Limpiar Filtros
               </button>
@@ -242,7 +242,7 @@ export default function ReportesPage() {
                     {Math.min(data.pagina * data.por_pagina, data.total)} de {data.total} reportes
                   </p>
 
-                  <div className="flex gap-2">
+                  <div className="flex items-center gap-2">
                     <button
                       onClick={() => setPaginaActual(paginaActual - 1)}
                       disabled={paginaActual === 1}
@@ -251,6 +251,79 @@ export default function ReportesPage() {
                       <span className="material-symbols-outlined text-base">chevron_left</span>
                       Anterior
                     </button>
+
+                    <div className="flex items-center gap-1">
+                      {(() => {
+                        const pages: number[] = [];
+                        const total = data.total_paginas;
+                        const current = paginaActual;
+                        const windowSize = 5;
+
+                        let start = Math.max(1, current - Math.floor(windowSize / 2));
+                        let end = start + windowSize - 1;
+
+                        if (end > total) {
+                          end = total;
+                          start = Math.max(1, end - windowSize + 1);
+                        }
+
+                        for (let i = start; i <= end; i++) pages.push(i);
+
+                        return (
+                          <>
+                            {start > 1 && (
+                              <>
+                                <button
+                                  onClick={() => setPaginaActual(1)}
+                                  className={`h-10 w-10 rounded-lg border bg-orange-100 text-sm font-medium transition-colors ${
+                                    paginaActual === 1
+                                      ? "border-primary bg-primary text-white"
+                                      : "border-zinc-300 bg-orange-500 text-zinc-700 hover:bg-zinc-50"
+                                  }`}
+                                >
+                                  1
+                                </button>
+                                {start > 2 && (
+                                  <span className="px-1 text-zinc-400">...</span>
+                                )}
+                              </>
+                            )}
+
+                            {pages.map((page) => (
+                              <button
+                                key={page}
+                                onClick={() => setPaginaActual(page)}
+                                className={`h-10 w-10 rounded-lg border bg-orange-100 text-sm font-medium transition-colors ${
+                                  page === paginaActual
+                                    ? "border-primary bg-primary text-white"
+                                    : "border-zinc-300 bg-orange-500 text-zinc-700 hover:bg-zinc-50"
+                                }`}
+                              >
+                                {page}
+                              </button>
+                            ))}
+
+                            {end < total && (
+                              <>
+                                {end < total - 1 && (
+                                  <span className="px-1 text-zinc-400">...</span>
+                                )}
+                                <button
+                                  onClick={() => setPaginaActual(total)}
+                                  className={`h-10 w-10 rounded-lg border bg-orange-100 text-sm font-medium transition-colors ${
+                                    paginaActual === total
+                                      ? "border-primary bg-primary text-white"
+                                      : "border-zinc-300 bg-orange-500 text-zinc-700 hover:bg-zinc-50"
+                                  }`}
+                                >
+                                  {total}
+                                </button>
+                              </>
+                            )}
+                          </>
+                        );
+                      })()}
+                    </div>
 
                     <button
                       onClick={() => setPaginaActual(paginaActual + 1)}

@@ -65,19 +65,21 @@ export class GpsService {
         .addOrderBy('pc.fecha_hora', 'DESC')
         .getMany();
 
-      // Obtener últimas posiciones de vehículos
+      // Obtener últimas posiciones de vehículos con su estado
       const vehiculos = await this.posicionVehiculoRepository
         .createQueryBuilder('pv')
         .leftJoinAndSelect('pv.vehiculo', 'v')
+        .leftJoinAndSelect('v.estado_vehiculo', 'ev')
         .distinctOn(['pv.id_vehiculo'])
         .orderBy('pv.id_vehiculo')
         .addOrderBy('pv.fecha_hora', 'DESC')
         .getMany();
 
-      // Obtener últimas posiciones de buques
+      // Obtener últimas posiciones de buques con su estado
       const buques = await this.posicionBuqueRepository
         .createQueryBuilder('pb')
         .leftJoinAndSelect('pb.buque', 'b')
+        .leftJoinAndSelect('b.estado_embarcacion', 'eb')
         .distinctOn(['pb.id_buque'])
         .orderBy('pb.id_buque')
         .addOrderBy('pb.fecha_hora', 'DESC')
@@ -102,8 +104,8 @@ export class GpsService {
           code: pv.vehiculo?.placa || `VEH-${pv.id_vehiculo.substring(0, 8)}`,
           type: 'vehicle',
           position: [Number(pv.latitud), Number(pv.longitud)],
-          status: 'En Tránsito',
-          statusColor: '#28A745',
+          status: pv.vehiculo?.estado_vehiculo?.nombre || 'Desconocido',
+          statusColor: this.getVehiculoStatusColor(pv.vehiculo?.estado_vehiculo?.nombre),
           icon: 'local_shipping',
           lastUpdate: pv.fecha_hora,
           speed: 'N/A',
@@ -114,8 +116,8 @@ export class GpsService {
           code: pb.buque?.nombre || `BQE-${pb.id_buque.substring(0, 8)}`,
           type: 'ship',
           position: [Number(pb.latitud), Number(pb.longitud)],
-          status: 'En Tránsito',
-          statusColor: '#17A2B8',
+          status: pb.buque?.estado_embarcacion?.nombre || 'Desconocido',
+          statusColor: this.getBuqueStatusColor(pb.buque?.estado_embarcacion?.nombre),
           icon: 'sailing',
           lastUpdate: pb.fecha_hora,
           speed: 'N/A',
@@ -131,16 +133,50 @@ export class GpsService {
   }
 
   private getStatusColor(status: string | undefined): string {
-    if (!status) return '#6C757D';
-    
+    // Contenedores - EstadoContenedor
+    if (!status) return '#6b7280';
+    const key = status.toLowerCase();
+
     const colors: Record<string, string> = {
-      'En Tránsito': '#28A745',
-      'En Almacén': '#FFC107',
-      'Entregado': '#17A2B8',
-      'En Alerta': '#DC3545',
-      'Disponible': '#28A745',
+      'disponible':        '#10b981', // verde
+      'en transito':       '#3b82f6', // azul
+      'en puerto':         '#6366f1', // indigo
+      'en reparacion':     '#f59e0b', // ámbar
+      'fuera de servicio': '#ef4444', // rojo
     };
-    
-    return colors[status] || '#6C757D';
+
+    return colors[key] || '#6b7280';
+  }
+
+  private getVehiculoStatusColor(status: string | undefined): string {
+    // Vehiculos - EstadoVehiculo
+    if (!status) return '#6b7280';
+    const key = status.toLowerCase();
+
+    const colors: Record<string, string> = {
+      'disponible':        '#10b981', // verde
+      'en ruta':           '#3b82f6', // azul
+      'en mantenimiento':  '#f59e0b', // ámbar
+      'fuera de servicio': '#ef4444', // rojo
+      'en revision':       '#8b5cf6', // violeta
+    };
+
+    return colors[key] || '#6b7280';
+  }
+
+  private getBuqueStatusColor(status: string | undefined): string {
+    // Embarcaciones - EstadoEmbarcacion
+    if (!status) return '#6b7280';
+    const key = status.toLowerCase();
+
+    const colors: Record<string, string> = {
+      'operativo':         '#10b981', // verde
+      'en mantenimiento':  '#f59e0b', // ámbar
+      'fuera de servicio': '#ef4444', // rojo
+      'en reparacion':     '#f97316', // naranja
+      'disponible':        '#3b82f6', // azul
+    };
+
+    return colors[key] || '#6b7280';
   }
 }
