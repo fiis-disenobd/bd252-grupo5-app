@@ -24,6 +24,7 @@ export default function NuevaOperacionPage() {
   const [operadores, setOperadores] = useState<any[]>([]);
   const [vehiculos, setVehiculos] = useState<any[]>([]);
   const [buques, setBuques] = useState<any[]>([]);
+  const [contenedoresDisponibles, setContenedoresDisponibles] = useState<any[]>([]);
   const [nuevoContenedor, setNuevoContenedor] = useState("");
   
   const [formData, setFormData] = useState<FormData>({
@@ -74,6 +75,13 @@ export default function NuevaOperacionPage() {
           const dataBuques = await resBuques.json();
           setBuques(Array.isArray(dataBuques) ? dataBuques : []);
         }
+
+        // Contenedores disponibles (por ahora filtramos por estado Disponible desde el backend)
+        const resContenedores = await fetch("http://localhost:3001/monitoreo/contenedores?estado=Disponible");
+        if (resContenedores.ok) {
+          const dataContenedores = await resContenedores.json();
+          setContenedoresDisponibles(Array.isArray(dataContenedores) ? dataContenedores : []);
+        }
       } catch (error) {
         console.error("Error cargando datos:", error);
       }
@@ -112,6 +120,7 @@ export default function NuevaOperacionPage() {
         fecha_inicio: formData.fecha_inicio,
         id_estado_operacion: formData.id_estado_operacion,
         operador_id: formData.operador_id,
+        medio_transporte: formData.medio_transporte,
         contenedores: formData.contenedores,
         descripcion: formData.descripcion || null,
       };
@@ -329,9 +338,37 @@ export default function NuevaOperacionPage() {
                 <div className="rounded-xl border border-zinc-200 bg-white shadow-sm">
                   <div className="border-b border-zinc-200 p-6">
                     <h2 className="text-lg font-bold text-zinc-900">Contenedores</h2>
-                    <p className="text-sm text-zinc-500">Agrega los códigos de contenedores (presiona Enter)</p>
+                    <p className="text-sm text-zinc-500">Selecciona contenedores disponibles o escribe el código y presiona Enter</p>
                   </div>
                   <div className="p-6">
+                    {/* Selector de contenedores disponibles */}
+                    <div className="mb-4">
+                      <label className="mb-2 block text-sm font-semibold text-zinc-900">
+                        Contenedores disponibles
+                      </label>
+                      <select
+                        className="h-11 w-full rounded-lg border border-zinc-300 bg-white px-4 text-sm text-zinc-900 transition-colors focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20"
+                        defaultValue=""
+                        onChange={(e) => {
+                          const codigo = e.target.value;
+                          if (codigo && !formData.contenedores.includes(codigo)) {
+                            setFormData({
+                              ...formData,
+                              contenedores: [...formData.contenedores, codigo],
+                            });
+                          }
+                          e.target.value = "";
+                        }}
+                      >
+                        <option value="">Selecciona un contenedor para agregar</option>
+                        {contenedoresDisponibles.map((c) => (
+                          <option key={c.id_contenedor} value={c.codigo}>
+                            {c.codigo} {c.tipo_contenedor?.nombre ? `- ${c.tipo_contenedor.nombre}` : ""}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+
                     <div className="relative w-full rounded-lg border-2 border-zinc-300 bg-white p-3 focus-within:border-primary focus-within:ring-2 focus-within:ring-primary/20">
                       <div className="flex flex-wrap items-center gap-2">
                         {formData.contenedores.map((codigo) => (

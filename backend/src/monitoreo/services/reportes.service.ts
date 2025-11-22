@@ -1,6 +1,6 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { DataSource, Repository } from 'typeorm';
 import { Reporte } from '../entities/reporte.entity';
 
 export interface CreateReporteDto {
@@ -18,6 +18,7 @@ export class ReportesService {
   constructor(
     @InjectRepository(Reporte)
     private reporteRepository: Repository<Reporte>,
+    private readonly dataSource: DataSource,
   ) {}
 
   // Listar todos los reportes con paginación y filtros
@@ -58,6 +59,30 @@ export class ReportesService {
         total_paginas: 0,
         por_pagina: 20,
       };
+    }
+  }
+
+  // Ejecutar proceso batch de cierre diario (esquema analítico)
+  async ejecutarCierreDiario(fecha_corte?: string) {
+    try {
+      const hoy = new Date();
+      const fecha = fecha_corte ? new Date(fecha_corte) : hoy;
+
+      // Normalizar a solo fecha (YYYY-MM-DD)
+      const fechaStr = fecha.toISOString().slice(0, 10);
+
+      await this.dataSource.query(
+        'SELECT monitoreo_analytics.f_cierre_diario_operaciones($1)',
+        [fechaStr],
+      );
+
+      return {
+        message: 'Proceso batch de cierre diario ejecutado correctamente',
+        fecha_corte: fechaStr,
+      };
+    } catch (error: any) {
+      console.error('Error al ejecutar cierre diario analítico:', error.message || error);
+      throw new Error('Error al ejecutar el proceso batch de cierre diario');
     }
   }
 
@@ -170,6 +195,87 @@ export class ReportesService {
         total: 0,
         este_mes: 0,
         ultimo_reporte: null,
+      };
+    }
+  }
+
+  // Resumen analítico basado en el esquema monitoreo_analytics
+  async getAnalyticsResumen() {
+    try {
+      // KPIs globales
+      const kpis = await this.dataSource.query(
+        `
+        SELECT
+          COUNT(*) AS total_operaciones,
+          AVG(duracion_minutos) AS promedio_duracion_global,
+          MIN(df.fecha) AS fecha_min,
+          MAX(df.fecha) AS fecha_max
+        FROM monitoreo_analytics.factoperacionmonitoreo f
+        JOIN monitoreo_analytics.dimfecha df
+          ON df.id_fecha = f.id_fecha_corte
+        `,
+      );
+
+      // Duración promedio por medio de transporte y mes
+      const duracionPorMedioMes = await this.dataSource.query(
+        `
+        SELECT
+          df.anio,
+          df.mes,
+          fom.medio_transporte,
+          AVG(fom.duracion_minutos) AS duracion_promedio_min
+        FROM monitoreo_analytics.dimfecha df
+        JOIN monitoreo_analytics.factoperacionmonitoreo fom
+          ON df.id_fecha = fom.id_fecha_corte
+        GROUP BY df.anio, df.mes, fom.medio_transporte
+        ORDER BY df.anio, df.mes, fom.medio_transporte
+        `,
+      );
+
+      // Incidencias de alta severidad por buque (top 10)
+      const incidenciasAltaPorBuque = await this.dataSource.query(
+        `
+        SELECT
+          db.nombre AS buque,
+          SUM(fom.incidencias_alta_severidad) AS total_incidencias_alta
+        FROM monitoreo_analytics.factoperacionmonitoreo fom
+        JOIN monitoreo_analytics.dimbuque db
+          ON db.id_buque = fom.id_buque
+        GROUP BY db.nombre
+        ORDER BY total_incidencias_alta DESC
+        LIMIT 10
+        `,
+      );
+
+      // Serie de tiempo por fecha y medio de transporte
+      const serieTiempoPorMedio = await this.dataSource.query(
+        `
+        SELECT
+          df.fecha,
+          f.medio_transporte,
+          AVG(f.duracion_minutos) AS duracion_promedio_min,
+          SUM(f.incidencias_alta_severidad) AS incidencias_alta
+        FROM monitoreo_analytics.factoperacionmonitoreo f
+        JOIN monitoreo_analytics.dimfecha df
+          ON df.id_fecha = f.id_fecha_corte
+        GROUP BY df.fecha, f.medio_transporte
+        ORDER BY df.fecha ASC, f.medio_transporte
+        `,
+      );
+
+      return {
+        kpis: kpis[0] || null,
+        duracionPorMedioMes,
+        incidenciasAltaPorBuque,
+        serieTiempoPorMedio,
+      };
+    } catch (error: any) {
+      console.error('Error en getAnalyticsResumen:', error.message || error);
+      return {
+        kpis: null,
+        duracionPorMedioMes: [],
+        incidenciasAltaPorBuque: [],
+        serieTiempoPorMedio: [],
       };
     }
   }

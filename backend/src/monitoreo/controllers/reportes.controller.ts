@@ -18,6 +18,18 @@ export class ReportesController {
     return this.reportesService.getEstadisticas();
   }
 
+  // GET /monitoreo/reportes/analytics/resumen - Resumen analítico del proceso batch
+  @Get('analytics/resumen')
+  getAnalyticsResumen() {
+    return this.reportesService.getAnalyticsResumen();
+  }
+
+  // POST /monitoreo/reportes/cierre-diario - Ejecutar proceso batch analítico
+  @Post('cierre-diario')
+  ejecutarCierreDiario(@Body('fecha_corte') fecha_corte?: string) {
+    return this.reportesService.ejecutarCierreDiario(fecha_corte);
+  }
+
   // GET /monitoreo/reportes/:id - Obtener un reporte por ID
   @Get(':id')
   findOne(@Param('id') id: string) {

@@ -22,6 +22,11 @@ export default function ReportesPage() {
   });
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [reporteAEliminar, setReporteAEliminar] = useState<string | null>(null);
+  const [fechaCorteBatch, setFechaCorteBatch] = useState<string>(
+    new Date().toISOString().slice(0, 10),
+  );
+  const [batchLoading, setBatchLoading] = useState(false);
+  const [batchMessage, setBatchMessage] = useState<string | null>(null);
 
   useEffect(() => {
     cargarDatos();
@@ -54,6 +59,41 @@ export default function ReportesPage() {
         console.error("Error:", err);
         setLoading(false);
       });
+  };
+
+  const ejecutarCierreDiario = async () => {
+    try {
+      setBatchLoading(true);
+      setBatchMessage(null);
+
+      const res = await fetch(
+        "http://localhost:3001/monitoreo/reportes/cierre-diario",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ fecha_corte: fechaCorteBatch }),
+        },
+      );
+
+      if (!res.ok) {
+        throw new Error(`Error HTTP ${res.status}`);
+      }
+
+      const data = await res.json();
+      setBatchMessage(
+        `Batch ejecutado para la fecha ${data.fecha_corte}.`,
+      );
+
+      // Recargar la lista de reportes
+      cargarDatos();
+    } catch (error) {
+      console.error("Error ejecutando cierre diario:", error);
+      setBatchMessage("Ocurrió un error al ejecutar el proceso batch.");
+    } finally {
+      setBatchLoading(false);
+    }
   };
 
   const handleEliminar = (id: string) => {
@@ -94,13 +134,69 @@ export default function ReportesPage() {
             <h1 className="text-2xl font-bold text-zinc-900">Gestión de Reportes</h1>
             <p className="text-sm text-zinc-500">Crea, visualiza y administra reportes del sistema</p>
           </div>
-          <Link
-            href="/monitoreo/reportes/nuevo"
-            className="flex items-center gap-2 rounded-lg bg-orange-600 px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-primary/90"
-          >
-            <span className="material-symbols-outlined text-lg">add</span>
-            Nuevo Reporte
-          </Link>
+          <div className="flex items-center gap-3">
+            <Link
+              href="/monitoreo/reportes/analytics"
+              className="flex items-center gap-2 rounded-lg border border-zinc-300 px-4 py-2 text-sm font-semibold text-zinc-700 transition-colors hover:bg-zinc-100"
+            >
+              <span className="material-symbols-outlined text-lg">insights</span>
+              Analítica
+            </Link>
+            <Link
+              href="/monitoreo/reportes/nuevo"
+              className="flex items-center gap-2 rounded-lg bg-orange-600 px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-primary/90"
+            >
+              <span className="material-symbols-outlined text-lg">add</span>
+              Nuevo Reporte
+            </Link>
+          </div>
+        </div>
+
+        {/* Proceso Batch Analítico */}
+        <div className="mb-6 rounded-lg border border-zinc-200 bg-white p-6">
+          <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+            <div>
+              <h3 className="text-lg font-semibold text-zinc-900">
+                Proceso batch de cierre diario
+              </h3>
+              <p className="text-sm text-zinc-500">
+                Ejecuta el proceso analítico que consolida operaciones completadas
+                en el esquema monitoreo_analytics para la fecha seleccionada.
+              </p>
+            </div>
+            <div className="flex flex-col gap-2 sm:flex-row sm:items-end">
+              <div>
+                <label className="mb-1 block text-sm font-medium text-zinc-700">
+                  Fecha de corte
+                </label>
+                <input
+                  type="date"
+                  value={fechaCorteBatch}
+                  onChange={(e) => setFechaCorteBatch(e.target.value)}
+                  className="w-full rounded-lg border border-zinc-300 px-4 py-2 text-sm focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20"
+                />
+              </div>
+              <button
+                onClick={ejecutarCierreDiario}
+                disabled={batchLoading || !fechaCorteBatch}
+                className="flex items-center justify-center gap-2 rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-60"
+              >
+                {batchLoading ? (
+                  <span className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" />
+                ) : (
+                  <span className="material-symbols-outlined text-lg">sync</span>
+                )}
+                <span>
+                  {batchLoading
+                    ? "Ejecutando batch..."
+                    : "Ejecutar cierre diario"}
+                </span>
+              </button>
+            </div>
+          </div>
+          {batchMessage && (
+            <p className="mt-3 text-sm text-zinc-600">{batchMessage}</p>
+          )}
         </div>
 
         {/* Estadísticas */}

@@ -1,4 +1,4 @@
-import { IsString, IsNotEmpty, IsUUID, IsArray, IsOptional, IsDateString } from 'class-validator';
+import { IsString, IsNotEmpty, IsUUID, IsArray, IsOptional, IsDateString, IsIn } from 'class-validator';
 
 export class CreateOperacionDto {
   @IsString()
@@ -9,9 +9,15 @@ export class CreateOperacionDto {
   @IsNotEmpty()
   fecha_inicio: string;
 
+  // Desde el frontend se envían códigos de contenedor, no UUIDs; por ahora solo los aceptamos como strings opcionales
+  @IsOptional()
   @IsArray()
-  @IsUUID('4', { each: true })
-  contenedores: string[];
+  contenedores?: string[];
+
+  // Estado inicial opcional (el servicio actualmente fuerza "En curso")
+  @IsOptional()
+  @IsUUID('4')
+  id_estado_operacion?: string;
 
   @IsOptional()
   @IsUUID('4')
@@ -20,6 +26,14 @@ export class CreateOperacionDto {
   @IsOptional()
   @IsUUID('4')
   buque_id?: string;
+
+  @IsOptional()
+  @IsIn(['vehiculo', 'buque'])
+  medio_transporte?: 'vehiculo' | 'buque';
+
+  @IsOptional()
+  @IsString()
+  descripcion?: string | null;
 
   @IsUUID('4')
   @IsNotEmpty()

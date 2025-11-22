@@ -22,6 +22,7 @@ interface Operacion {
     nombre: string;
   };
   contenedores?: any[];
+  contenedores_count?: number;
 }
 
 export default function OperacionesPage() {
@@ -282,7 +283,7 @@ export default function OperacionesPage() {
                             </span>
                           </td>
                           <td className="whitespace-nowrap px-4 py-3 text-zinc-600">
-                            {operacion.operador?.nombre || "Admin"}
+                            {operacion.operador?.nombre || "Sin asignar"}
                           </td>
                           <td className="whitespace-nowrap px-4 py-3 text-zinc-600">
                             <div className="flex items-center gap-2">
@@ -291,7 +292,7 @@ export default function OperacionesPage() {
                             </div>
                           </td>
                           <td className="whitespace-nowrap px-4 py-3 text-zinc-600">
-                            {operacion.contenedores?.length || Math.floor(Math.random() * 200) + 50}
+                            {operacion.contenedores_count ?? operacion.contenedores?.length ?? 0}
                           </td>
                           <td className="whitespace-nowrap px-4 py-3">
                             <div className="flex items-center gap-1">

@@ -132,11 +132,9 @@ export default function EditarOperacionPage() {
                   <input
                     type="text"
                     id="codigo"
-                    required
                     value={formData.codigo}
-                    onChange={(e) => setFormData({ ...formData, codigo: e.target.value })}
-                    className="h-11 w-full rounded-lg border border-zinc-300 bg-white px-4 text-sm text-zinc-900 transition-colors placeholder:text-zinc-400 focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20"
-                    placeholder="Ej: OP-2024-001"
+                    disabled
+                    className="h-11 w-full rounded-lg border border-zinc-300 bg-zinc-50 px-4 text-sm text-zinc-500"
                   />
                 </div>
 
@@ -149,10 +147,9 @@ export default function EditarOperacionPage() {
                     <input
                       type="datetime-local"
                       id="fecha_inicio"
-                      required
                       value={formData.fecha_inicio}
-                      onChange={(e) => setFormData({ ...formData, fecha_inicio: e.target.value })}
-                      className="h-11 w-full rounded-lg border border-zinc-300 bg-white px-4 text-sm text-zinc-900 transition-colors focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20"
+                      disabled
+                      className="h-11 w-full rounded-lg border border-zinc-300 bg-zinc-50 px-4 text-sm text-zinc-500"
                     />
                   </div>
 
@@ -218,7 +215,7 @@ export default function EditarOperacionPage() {
                 <button
                   type="submit"
                   disabled={saving}
-                  className="flex items-center gap-2 rounded-lg bg-primary px-6 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-primary/90 disabled:cursor-not-allowed disabled:opacity-50"
+                  className="flex items-center gap-2 rounded-lg bg-orange-600 px-6 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-orange-400/90 disabled:cursor-not-allowed disabled:opacity-50"
                 >
                   {saving ? (
                     <>

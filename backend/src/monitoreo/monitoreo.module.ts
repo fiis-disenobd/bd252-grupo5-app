@@ -33,6 +33,12 @@ import { EstadoOperacion } from '../shared/entities/estado-operacion.entity';
 import { EstadoContenedor } from '../shared/entities/estado-contenedor.entity';
 import { TipoContenedor } from '../shared/entities/tipo-contenedor.entity';
 import { EstadoEntrega } from '../shared/entities/estado-entrega.entity';
+import { EstatusNavegacion } from '../shared/entities/estatus-navegacion.entity';
+import { OperacionEmpleado } from '../gestion_maritima/entities/operacion-empleado.entity';
+import { OperacionContenedor } from '../gestion_maritima/entities/operacion-contenedor.entity';
+import { OperacionMaritima } from '../shared/entities/operacion-maritima.entity';
+import { OperacionTerrestre } from '../operaciones_terrestres/entities/operacion-terrestre.entity';
+import { OperacionTerrestreDetalle } from '../operaciones_terrestres/entities/operacion-terrestre-detalle.entity';
 
 // Controllers
 import { OperacionesController } from './controllers/operaciones.controller';
@@ -83,11 +89,17 @@ import { RecursosService } from './services/recursos.service';
       EstadoContenedor,
       TipoContenedor,
       EstadoEntrega,
+      EstatusNavegacion,
       Ruta,
       Puerto,
       Muelle,
       RutaMaritima,
       RutaPuertoIntermedio,
+      OperacionEmpleado,
+      OperacionContenedor,
+      OperacionMaritima,
+      OperacionTerrestre,
+      OperacionTerrestreDetalle,
     ]),
   ],
   controllers: [

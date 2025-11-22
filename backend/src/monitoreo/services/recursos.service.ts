@@ -59,9 +59,13 @@ export class RecursosService {
 
   async findVehiculos() {
     try {
-      return await this.vehiculoRepository.find({
-        order: { placa: 'ASC' },
-      });
+      // Solo vehículos con estado 'Disponible'
+      return await this.vehiculoRepository
+        .createQueryBuilder('v')
+        .leftJoinAndSelect('v.estado_vehiculo', 'ev')
+        .where('LOWER(ev.nombre) = :estado', { estado: 'disponible' })
+        .orderBy('v.placa', 'ASC')
+        .getMany();
     } catch (error) {
       console.error('Error al obtener vehículos:', error);
       return [];
@@ -70,9 +74,13 @@ export class RecursosService {
 
   async findBuques() {
     try {
-      return await this.buqueRepository.find({
-        order: { nombre: 'ASC' },
-      });
+      // Solo buques con estado 'Disponible'
+      return await this.buqueRepository
+        .createQueryBuilder('b')
+        .leftJoinAndSelect('b.estado_embarcacion', 'ee')
+        .where('LOWER(ee.nombre) = :estado', { estado: 'disponible' })
+        .orderBy('b.nombre', 'ASC')
+        .getMany();
     } catch (error) {
       console.error('Error al obtener buques:', error);
       return [];
