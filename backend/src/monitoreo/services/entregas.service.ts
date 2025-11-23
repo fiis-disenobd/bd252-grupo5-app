@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Entrega } from '../entities/entrega.entity';
@@ -84,7 +84,7 @@ export class EntregasService {
     try {
       const entrega = await this.entregaRepository.findOne({
         where: { id_entrega: id },
-        relations: ['estado_entrega', 'contenedor', 'importador'],
+        relations: ['estado_entrega', 'contenedor', 'contenedor.tipo_contenedor', 'importador'],
       });
 
       if (!entrega) {
@@ -154,6 +154,58 @@ export class EntregasService {
       }
       console.error('Error en update entrega:', error.message);
       throw new Error('Error al actualizar la entrega');
+    }
+  }
+
+  // Finalizar entrega (marcar como Entregada)
+  async finalize(id: string) {
+    try {
+      const entrega = await this.entregaRepository.findOne({
+        where: { id_entrega: id },
+        relations: ['estado_entrega'],
+      });
+
+      if (!entrega) {
+        throw new NotFoundException(`Entrega con ID ${id} no encontrada`);
+      }
+
+      const estadoActual = entrega.estado_entrega?.nombre?.toLowerCase() || '';
+
+      // Solo permitir finalizar si no está ya entregada/cancelada
+      const noFinalizable = ['entregada', 'cancelada'];
+      if (noFinalizable.includes(estadoActual)) {
+        throw new BadRequestException(
+          'Solo se pueden finalizar entregas que no estén ya "Entregada" o "Cancelada".',
+        );
+      }
+
+      // Buscar estado "Entregada"
+      const estadoEntregada = await this.estadoEntregaRepository.findOne({
+        where: { nombre: 'Entregada' },
+      });
+
+      if (!estadoEntregada) {
+        throw new Error('Estado "Entregada" no encontrado en la tabla estadoentrega');
+      }
+
+      await this.entregaRepository.update(
+        { id_entrega: id },
+        { id_estado_entrega: estadoEntregada.id_estado_entrega },
+      );
+
+      // Devolver entrega actualizada con relaciones
+      const entregaActualizada = await this.entregaRepository.findOne({
+        where: { id_entrega: id },
+        relations: ['estado_entrega', 'contenedor', 'contenedor.tipo_contenedor', 'importador'],
+      });
+
+      return entregaActualizada;
+    } catch (error) {
+      if (error instanceof NotFoundException || error instanceof BadRequestException) {
+        throw error;
+      }
+      console.error('Error en finalize entrega:', error.message);
+      throw new Error('Error al finalizar la entrega');
     }
   }
 
@@ -227,7 +279,7 @@ export class EntregasService {
       const contenedores = await this.contenedorRepository
         .createQueryBuilder('contenedor')
         .leftJoinAndSelect('contenedor.tipo_contenedor', 'tipo')
-        .leftJoin('monitoreo.entrega', 'entrega', 'entrega.id_contenedor = contenedor.id_contenedor')
+        .leftJoin(Entrega, 'entrega', 'entrega.id_contenedor = contenedor.id_contenedor')
         .where('entrega.id_entrega IS NULL')
         .take(100)
         .getMany();

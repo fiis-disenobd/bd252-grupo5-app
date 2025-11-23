@@ -19,6 +19,7 @@ import { Reporte } from './entities/reporte.entity';
 import { IncidenciaReporte } from './entities/incidencia-reporte.entity';
 import { Entrega } from './entities/entrega.entity';
 import { Importador } from './entities/importador.entity';
+import { ImportadorDireccion } from './entities/importador-direccion.entity';
 import { Documentacion } from './entities/documentacion.entity';
 import { DocumentacionContenedor } from './entities/documentacion-contenedor.entity';
 
@@ -52,6 +53,7 @@ import { GpsController } from './controllers/gps.controller';
 import { IncidenciasController } from './controllers/incidencias.controller';
 import { ReportesController } from './controllers/reportes.controller';
 import { EntregasController } from './controllers/entregas.controller';
+import { ImportadoresController } from './controllers/importadores.controller';
 import { RecursosController } from './controllers/recursos.controller';
 import { DocumentacionController } from './controllers/documentacion.controller';
 
@@ -63,6 +65,7 @@ import { GpsService } from './services/gps.service';
 import { IncidenciasService } from './services/incidencias.service';
 import { ReportesService } from './services/reportes.service';
 import { EntregasService } from './services/entregas.service';
+import { ImportadoresService } from './services/importadores.service';
 import { RecursosService } from './services/recursos.service';
 import { DocumentacionService } from './services/documentacion.service';
 
@@ -87,6 +90,7 @@ import { DocumentacionService } from './services/documentacion.service';
       Reporte,
       Entrega,
       Importador,
+      ImportadorDireccion,
       Documentacion,
       DocumentacionContenedor,
       // Shared entities
@@ -120,6 +124,7 @@ import { DocumentacionService } from './services/documentacion.service';
     IncidenciasController,
     ReportesController,
     EntregasController,
+    ImportadoresController,
     RecursosController,
     DocumentacionController,
   ],
@@ -131,6 +136,7 @@ import { DocumentacionService } from './services/documentacion.service';
     IncidenciasService,
     ReportesService,
     EntregasService,
+    ImportadoresService,
     RecursosService,
     DocumentacionService,
   ],

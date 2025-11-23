@@ -110,6 +110,11 @@ export class IncidenciasService {
 
   async create(data: CreateIncidenciaDto) {
     try {
+      // Validar que venga un id_usuario (desde el contexto de autenticación)
+      if (!data.id_usuario) {
+        throw new BadRequestException('Usuario no autenticado');
+      }
+
       // Validar que el tipo de incidencia existe
       const tipoExists = await this.tipoIncidenciaRepository.findOne({
         where: { id_tipo_incidencia: data.id_tipo_incidencia },
@@ -131,14 +136,11 @@ export class IncidenciasService {
       // Generar código único
       const codigo = await this.generarCodigoUnico();
 
-      // Por ahora usar un UUID fijo para id_usuario (en producción vendría del contexto de autenticación)
-      const id_usuario_default = '00000000-0000-0000-0000-000000000001';
-
       const incidencia = this.incidenciaRepository.create({
         ...data,
         codigo,
         id_estado_incidencia: estadoInicial.id_estado_incidencia,
-        id_usuario: data.id_usuario || id_usuario_default,
+        id_usuario: data.id_usuario,
       });
 
       const saved = await this.incidenciaRepository.save(incidencia);

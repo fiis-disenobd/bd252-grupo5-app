@@ -695,10 +695,13 @@ function ModalIncidencia({ show, modoEdicion, incidencia, tipos, estados, onClos
 
     const method = modoEdicion ? "PUT" : "POST";
 
+    const token = typeof window !== "undefined" ? localStorage.getItem("token") : null;
+
     fetch(url, {
       method,
       headers: {
         "Content-Type": "application/json",
+        ...(token ? { Authorization: `Bearer ${token}` } : {}),
       },
       body: JSON.stringify(formData),
     })

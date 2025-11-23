@@ -60,6 +60,8 @@ export default function ContenedorDetallePage() {
   const [contenedor, setContenedor] = useState<Contenedor | null>(null);
   const [loading, setLoading] = useState(true);
   const [showReporteModal, setShowReporteModal] = useState(false);
+  const [modalModo, setModalModo] = useState<"reporte" | "ver">("reporte");
+
   const [loadingNotificaciones, setLoadingNotificaciones] = useState(false);
   const [notificaciones, setNotificaciones] = useState<NotificacionSensor[]>([]);
   const [errorNotificaciones, setErrorNotificaciones] = useState<string | null>(null);
@@ -317,7 +319,7 @@ export default function ContenedorDetallePage() {
                     {contenedor.historial_posiciones.slice(0, 5).map((pos: any, index: number) => (
                       <div
                         key={pos.id_posicion}
-                        className="flex items-start gap-3 rounded-lg border border-zinc-200 p-3"
+                        className="flex items-start justify-between gap-3 rounded-lg border border-zinc-200 p-3"
                       >
                         <div className="flex h-8 w-8 items-center justify-center rounded-full bg-blue-100">
                           <span className="material-symbols-outlined text-blue-600">location_on</span>
@@ -379,6 +381,7 @@ export default function ContenedorDetallePage() {
                 <div className="space-y-2">
                   <button
                     onClick={() => {
+                      setModalModo("reporte");
                       setShowReporteModal(true);
                       cargarNotificaciones();
                     }}
@@ -389,6 +392,7 @@ export default function ContenedorDetallePage() {
                   </button>
                   <button
                     onClick={() => {
+                      setModalModo("ver");
                       setShowReporteModal(true);
                       cargarNotificaciones();
                     }}
@@ -459,10 +463,14 @@ export default function ContenedorDetallePage() {
             <div className="flex items-center justify-between border-b border-zinc-200 px-6 py-4">
               <div>
                 <h3 className="text-lg font-bold text-zinc-900">
-                  Reporte de notificaciones de sensores
+                  {modalModo === "reporte"
+                    ? "Reporte de notificaciones de sensores"
+                    : "Notificaciones de sensores"}
                 </h3>
                 <p className="text-xs text-zinc-500">
-                  Listado de notificaciones generadas por los sensores instalados en este contenedor.
+                  {modalModo === "reporte"
+                    ? "Listado de notificaciones para generar un reporte analítico."
+                    : "Listado de notificaciones generadas por los sensores de este contenedor."}
                 </p>
               </div>
               <button
@@ -511,15 +519,17 @@ export default function ContenedorDetallePage() {
                             Notificaciones encontradas: <span className="font-semibold">{notificaciones.length}</span>
                           </span>
                         </div>
-                        <button
-                          type="button"
-                          onClick={seleccionarTodas}
-                          className="text-xs font-medium text-primary hover:text-primary/80"
-                        >
-                          {notificacionesSeleccionadas.length === notificaciones.length
-                            ? "Quitar selección"
-                            : "Seleccionar todas"}
-                        </button>
+                        {modalModo === "reporte" && (
+                          <button
+                            type="button"
+                            onClick={seleccionarTodas}
+                            className="text-xs font-medium text-primary hover:text-primary/80"
+                          >
+                            {notificacionesSeleccionadas.length === notificaciones.length
+                              ? "Quitar selección"
+                              : "Seleccionar todas"}
+                          </button>
+                        )}
                       </div>
 
                       <div className="space-y-3">
@@ -570,14 +580,16 @@ export default function ContenedorDetallePage() {
                                   </div>
                                 </div>
                               </div>
-                              <div className="mt-1 flex items-start">
-                                <input
-                                  type="checkbox"
-                                  checked={checked}
-                                  onChange={() => toggleSeleccionNotificacion(notif.id_notificacion)}
-                                  className="h-4 w-4 rounded border-zinc-300 text-primary focus:ring-primary/40"
-                                />
-                              </div>
+                              {modalModo === "reporte" && (
+                                <div className="mt-1 flex items-start">
+                                  <input
+                                    type="checkbox"
+                                    checked={checked}
+                                    onChange={() => toggleSeleccionNotificacion(notif.id_notificacion)}
+                                    className="h-4 w-4 rounded border-zinc-300 text-primary focus:ring-primary/40"
+                                  />
+                                </div>
+                              )}
                             </div>
                           );
                         })}
@@ -586,46 +598,48 @@ export default function ContenedorDetallePage() {
                   )}
                 </div>
 
-                {/* Columna derecha: comentario y acciones */}
-                <div className="w-full max-w-xs border-l border-zinc-200 pl-4">
-                  <div className="mb-3">
-                    <label className="mb-1 block text-xs font-medium text-zinc-700">
-                      Comentario del reporte (opcional)
-                    </label>
-                    <textarea
-                      value={comentarioReporte}
-                      onChange={(e) => setComentarioReporte(e.target.value)}
-                      rows={6}
-                      className="w-full rounded-lg border border-zinc-300 px-3 py-2 text-sm focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20"
-                      placeholder="Resumen, observaciones, acciones tomadas..."
-                    />
-                  </div>
+                {modalModo === "reporte" && (
+                  // Columna derecha: comentario y acciones solo en modo reporte
+                  <div className="w-full max-w-xs border-l border-zinc-200 pl-4">
+                    <div className="mb-3">
+                      <label className="mb-1 block text-xs font-medium text-zinc-700">
+                        Comentario del reporte (opcional)
+                      </label>
+                      <textarea
+                        value={comentarioReporte}
+                        onChange={(e) => setComentarioReporte(e.target.value)}
+                        rows={6}
+                        className="w-full rounded-lg border border-zinc-300 px-3 py-2 text-sm focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20"
+                        placeholder="Resumen, observaciones, acciones tomadas..."
+                      />
+                    </div>
 
-                  {mensajeReporte && (
-                    <div className="mb-3 text-xs text-zinc-600">{mensajeReporte}</div>
-                  )}
+                    {mensajeReporte && (
+                      <div className="mb-3 text-xs text-zinc-600">{mensajeReporte}</div>
+                    )}
 
-                  <div className="flex flex-col gap-2">
-                    <button
-                      onClick={enviarReporte}
-                      disabled={enviandoReporte || notificaciones.length === 0}
-                      className="inline-flex items-center justify-center gap-2 rounded-lg bg-orange-500 px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-orange-600 disabled:cursor-not-allowed disabled:opacity-60"
-                    >
-                      {enviandoReporte ? (
-                        <span className="material-symbols-outlined text-sm animate-spin">progress_activity</span>
-                      ) : (
-                        <span className="material-symbols-outlined text-sm">description</span>
-                      )}
-                      Generar Reporte
-                    </button>
-                    <button
-                      onClick={() => setShowReporteModal(false)}
-                      className="rounded-lg px-4 py-2 text-sm font-medium text-zinc-700 hover:bg-zinc-100"
-                    >
-                      Cerrar
-                    </button>
+                    <div className="flex flex-col gap-2">
+                      <button
+                        onClick={enviarReporte}
+                        disabled={enviandoReporte || notificaciones.length === 0}
+                        className="inline-flex items-center justify-center gap-2 rounded-lg bg-orange-500 px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-orange-600 disabled:cursor-not-allowed disabled:opacity-60"
+                      >
+                        {enviandoReporte ? (
+                          <span className="material-symbols-outlined text-sm animate-spin">progress_activity</span>
+                        ) : (
+                          <span className="material-symbols-outlined text-sm">description</span>
+                        )}
+                        Generar Reporte
+                      </button>
+                      <button
+                        onClick={() => setShowReporteModal(false)}
+                        className="rounded-lg px-4 py-2 text-sm font-medium text-zinc-700 hover:bg-zinc-100"
+                      >
+                        Cerrar
+                      </button>
+                    </div>
                   </div>
-                </div>
+                )}
               </div>
             </div>
           </div>

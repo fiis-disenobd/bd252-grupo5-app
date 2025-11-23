@@ -28,9 +28,23 @@ interface EstadoEntrega {
   nombre: string;
 }
 
+interface EntregasResponse {
+  entregas: Entrega[];
+  total: number;
+  pagina: number;
+  total_paginas: number;
+  por_pagina: number;
+}
+
+interface EstadisticasEntregas {
+  total: number;
+  este_mes: number;
+  pendientes: number;
+}
+
 export default function EntregasPage() {
-  const [data, setData] = useState<any>({ entregas: [], total: 0 });
-  const [estadisticas, setEstadisticas] = useState<any>({});
+  const [data, setData] = useState<EntregasResponse | null>(null);
+  const [estadisticas, setEstadisticas] = useState<EstadisticasEntregas | null>(null);
   const [loading, setLoading] = useState(true);
   const [paginaActual, setPaginaActual] = useState(1);
   const [estados, setEstados] = useState<EstadoEntrega[]>([]);
@@ -164,7 +178,7 @@ export default function EntregasPage() {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm font-medium text-zinc-500">Total de Entregas</p>
-                <p className="mt-2 text-3xl font-bold text-zinc-900">{estadisticas.total || 0}</p>
+                <p className="mt-2 text-3xl font-bold text-zinc-900">{estadisticas?.total ?? 0}</p>
               </div>
               <span className="material-symbols-outlined text-4xl text-primary">local_shipping</span>
             </div>
@@ -174,7 +188,7 @@ export default function EntregasPage() {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm font-medium text-zinc-500">Este Mes</p>
-                <p className="mt-2 text-3xl font-bold text-zinc-900">{estadisticas.este_mes || 0}</p>
+                <p className="mt-2 text-3xl font-bold text-zinc-900">{estadisticas?.este_mes ?? 0}</p>
               </div>
               <span className="material-symbols-outlined text-4xl text-green-600">calendar_month</span>
             </div>
@@ -184,7 +198,7 @@ export default function EntregasPage() {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm font-medium text-zinc-500">Pendientes</p>
-                <p className="mt-2 text-3xl font-bold text-zinc-900">{estadisticas.pendientes || 0}</p>
+                <p className="mt-2 text-3xl font-bold text-zinc-900">{estadisticas?.pendientes ?? 0}</p>
               </div>
               <span className="material-symbols-outlined text-4xl text-yellow-600">pending_actions</span>
             </div>
@@ -248,7 +262,7 @@ export default function EntregasPage() {
             <div className="flex items-center justify-center py-12">
               <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent"></div>
             </div>
-          ) : data.entregas.length > 0 ? (
+          ) : data && data.entregas.length > 0 ? (
             <>
               <div className="overflow-x-auto">
                 <table className="w-full">
@@ -270,12 +284,28 @@ export default function EntregasPage() {
                           <span className="font-mono text-sm font-medium text-zinc-900">{entrega.codigo}</span>
                         </td>
                         <td className="px-6 py-4">
-                          <span className="text-sm text-zinc-900">{entrega.contenedor?.codigo || "N/A"}</span>
+                          {entrega.contenedor ? (
+                            <Link
+                              href={`/monitoreo/contenedores/${entrega.contenedor.id_contenedor}`}
+                              className="text-sm font-medium text-blue-600 hover:underline"
+                            >
+                              {entrega.contenedor.codigo}
+                            </Link>
+                          ) : (
+                            <span className="text-sm text-zinc-500">N/A</span>
+                          )}
                         </td>
                         <td className="px-6 py-4">
-                          <span className="line-clamp-1 text-sm text-zinc-600">
-                            {entrega.importador?.razon_social || "N/A"}
-                          </span>
+                          {entrega.importador ? (
+                            <Link
+                              href={`/monitoreo/importadores/${entrega.importador.id_importador}`}
+                              className="line-clamp-1 text-sm font-medium text-blue-600 hover:underline"
+                            >
+                              {entrega.importador.razon_social}
+                            </Link>
+                          ) : (
+                            <span className="line-clamp-1 text-sm text-zinc-500">N/A</span>
+                          )}
                         </td>
                         <td className="px-6 py-4">
                           <span className="line-clamp-1 text-sm text-zinc-600">{entrega.lugar_entrega}</span>

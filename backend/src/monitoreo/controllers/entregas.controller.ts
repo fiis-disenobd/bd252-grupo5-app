@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Put, Delete, Param, Body, Query } from '@nestjs/common';
+import { Controller, Get, Post, Put, Patch, Delete, Param, Body, Query } from '@nestjs/common';
 import { EntregasService } from '../services/entregas.service';
 import type { CreateEntregaDto, UpdateEntregaDto } from '../services/entregas.service';
 
@@ -52,6 +52,12 @@ export class EntregasController {
   @Put(':id')
   update(@Param('id') id: string, @Body() data: UpdateEntregaDto) {
     return this.entregasService.update(id, data);
+  }
+
+   // PATCH /monitoreo/entregas/:id/finalizar - Marcar entrega como Entregada
+  @Patch(':id/finalizar')
+  finalize(@Param('id') id: string) {
+    return this.entregasService.finalize(id);
   }
 
   // DELETE /monitoreo/entregas/:id - Eliminar entrega

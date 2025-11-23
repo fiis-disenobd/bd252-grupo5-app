@@ -34,6 +34,7 @@ export default function VerEntregaPage() {
   const router = useRouter();
   const [entrega, setEntrega] = useState<Entrega | null>(null);
   const [loading, setLoading] = useState(true);
+  const [finalizando, setFinalizando] = useState(false);
 
   useEffect(() => {
     fetch(`http://localhost:3001/monitoreo/entregas/${params.id}`)
@@ -70,6 +71,46 @@ export default function VerEntregaPage() {
       default:
         return "bg-zinc-100 text-zinc-700 border-zinc-200";
     }
+  };
+
+  const puedeFinalizar = () => {
+    const nombre = entrega?.estado_entrega?.nombre?.toLowerCase() || "";
+    return !!nombre && nombre !== "entregada" && nombre !== "cancelada";
+  };
+
+  const handleFinalizarEntrega = () => {
+    if (!entrega) return;
+    if (!puedeFinalizar()) return;
+
+    const confirmar = window.confirm(
+      "¿Seguro que deseas marcar esta entrega como 'Entregada'? Esta acción no se puede deshacer.",
+    );
+    if (!confirmar) return;
+
+    setFinalizando(true);
+
+    fetch(`http://localhost:3001/monitoreo/entregas/${entrega.id_entrega}/finalizar`, {
+      method: "PATCH",
+      headers: {
+        "Content-Type": "application/json",
+      },
+    })
+      .then(async (res) => {
+        if (!res.ok) {
+          const err = await res.json().catch(() => ({}));
+          throw new Error(err.message || "Error al finalizar la entrega");
+        }
+        return res.json();
+      })
+      .then((data) => {
+        setEntrega(data);
+        setFinalizando(false);
+      })
+      .catch((err) => {
+        console.error("Error finalizando entrega:", err);
+        setFinalizando(false);
+        alert(err.message || "No se pudo finalizar la entrega");
+      });
   };
 
   if (loading) {
@@ -113,6 +154,18 @@ export default function VerEntregaPage() {
               <span className="material-symbols-outlined text-lg">edit</span>
               Editar
             </Link>
+            {puedeFinalizar() && (
+              <button
+                onClick={handleFinalizarEntrega}
+                disabled={finalizando}
+                className="flex items-center gap-2 rounded-lg bg-green-600 px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-green-500 disabled:cursor-not-allowed disabled:opacity-60"
+              >
+                <span className="material-symbols-outlined text-lg">
+                  {finalizando ? "hourglass_bottom" : "task_alt"}
+                </span>
+                {finalizando ? "Finalizando..." : "Finalizar Entrega"}
+              </button>
+            )}
           </div>
         </div>
 
