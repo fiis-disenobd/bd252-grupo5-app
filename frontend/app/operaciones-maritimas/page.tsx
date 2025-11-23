@@ -25,6 +25,12 @@ const actions = [
     description: "Revisar inspecciones y hallazgos asociados.",
     href: "/operaciones-maritimas/hallazgos",
   },
+  {
+    icon: "rule",
+    title: "Gestionar Incidencias",
+    description: "Administrar y dar seguimiento a incidencias registradas.",
+    href: "/operaciones-maritimas/incidencias/gestion",
+  },
 ];
 
 export default function OperacionesMaritimasPage() {
