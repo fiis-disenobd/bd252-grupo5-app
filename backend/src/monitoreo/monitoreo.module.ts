@@ -54,7 +54,6 @@ import { IncidenciasController } from './controllers/incidencias.controller';
 import { ReportesController } from './controllers/reportes.controller';
 import { EntregasController } from './controllers/entregas.controller';
 import { ImportadoresController } from './controllers/importadores.controller';
-import { RecursosController } from './controllers/recursos.controller';
 import { DocumentacionController } from './controllers/documentacion.controller';
 
 // Services
@@ -66,7 +65,6 @@ import { IncidenciasService } from './services/incidencias.service';
 import { ReportesService } from './services/reportes.service';
 import { EntregasService } from './services/entregas.service';
 import { ImportadoresService } from './services/importadores.service';
-import { RecursosService } from './services/recursos.service';
 import { DocumentacionService } from './services/documentacion.service';
 
 @Module({
@@ -125,7 +123,6 @@ import { DocumentacionService } from './services/documentacion.service';
     ReportesController,
     EntregasController,
     ImportadoresController,
-    RecursosController,
     DocumentacionController,
   ],
   providers: [
@@ -137,7 +134,6 @@ import { DocumentacionService } from './services/documentacion.service';
     ReportesService,
     EntregasService,
     ImportadoresService,
-    RecursosService,
     DocumentacionService,
   ],
   exports: [

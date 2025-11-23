@@ -5,6 +5,7 @@ import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { MonitoreoModule } from './monitoreo/monitoreo.module';
 import { AuthModule } from './auth/auth.module';
+import { GestionMaritimaModule } from './gestion_maritima/gestion_maritima.module';
 
 @Module({
   imports: [
@@ -34,6 +35,7 @@ import { AuthModule } from './auth/auth.module';
     // Módulos de la aplicación
     AuthModule,
     MonitoreoModule,
+    GestionMaritimaModule,
   ],
   controllers: [AppController],
   providers: [AppService],
