@@ -42,6 +42,34 @@ export class ReportesController {
     return this.reportesService.create(data);
   }
 
+  // POST /monitoreo/reportes/operacion/:id - Crear reporte a partir de una operación e incidencias
+  @Post('operacion/:id')
+  crearReporteOperacion(
+    @Param('id') idOperacion: string,
+    @Body()
+    body: { incidenciasIds?: string[]; comentario?: string },
+  ) {
+    return this.reportesService.crearReporteOperacion(
+      idOperacion,
+      body.incidenciasIds || [],
+      body.comentario,
+    );
+  }
+
+  // POST /monitoreo/reportes/contenedor/:id - Crear reporte a partir de notificaciones de sensores de un contenedor
+  @Post('contenedor/:id')
+  crearReporteContenedor(
+    @Param('id') idContenedor: string,
+    @Body()
+    body: { notificacionesIds?: string[]; comentario?: string },
+  ) {
+    return this.reportesService.crearReporteContenedor(
+      idContenedor,
+      body.notificacionesIds || [],
+      body.comentario,
+    );
+  }
+
   // PUT /monitoreo/reportes/:id - Actualizar reporte
   @Put(':id')
   update(@Param('id') id: string, @Body() data: UpdateReporteDto) {

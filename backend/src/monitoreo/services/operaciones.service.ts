@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { MoreThanOrEqual, Repository } from 'typeorm';
 import { Operacion } from '../../shared/entities/operacion.entity';
@@ -337,7 +337,25 @@ export class OperacionesService {
   }
 
   async finalize(id: string) {
-    const operacion = await this.findOne(id);
+    // Cargar la entidad real de Operacion con su estado actual
+    const operacion = await this.operacionRepository.findOne({
+      where: { id_operacion: id },
+      relations: ['estado_operacion'],
+    });
+
+    if (!operacion) {
+      throw new NotFoundException(`Operación con ID ${id} no encontrada`);
+    }
+
+    // Validar que la operación esté en un estado que permita finalizarse
+    const estadoActual = operacion.estado_operacion?.nombre?.toLowerCase() || '';
+    const puedeFinalizar = estadoActual === 'en curso' || estadoActual === 'en espera';
+
+    if (!puedeFinalizar) {
+      throw new BadRequestException(
+        'Solo se pueden finalizar operaciones en estado "En Curso" o "En Espera".',
+      );
+    }
 
     const estadoCompletada = await this.estadoOperacionRepository.findOne({
       where: { nombre: 'Completada' },
@@ -347,10 +365,23 @@ export class OperacionesService {
       throw new Error('Estado "Completada" no encontrado. Por favor, ejecuta los seeders para poblar los estados.');
     }
 
-    operacion.fecha_fin = new Date();
-    operacion.id_estado_operacion = estadoCompletada.id_estado_operacion;
+    const ahora = new Date();
 
-    return await this.operacionRepository.save(operacion);
+    await this.operacionRepository.update(
+      { id_operacion: id },
+      {
+        fecha_fin: ahora,
+        id_estado_operacion: estadoCompletada.id_estado_operacion,
+      },
+    );
+
+    // Devolver la operación actualizada (incluyendo el nuevo estado)
+    const operacionActualizada = await this.operacionRepository.findOne({
+      where: { id_operacion: id },
+      relations: ['estado_operacion'],
+    });
+
+    return operacionActualizada;
   }
 
   async remove(id: string) {

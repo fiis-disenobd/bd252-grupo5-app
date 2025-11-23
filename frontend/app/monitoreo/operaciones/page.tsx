@@ -101,6 +101,9 @@ export default function OperacionesPage() {
         const data = await fetch(url).then(res => res.json());
         setOperaciones(Array.isArray(data) ? data : []);
         setOperacionAFinalizar(null);
+      } else {
+        const errorText = await response.text();
+        alert(errorText || 'No se pudo finalizar la operación.');
       }
     } catch (error) {
       console.error("Error al finalizar operación:", error);
@@ -310,15 +313,21 @@ export default function OperacionesPage() {
                               >
                                 <span className="material-symbols-outlined text-xl">edit</span>
                               </Link>
-                              {operacion.estado_operacion.nombre !== "Completada" && (
-                                <button
-                                  onClick={() => setOperacionAFinalizar(operacion.id_operacion)}
-                                  className="flex h-9 w-9 items-center justify-center rounded-lg text-zinc-600 transition-colors hover:bg-green-50 hover:text-green-600"
-                                  title="Finalizar operación"
-                                >
-                                  <span className="material-symbols-outlined text-xl">task_alt</span>
-                                </button>
-                              )}
+                              {(() => {
+                                const estado = (operacion.estado_operacion.nombre || '').toLowerCase();
+                                const puedeFinalizar = estado === 'en curso' || estado === 'en espera';
+                                return (
+                                  puedeFinalizar && (
+                                    <button
+                                      onClick={() => setOperacionAFinalizar(operacion.id_operacion)}
+                                      className="flex h-9 w-9 items-center justify-center rounded-lg text-zinc-600 transition-colors hover:bg-green-50 hover:text-green-600"
+                                      title="Finalizar operación"
+                                    >
+                                      <span className="material-symbols-outlined text-xl">task_alt</span>
+                                    </button>
+                                  )
+                                );
+                              })()}
                               <button
                                 onClick={() => setOperacionAEliminar(operacion.id_operacion)}
                                 className="flex h-9 w-9 items-center justify-center rounded-lg text-zinc-600 transition-colors hover:bg-red-50 hover:text-red-600"

@@ -25,6 +25,11 @@ export class SensoresController {
     return this.sensoresService.getNotificacionesPorDia(dias ? parseInt(dias) : 7);
   }
 
+  @Get('notificaciones/:id')
+  async findNotificacionDetalle(@Param('id') id: string) {
+    return this.sensoresService.findNotificacionDetalle(id);
+  }
+
   @Get(':id/analiticas')
   getAnaliticas(@Param('id') id: string) {
     return this.sensoresService.getAnaliticas(id);

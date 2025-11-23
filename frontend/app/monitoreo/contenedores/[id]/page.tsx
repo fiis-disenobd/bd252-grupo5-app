@@ -26,16 +26,57 @@ interface Contenedor {
     fecha_hora: string;
   };
   historial_posiciones?: any[];
+  documentacion?: {
+    id_documentacion: string;
+    codigo: string;
+    nombre: string;
+    fecha_emision: string;
+    tipo_documento?: {
+      nombre: string;
+    };
+  } | null;
+}
+
+interface NotificacionSensor {
+  id_notificacion: string;
+  codigo: string;
+  fecha_hora: string;
+  valor: number;
+  tipo_notificacion?: {
+    nombre: string;
+  };
+  sensor?: {
+    id_sensor: string;
+    codigo: string;
+    nombre: string;
+    tipo_sensor?: {
+      nombre: string;
+    };
+  };
 }
 
 export default function ContenedorDetallePage() {
   const params = useParams();
   const [contenedor, setContenedor] = useState<Contenedor | null>(null);
   const [loading, setLoading] = useState(true);
+  const [showReporteModal, setShowReporteModal] = useState(false);
+  const [loadingNotificaciones, setLoadingNotificaciones] = useState(false);
+  const [notificaciones, setNotificaciones] = useState<NotificacionSensor[]>([]);
+  const [errorNotificaciones, setErrorNotificaciones] = useState<string | null>(null);
+  const [notificacionesSeleccionadas, setNotificacionesSeleccionadas] = useState<string[]>([]);
+  const [comentarioReporte, setComentarioReporte] = useState("");
+  const [enviandoReporte, setEnviandoReporte] = useState(false);
+  const [mensajeReporte, setMensajeReporte] = useState<string | null>(null);
 
   useEffect(() => {
     fetch(`http://localhost:3001/monitoreo/contenedores/${params.id}/detalle`)
-      .then((res) => res.json())
+      .then(async (res) => {
+        if (!res.ok) {
+          throw new Error(`Error al cargar contenedor: ${res.status}`);
+        }
+        const text = await res.text();
+        return text ? JSON.parse(text) : null;
+      })
       .then((data) => {
         setContenedor(data);
         setLoading(false);
@@ -45,6 +86,75 @@ export default function ContenedorDetallePage() {
         setLoading(false);
       });
   }, [params.id]);
+
+  const cargarNotificaciones = () => {
+    if (!contenedor) return;
+    setLoadingNotificaciones(true);
+    setErrorNotificaciones(null);
+
+    fetch(
+      `http://localhost:3001/monitoreo/sensores/notificaciones?contenedor=${contenedor.id_contenedor}&limite=100`
+    )
+      .then((res) => res.json())
+      .then((data) => {
+        setNotificaciones(data?.notificaciones || []);
+        setNotificacionesSeleccionadas([]);
+        setComentarioReporte("");
+        setMensajeReporte(null);
+        setLoadingNotificaciones(false);
+      })
+      .catch((err) => {
+        console.error("Error cargando notificaciones:", err);
+        setErrorNotificaciones("No se pudieron cargar las notificaciones");
+        setLoadingNotificaciones(false);
+      });
+  };
+
+  const toggleSeleccionNotificacion = (id: string) => {
+    setNotificacionesSeleccionadas((prev) =>
+      prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id],
+    );
+  };
+
+  const seleccionarTodas = () => {
+    if (notificacionesSeleccionadas.length === notificaciones.length) {
+      setNotificacionesSeleccionadas([]);
+    } else {
+      setNotificacionesSeleccionadas(notificaciones.map((n) => n.id_notificacion));
+    }
+  };
+
+  const enviarReporte = async () => {
+    if (!contenedor) return;
+    setEnviandoReporte(true);
+    setMensajeReporte(null);
+
+    try {
+      const resp = await fetch(
+        `http://localhost:3001/monitoreo/reportes/contenedor/${contenedor.id_contenedor}`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            notificacionesIds: notificacionesSeleccionadas,
+            comentario: comentarioReporte || undefined,
+          }),
+        },
+      );
+
+      if (!resp.ok) {
+        throw new Error("Error al generar el reporte");
+      }
+
+      const data = await resp.json();
+      setMensajeReporte(`Reporte generado con código ${data.codigo}`);
+      setEnviandoReporte(false);
+    } catch (err) {
+      console.error(err);
+      setMensajeReporte("Ocurrió un error al generar el reporte");
+      setEnviandoReporte(false);
+    }
+  };
 
   const getEstadoColor = (estado?: string) => {
     if (!estado) return "bg-gray-100 text-gray-700";
@@ -106,7 +216,7 @@ export default function ContenedorDetallePage() {
   return (
     <div className="flex h-screen w-full flex-col overflow-hidden">
       <MapHeader />
-      
+
       <main className="flex-1 overflow-y-auto bg-zinc-50 p-6">
         <div className="mx-auto max-w-7xl">
           {/* Breadcrumb */}
@@ -178,7 +288,7 @@ export default function ContenedorDetallePage() {
                     Sensores Asociados ({contenedor.sensores?.length || 0})
                   </h2>
                 </div>
-                
+
                 {contenedor.sensores && contenedor.sensores.length > 0 ? (
                   <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
                     {contenedor.sensores.map((sensor) => (
@@ -267,20 +377,260 @@ export default function ContenedorDetallePage() {
               <div className="rounded-xl border border-zinc-200 bg-white p-6 shadow-sm">
                 <h2 className="mb-4 text-lg font-bold text-zinc-900">Acciones Rápidas</h2>
                 <div className="space-y-2">
-                  <button className="flex w-full items-center gap-2 rounded-lg border border-zinc-300 bg-white px-4 py-2.5 text-sm font-semibold text-zinc-700 transition-colors hover:bg-zinc-50">
+                  <button
+                    onClick={() => {
+                      setShowReporteModal(true);
+                      cargarNotificaciones();
+                    }}
+                    className="flex w-full items-center gap-2 rounded-lg border border-zinc-300 bg-white px-4 py-2.5 text-sm font-semibold text-zinc-700 transition-colors hover:bg-zinc-50"
+                  >
                     <span className="material-symbols-outlined text-lg">description</span>
                     Generar Reporte
                   </button>
-                  <button className="flex w-full items-center gap-2 rounded-lg border border-zinc-300 bg-white px-4 py-2.5 text-sm font-semibold text-zinc-700 transition-colors hover:bg-zinc-50">
-                    <span className="material-symbols-outlined text-lg">download</span>
-                    Exportar Datos
+                  <button
+                    onClick={() => {
+                      setShowReporteModal(true);
+                      cargarNotificaciones();
+                    }}
+                    className="flex w-full items-center gap-2 rounded-lg border border-zinc-300 bg-white px-4 py-2.5 text-sm font-semibold text-zinc-700 transition-colors hover:bg-zinc-50"
+                  >
+                    <span className="material-symbols-outlined text-lg">notifications</span>
+                    Ver Notificaciones
                   </button>
                 </div>
+              </div>
+
+              {/* Documentación asociada al contenedor */}
+              <div className="rounded-xl border border-zinc-200 bg-white p-6 shadow-sm">
+                <div className="mb-4 flex items-center justify-between">
+                  <h2 className="text-lg font-bold text-zinc-900">Documentación</h2>
+                  <span className="text-xs text-zinc-500">
+                    {contenedor.documentacion ? '1 documento' : '0 documentos'}
+                  </span>
+                </div>
+
+                {contenedor.documentacion ? (
+                  <div className="flex items-start gap-3 rounded-lg border border-zinc-200 p-3">
+                    <div className="mt-1 flex h-9 w-9 items-center justify-center rounded-full bg-blue-50">
+                      <span className="material-symbols-outlined text-lg text-blue-600">description</span>
+                    </div>
+                    <div className="flex-1">
+                      <div className="flex items-center justify-between gap-2">
+                        <div>
+                          <p className="text-sm font-semibold text-zinc-900">
+                            {contenedor.documentacion.nombre}
+                          </p>
+                          <p className="text-xs text-zinc-500">
+                            {contenedor.documentacion.tipo_documento?.nombre || 'Documento'} ·
+                            {' '}
+                            Código {contenedor.documentacion.codigo}
+                          </p>
+                        </div>
+                      </div>
+                      <p className="mt-2 text-xs text-zinc-500">
+                        Fecha de emisión:{' '}
+                        {new Date(contenedor.documentacion.fecha_emision).toLocaleDateString('es-ES')}
+                      </p>
+                      <div className="mt-3">
+                        <Link
+                          href={`/monitoreo/documentacion/${contenedor.documentacion.id_documentacion}`}
+                          className="inline-flex items-center gap-1 text-xs font-semibold text-primary hover:text-primary/80"
+                        >
+                          <span className="material-symbols-outlined text-sm">open_in_new</span>
+                          Ver detalle de documentación
+                        </Link>
+                      </div>
+                    </div>
+                  </div>
+                ) : (
+                  <p className="text-xs text-zinc-500">
+                    No hay documentación registrada para este contenedor.
+                  </p>
+                )}
               </div>
             </div>
           </div>
         </div>
       </main>
+
+      {showReporteModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-4">
+          <div className="max-h-[80vh] w-full max-w-3xl overflow-hidden rounded-2xl bg-white shadow-xl">
+            <div className="flex items-center justify-between border-b border-zinc-200 px-6 py-4">
+              <div>
+                <h3 className="text-lg font-bold text-zinc-900">
+                  Reporte de notificaciones de sensores
+                </h3>
+                <p className="text-xs text-zinc-500">
+                  Listado de notificaciones generadas por los sensores instalados en este contenedor.
+                </p>
+              </div>
+              <button
+                onClick={() => setShowReporteModal(false)}
+                className="rounded-full p-1.5 text-zinc-500 hover:bg-zinc-100"
+              >
+                <span className="material-symbols-outlined text-lg">close</span>
+              </button>
+            </div>
+
+            <div className="border-b border-zinc-200 px-6 py-3 text-xs text-zinc-500">
+              {contenedor && (
+                <span>
+                  Contenedor <span className="font-mono font-semibold">{contenedor.codigo}</span> ·
+                  Sensores instalados: {contenedor.sensores?.length || 0}
+                </span>
+              )}
+            </div>
+
+            <div className="px-6 py-4">
+              <div className="flex gap-4">
+                {/* Columna izquierda: listado de notificaciones */}
+                <div className="flex-1 max-h-[60vh] overflow-y-auto pr-2">
+                  {loadingNotificaciones ? (
+                    <div className="flex items-center justify-center py-8 text-sm text-zinc-500">
+                      Cargando notificaciones...
+                    </div>
+                  ) : errorNotificaciones ? (
+                    <div className="rounded-lg bg-red-50 px-4 py-3 text-sm text-red-700">
+                      {errorNotificaciones}
+                    </div>
+                  ) : notificaciones.length === 0 ? (
+                    <div className="flex flex-col items-center justify-center py-10 text-center">
+                      <span className="material-symbols-outlined mb-2 text-4xl text-zinc-300">
+                        notifications_off
+                      </span>
+                      <p className="text-sm text-zinc-500">
+                        No se encontraron notificaciones para los sensores de este contenedor.
+                      </p>
+                    </div>
+                  ) : (
+                    <>
+                      <div className="mb-3 flex items-center justify-between text-xs text-zinc-500">
+                        <div>
+                          <span>
+                            Notificaciones encontradas: <span className="font-semibold">{notificaciones.length}</span>
+                          </span>
+                        </div>
+                        <button
+                          type="button"
+                          onClick={seleccionarTodas}
+                          className="text-xs font-medium text-primary hover:text-primary/80"
+                        >
+                          {notificacionesSeleccionadas.length === notificaciones.length
+                            ? "Quitar selección"
+                            : "Seleccionar todas"}
+                        </button>
+                      </div>
+
+                      <div className="space-y-3">
+                        {notificaciones.map((notif) => {
+                          const checked = notificacionesSeleccionadas.includes(notif.id_notificacion);
+                          return (
+                            <div
+                              key={notif.id_notificacion}
+                              className="flex items-start justify-between gap-3 rounded-lg border border-zinc-200 p-3"
+                            >
+                              <div className="flex flex-1 gap-3">
+                                <div className="mt-1 flex h-8 w-8 items-center justify-center rounded-full bg-orange-50">
+                                  <span className="material-symbols-outlined text-base text-orange-600">
+                                    notification_important
+                                  </span>
+                                </div>
+                                <div className="flex-1">
+                                  <div className="flex flex-wrap items-center gap-2">
+                                    <span className="font-mono text-xs font-semibold text-zinc-900">
+                                      {notif.codigo}
+                                    </span>
+                                    <span className="rounded-full bg-zinc-100 px-2 py-0.5 text-xs text-zinc-600">
+                                      {notif.tipo_notificacion?.nombre || "Sin tipo"}
+                                    </span>
+                                    {notif.sensor && (
+                                      <span className="rounded-full bg-blue-50 px-2 py-0.5 text-xs text-blue-700">
+                                        Sensor {notif.sensor.codigo}
+                                        {notif.sensor.tipo_sensor?.nombre
+                                          ? ` · ${notif.sensor.tipo_sensor.nombre}`
+                                          : ""}
+                                      </span>
+                                    )}
+                                  </div>
+                                  <p className="mt-1 text-sm text-zinc-700">
+                                    Valor registrado: <span className="font-semibold">{notif.valor}</span>
+                                  </p>
+                                  <p className="mt-1 text-xs text-zinc-400">
+                                    {new Date(notif.fecha_hora).toLocaleString("es-ES")}
+                                  </p>
+                                  <div className="mt-2">
+                                    <Link
+                                      href={`/monitoreo/notificaciones/${notif.id_notificacion}`}
+                                      className="inline-flex items-center gap-1 text-[11px] font-semibold text-primary hover:text-primary/80"
+                                    >
+                                      <span className="material-symbols-outlined text-xs">open_in_new</span>
+                                      Ver detalle de notificación
+                                    </Link>
+                                  </div>
+                                </div>
+                              </div>
+                              <div className="mt-1 flex items-start">
+                                <input
+                                  type="checkbox"
+                                  checked={checked}
+                                  onChange={() => toggleSeleccionNotificacion(notif.id_notificacion)}
+                                  className="h-4 w-4 rounded border-zinc-300 text-primary focus:ring-primary/40"
+                                />
+                              </div>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </>
+                  )}
+                </div>
+
+                {/* Columna derecha: comentario y acciones */}
+                <div className="w-full max-w-xs border-l border-zinc-200 pl-4">
+                  <div className="mb-3">
+                    <label className="mb-1 block text-xs font-medium text-zinc-700">
+                      Comentario del reporte (opcional)
+                    </label>
+                    <textarea
+                      value={comentarioReporte}
+                      onChange={(e) => setComentarioReporte(e.target.value)}
+                      rows={6}
+                      className="w-full rounded-lg border border-zinc-300 px-3 py-2 text-sm focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20"
+                      placeholder="Resumen, observaciones, acciones tomadas..."
+                    />
+                  </div>
+
+                  {mensajeReporte && (
+                    <div className="mb-3 text-xs text-zinc-600">{mensajeReporte}</div>
+                  )}
+
+                  <div className="flex flex-col gap-2">
+                    <button
+                      onClick={enviarReporte}
+                      disabled={enviandoReporte || notificaciones.length === 0}
+                      className="inline-flex items-center justify-center gap-2 rounded-lg bg-orange-500 px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-orange-600 disabled:cursor-not-allowed disabled:opacity-60"
+                    >
+                      {enviandoReporte ? (
+                        <span className="material-symbols-outlined text-sm animate-spin">progress_activity</span>
+                      ) : (
+                        <span className="material-symbols-outlined text-sm">description</span>
+                      )}
+                      Generar Reporte
+                    </button>
+                    <button
+                      onClick={() => setShowReporteModal(false)}
+                      className="rounded-lg px-4 py-2 text-sm font-medium text-zinc-700 hover:bg-zinc-100"
+                    >
+                      Cerrar
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

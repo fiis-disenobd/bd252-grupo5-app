@@ -41,12 +41,15 @@ export default function NotificacionesPage() {
   const [data, setData] = useState<NotificacionesResponse | null>(null);
   const [estadisticas, setEstadisticas] = useState<Estadisticas | null>(null);
   const [loading, setLoading] = useState(true);
-  
+
   // Filtros
   const [tipoFiltro, setTipoFiltro] = useState("");
+  const [contenedorFiltro, setContenedorFiltro] = useState("");
+  const [sensorFiltro, setSensorFiltro] = useState("");
   const [fechaDesde, setFechaDesde] = useState("");
   const [fechaHasta, setFechaHasta] = useState("");
   const [paginaActual, setPaginaActual] = useState(1);
+
   const limite = 20;
 
   useEffect(() => {
@@ -59,17 +62,19 @@ export default function NotificacionesPage() {
     }, 60000);
 
     return () => clearInterval(interval);
-  }, [paginaActual, tipoFiltro, fechaDesde, fechaHasta]);
+  }, [paginaActual, tipoFiltro, contenedorFiltro, sensorFiltro, fechaDesde, fechaHasta]);
 
   const cargarNotificaciones = () => {
     setLoading(true);
-    
+
     const params = new URLSearchParams({
       pagina: paginaActual.toString(),
       limite: limite.toString(),
     });
 
     if (tipoFiltro) params.append("tipo", tipoFiltro);
+    if (contenedorFiltro) params.append("contenedor", contenedorFiltro);
+    if (sensorFiltro) params.append("sensor", sensorFiltro);
     if (fechaDesde) params.append("fecha_desde", fechaDesde);
     if (fechaHasta) params.append("fecha_hasta", fechaHasta);
 
@@ -94,6 +99,8 @@ export default function NotificacionesPage() {
 
   const limpiarFiltros = () => {
     setTipoFiltro("");
+    setContenedorFiltro("");
+    setSensorFiltro("");
     setFechaDesde("");
     setFechaHasta("");
     setPaginaActual(1);
@@ -101,7 +108,7 @@ export default function NotificacionesPage() {
 
   const getSeveridadColor = (tipo?: string) => {
     const nombre = tipo?.toLowerCase() || "";
-    
+
     if (nombre.includes("crítica") || nombre.includes("peligro") || nombre.includes("critica")) {
       return {
         bg: "bg-red-50",
@@ -111,7 +118,7 @@ export default function NotificacionesPage() {
         badge: "bg-red-100 text-red-700",
       };
     }
-    
+
     if (nombre.includes("advertencia") || nombre.includes("warning") || nombre.includes("alerta")) {
       return {
         bg: "bg-yellow-50",
@@ -121,7 +128,7 @@ export default function NotificacionesPage() {
         badge: "bg-yellow-100 text-yellow-700",
       };
     }
-    
+
     return {
       bg: "bg-blue-50",
       border: "border-blue-200",
@@ -133,14 +140,14 @@ export default function NotificacionesPage() {
 
   const getIconoNotificacion = (tipo?: string) => {
     const nombre = tipo?.toLowerCase() || "";
-    
+
     if (nombre.includes("temperatura")) return "device_thermostat";
     if (nombre.includes("humedad")) return "water_drop";
     if (nombre.includes("puerta")) return "door_open";
     if (nombre.includes("vibración") || nombre.includes("impacto")) return "vibration";
     if (nombre.includes("batería") || nombre.includes("bateria")) return "battery_alert";
     if (nombre.includes("ruta")) return "wrong_location";
-    
+
     return "notifications";
   };
 
@@ -213,7 +220,7 @@ export default function NotificacionesPage() {
               </button>
             </div>
 
-            <div className="grid grid-cols-1 gap-4 md:grid-cols-4">
+            <div className="grid grid-cols-1 gap-4 md:grid-cols-5">
               <div>
                 <label className="mb-2 block text-sm font-medium text-zinc-700">
                   Tipo de Notificación
@@ -233,6 +240,38 @@ export default function NotificacionesPage() {
                     </option>
                   ))}
                 </select>
+              </div>
+
+              <div>
+                <label className="mb-2 block text-sm font-medium text-zinc-700">
+                  Contenedor (código)
+                </label>
+                <input
+                  type="text"
+                  value={contenedorFiltro}
+                  onChange={(e) => {
+                    setContenedorFiltro(e.target.value);
+                    setPaginaActual(1);
+                  }}
+                  placeholder="Ej: CNT-001"
+                  className="w-full rounded-lg border border-zinc-300 px-4 py-2 text-sm focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20"
+                />
+              </div>
+
+              <div>
+                <label className="mb-2 block text-sm font-medium text-zinc-700">
+                  Sensor (código/id)
+                </label>
+                <input
+                  type="text"
+                  value={sensorFiltro}
+                  onChange={(e) => {
+                    setSensorFiltro(e.target.value);
+                    setPaginaActual(1);
+                  }}
+                  placeholder="Ej: SENS-001"
+                  className="w-full rounded-lg border border-zinc-300 px-4 py-2 text-sm focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20"
+                />
               </div>
 
               <div>
@@ -265,7 +304,7 @@ export default function NotificacionesPage() {
                 />
               </div>
 
-              <div className="flex items-end">
+              <div className="mt-2 flex items-end justify-start md:justify-end md:col-span-5">
                 <button
                   onClick={cargarNotificaciones}
                   className="flex w-full items-center justify-center gap-2 rounded-lg bg-orange-500 px-4 py-2 text-sm font-semibold text-white shadow-lg transition-all hover:bg-orange-600 hover:shadow-xl"
@@ -336,17 +375,24 @@ export default function NotificacionesPage() {
                               </div>
                             </div>
 
-                            {notif.sensor?.contenedor && (
-                              <div className="mt-3">
+                            <div className="mt-3 flex flex-wrap gap-3 text-xs">
+                              {notif.sensor?.contenedor && (
                                 <Link
                                   href={`/monitoreo/contenedores/${notif.sensor.contenedor.id_contenedor}`}
-                                  className="inline-flex items-center gap-1 text-sm font-medium text-primary hover:text-primary/80"
+                                  className="inline-flex items-center gap-1 text-xs font-semibold text-primary hover:text-primary/80"
                                 >
-                                  Ver Contenedor
-                                  <span className="material-symbols-outlined text-base">arrow_forward</span>
+                                  <span className="material-symbols-outlined text-sm">local_shipping</span>
+                                  Ver contenedor
                                 </Link>
-                              </div>
-                            )}
+                              )}
+                              <Link
+                                href={`/monitoreo/notificaciones/${notif.id_notificacion}`}
+                                className="inline-flex items-center gap-1 text-xs font-semibold text-primary hover:text-primary/80"
+                              >
+                                <span className="material-symbols-outlined text-sm">open_in_new</span>
+                                Ver detalle de notificación
+                              </Link>
+                            </div>
                           </div>
                         </div>
                       </div>

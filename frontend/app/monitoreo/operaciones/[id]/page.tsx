@@ -31,11 +31,28 @@ interface Operacion {
   contenedores?: any[];
 }
 
+interface IncidenciaResumen {
+  id_incidencia: string;
+  codigo: string;
+  descripcion: string;
+  grado_severidad: number;
+  fecha_hora: string;
+  tipo_incidencia?: {
+    nombre: string;
+  };
+  estado_incidencia?: {
+    nombre: string;
+  };
+}
+
 export default function DetalleOperacionPage() {
   const params = useParams();
   const router = useRouter();
   const [operacion, setOperacion] = useState<Operacion | null>(null);
   const [loading, setLoading] = useState(true);
+  const [showIncidenciasModal, setShowIncidenciasModal] = useState(false);
+  const [incidencias, setIncidencias] = useState<IncidenciaResumen[]>([]);
+  const [incidenciasLoading, setIncidenciasLoading] = useState(false);
 
   useEffect(() => {
     if (params.id) {
@@ -64,6 +81,28 @@ export default function DetalleOperacionPage() {
       "En tránsito": { bg: "bg-amber-50", text: "text-amber-700", dot: "bg-amber-500" },
     };
     return badges[estado] || { bg: "bg-gray-50", text: "text-gray-700", dot: "bg-gray-500" };
+  };
+
+  const abrirIncidencias = async () => {
+    if (!operacion) return;
+    setShowIncidenciasModal(true);
+    setIncidenciasLoading(true);
+
+    try {
+      const url = new URL("http://localhost:3001/monitoreo/incidencias");
+      url.searchParams.set("operacion", operacion.id_operacion);
+      url.searchParams.set("pagina", "1");
+      url.searchParams.set("limite", "50");
+
+      const res = await fetch(url.toString());
+      const data = await res.json();
+      setIncidencias(Array.isArray(data.incidencias) ? data.incidencias : []);
+    } catch (error) {
+      console.error("Error cargando incidencias de la operación:", error);
+      setIncidencias([]);
+    } finally {
+      setIncidenciasLoading(false);
+    }
   };
 
   if (loading) {
@@ -288,17 +327,20 @@ export default function DetalleOperacionPage() {
                     <span className="material-symbols-outlined text-lg">map</span>
                     Ver en Mapa GPS
                   </Link>
-                  <Link
-                    href={`/monitoreo/incidencias?operacion=${operacion.id_operacion}`}
+                  <button
+                    onClick={abrirIncidencias}
                     className="flex w-full items-center gap-3 rounded-lg border border-zinc-200 p-3 text-sm font-medium text-zinc-700 transition-colors hover:bg-zinc-50"
                   >
                     <span className="material-symbols-outlined text-lg">error</span>
                     Ver Incidencias
-                  </Link>
-                  <button className="flex w-full items-center gap-3 rounded-lg border border-zinc-200 p-3 text-sm font-medium text-zinc-700 transition-colors hover:bg-zinc-50">
+                  </button>
+                  <Link
+                    href={`/monitoreo/operaciones/${operacion.id_operacion}/reporte/nuevo`}
+                    className="flex w-full items-center gap-3 rounded-lg border border-zinc-200 p-3 text-sm font-medium text-zinc-700 transition-colors hover:bg-zinc-50"
+                  >
                     <span className="material-symbols-outlined text-lg">description</span>
                     Generar Reporte
-                  </button>
+                  </Link>
                 </div>
               </div>
 
@@ -334,6 +376,93 @@ export default function DetalleOperacionPage() {
             </div>
           </div>
         </main>
+
+      {/* Modal Incidencias de la Operación */}
+      {showIncidenciasModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
+          <div className="w-full max-w-3xl rounded-xl bg-white p-6 shadow-2xl">
+            <div className="mb-4 flex items-center justify-between">
+              <div>
+                <h3 className="text-lg font-bold text-zinc-900">Incidencias de la Operación</h3>
+                <p className="text-sm text-zinc-500">
+                  Operación {operacion.codigo} — {incidencias.length} incidencia(s)
+                </p>
+              </div>
+              <button
+                onClick={() => setShowIncidenciasModal(false)}
+                className="rounded-lg p-2 text-zinc-400 transition-colors hover:bg-zinc-100 hover:text-zinc-700"
+              >
+                <span className="material-symbols-outlined text-xl">close</span>
+              </button>
+            </div>
+
+            <div className="max-h-[400px] space-y-2 overflow-y-auto border-t border-b border-zinc-200 py-3">
+              {incidenciasLoading ? (
+                <p className="px-1 text-sm text-zinc-500">Cargando incidencias...</p>
+              ) : incidencias.length === 0 ? (
+                <p className="px-1 text-sm text-zinc-500">
+                  No hay incidencias registradas para esta operación.
+                </p>
+              ) : (
+                incidencias.map((inc) => (
+                  <div
+                    key={inc.id_incidencia}
+                    className="flex items-start justify-between gap-3 rounded-lg border border-zinc-200 p-3"
+                  >
+                    <div className="flex items-start gap-3">
+                      <div className="mt-1 flex h-8 w-8 items-center justify-center rounded-full bg-red-50">
+                        <span className="material-symbols-outlined text-base text-red-600">warning</span>
+                      </div>
+                      <div>
+                        <div className="flex flex-wrap items-center gap-2">
+                          <span className="font-mono text-xs font-semibold text-zinc-900">
+                            {inc.codigo}
+                          </span>
+                          <span className="rounded-full bg-zinc-100 px-2 py-0.5 text-xs text-zinc-600">
+                            {inc.tipo_incidencia?.nombre || "Sin tipo"}
+                          </span>
+                          <span className="rounded-full bg-amber-50 px-2 py-0.5 text-xs text-amber-700">
+                            Sev. {inc.grado_severidad}
+                          </span>
+                          <span className="rounded-full bg-zinc-100 px-2 py-0.5 text-xs text-zinc-600">
+                            {inc.estado_incidencia?.nombre || "Sin estado"}
+                          </span>
+                        </div>
+                        <p className="mt-1 text-sm text-zinc-700 line-clamp-2">{inc.descripcion}</p>
+                        <p className="mt-1 text-xs text-zinc-400">
+                          {new Date(inc.fecha_hora).toLocaleString("es-ES")}
+                        </p>
+                      </div>
+                    </div>
+                    <div className="flex flex-col items-end gap-2">
+                      <Link
+                        href={`/monitoreo/incidencias/${inc.id_incidencia}`}
+                        className="inline-flex items-center gap-1 rounded-lg border border-zinc-200 px-3 py-1.5 text-xs font-medium text-zinc-700 hover:bg-zinc-50"
+                      >
+                        <span className="material-symbols-outlined text-sm">visibility</span>
+                        Ver detalle
+                      </Link>
+                    </div>
+                  </div>
+                ))
+              )}
+            </div>
+
+            <div className="mt-4 flex items-center justify-between">
+              <p className="text-xs text-zinc-500">
+                Para gestionar las incidencias en detalle (editar, cerrar, etc.), usa el módulo completo.
+              </p>
+              <Link
+                href="/monitoreo/incidencias"
+                className="inline-flex items-center gap-2 rounded-lg bg-orange-600 px-4 py-2 text-xs font-semibold text-white hover:bg-orange-700"
+              >
+                <span className="material-symbols-outlined text-sm">open_in_new</span>
+                Ir al módulo de incidencias
+              </Link>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

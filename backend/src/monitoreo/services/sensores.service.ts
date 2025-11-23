@@ -22,7 +22,16 @@ export class SensoresService {
 
   async findNotificaciones(filtros: any = {}) {
     try {
-      const { tipo, estado, fecha_desde, fecha_hasta, limite = 50, pagina = 1 } = filtros;
+      const {
+        tipo,
+        estado,
+        fecha_desde,
+        fecha_hasta,
+        contenedor,
+        sensor,
+        limite = 50,
+        pagina = 1,
+      } = filtros;
       
       const query = this.notificacionRepository
         .createQueryBuilder('notificacion')
@@ -38,12 +47,24 @@ export class SensoresService {
         query.andWhere('tipo_notificacion.nombre = :tipo', { tipo });
       }
 
+      if (estado) {
+        query.andWhere('notificacion.estado = :estado', { estado });
+      }
+
       if (fecha_desde) {
         query.andWhere('notificacion.fecha_hora >= :fecha_desde', { fecha_desde });
       }
 
       if (fecha_hasta) {
         query.andWhere('notificacion.fecha_hora <= :fecha_hasta', { fecha_hasta });
+      }
+
+      if (contenedor) {
+        query.andWhere('contenedor.id_contenedor = :contenedor', { contenedor });
+      }
+
+      if (sensor) {
+        query.andWhere('sensor.id_sensor = :sensor', { sensor });
       }
 
       // Paginación
@@ -130,7 +151,7 @@ export class SensoresService {
       return [];
     }
   }
-
+  // Obtener detalle de un sensor por id
   async findOne(id_sensor: string) {
     try {
       return await this.sensorRepository.findOne({
@@ -143,6 +164,7 @@ export class SensoresService {
     }
   }
 
+  // Obtener detalle extendido de un sensor (con notificaciones y lecturas simuladas)
   async findOneDetalle(id_sensor: string) {
     try {
       const sensor = await this.sensorRepository.findOne({
@@ -301,5 +323,24 @@ export class SensoresService {
     
     if (Math.abs(diferencia) < 0.5) return 'estable';
     return diferencia > 0 ? 'ascendente' : 'descendente';
+  }
+
+  // Detalle de una notificación específica con sus relaciones principales
+  async findNotificacionDetalle(id_notificacion: string) {
+    try {
+      const notificacion = await this.notificacionRepository.findOne({
+        where: { id_notificacion },
+        relations: ['tipo_notificacion', 'sensor', 'sensor.tipo_sensor', 'sensor.contenedor'],
+      });
+
+      if (!notificacion) {
+        return null;
+      }
+
+      return notificacion;
+    } catch (error) {
+      console.error('Error en findNotificacionDetalle:', error.message);
+      return null;
+    }
   }
 }

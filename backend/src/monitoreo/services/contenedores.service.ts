@@ -6,6 +6,7 @@ import { PosicionContenedor } from '../entities/posicion-contenedor.entity';
 import { Sensor } from '../entities/sensor.entity';
 import { EstadoContenedor } from '../../shared/entities/estado-contenedor.entity';
 import { TipoContenedor } from '../../shared/entities/tipo-contenedor.entity';
+import { DocumentacionContenedor } from '../entities/documentacion-contenedor.entity';
 
 @Injectable()
 export class ContenedoresService {
@@ -20,6 +21,8 @@ export class ContenedoresService {
     private estadoContenedorRepository: Repository<EstadoContenedor>,
     @InjectRepository(TipoContenedor)
     private tipoContenedorRepository: Repository<TipoContenedor>,
+    @InjectRepository(DocumentacionContenedor)
+    private documentacionContenedorRepository: Repository<DocumentacionContenedor>,
   ) {}
 
   // Crear contenedor
@@ -105,11 +108,18 @@ export class ContenedoresService {
         take: 10,
       });
 
+      // Obtener documentación asociada (boleta final del contenedor)
+      const documentacionContenedor = await this.documentacionContenedorRepository.findOne({
+        where: { id_contenedor: id },
+        relations: ['documentacion', 'documentacion.tipo_documento'],
+      });
+
       return {
         ...contenedor,
         sensores,
         ultima_posicion: ultimaPosicion,
         historial_posiciones: historialPosiciones,
+        documentacion: documentacionContenedor?.documentacion || null,
       };
     } catch (error) {
       console.error('Error en findOneDetalle:', error.message);

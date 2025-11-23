@@ -34,7 +34,7 @@ export class IncidenciasService {
 
   async findAll(filtros: any = {}) {
     try {
-      const { tipo, estado, operacion, limite = 100, pagina = 1 } = filtros;
+      const { tipo, estado, operacion, codigo, limite = 100, pagina = 1 } = filtros;
 
       const query = this.incidenciaRepository
         .createQueryBuilder('incidencia')
@@ -54,6 +54,12 @@ export class IncidenciasService {
 
       if (operacion) {
         query.andWhere('incidencia.id_operacion = :operacion', { operacion });
+      }
+
+      if (codigo) {
+        query.andWhere('LOWER(incidencia.codigo) LIKE :codigo', {
+          codigo: `%${String(codigo).toLowerCase()}%`,
+        });
       }
 
       // Paginación

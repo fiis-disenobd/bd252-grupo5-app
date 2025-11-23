@@ -1,7 +1,12 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { DataSource, Repository } from 'typeorm';
+import { DataSource, In, Repository } from 'typeorm';
 import { Reporte } from '../entities/reporte.entity';
+import { IncidenciaReporte } from '../entities/incidencia-reporte.entity';
+import { Incidencia } from '../entities/incidencia.entity';
+import { Operacion } from '../../shared/entities/operacion.entity';
+import { Notificacion } from '../entities/notificacion.entity';
+import { Contenedor } from '../../shared/entities/contenedor.entity';
 
 export interface CreateReporteDto {
   detalle: string;
@@ -18,6 +23,16 @@ export class ReportesService {
   constructor(
     @InjectRepository(Reporte)
     private reporteRepository: Repository<Reporte>,
+    @InjectRepository(IncidenciaReporte)
+    private incidenciaReporteRepository: Repository<IncidenciaReporte>,
+    @InjectRepository(Incidencia)
+    private incidenciaRepository: Repository<Incidencia>,
+    @InjectRepository(Operacion)
+    private operacionRepository: Repository<Operacion>,
+    @InjectRepository(Notificacion)
+    private notificacionRepository: Repository<Notificacion>,
+    @InjectRepository(Contenedor)
+    private contenedorRepository: Repository<Contenedor>,
     private readonly dataSource: DataSource,
   ) {}
 
@@ -124,6 +139,157 @@ export class ReportesService {
       console.error('Error en create reporte:', error.message);
       throw new Error('Error al crear el reporte');
     }
+  }
+
+  // Crear reporte asociado a una operación y a un conjunto de incidencias
+  async crearReporteOperacion(
+    id_operacion: string,
+    incidenciasIds: string[] = [],
+    comentarioAdicional?: string,
+  ) {
+    // 1) Obtener operación
+    const operacion = await this.operacionRepository.findOne({
+      where: { id_operacion },
+    });
+
+    if (!operacion) {
+      throw new Error(`Operación con ID ${id_operacion} no encontrada`);
+    }
+
+    // 2) Obtener incidencias de la operación (filtrando por ids si se envían)
+    const where: any = { id_operacion };
+    if (incidenciasIds && incidenciasIds.length > 0) {
+      where.id_incidencia = In(incidenciasIds);
+    }
+
+    const incidencias = await this.incidenciaRepository.find({
+      where,
+      relations: ['tipo_incidencia', 'estado_incidencia'],
+      order: { fecha_hora: 'ASC' },
+    });
+
+    // 3) Construir detalle del reporte
+    const lineas: string[] = [];
+    lineas.push(`REPORTE DE OPERACIÓN ${operacion.codigo}`);
+    lineas.push('');
+    lineas.push(`ID Operación: ${operacion.id_operacion}`);
+    if (operacion.fecha_inicio) {
+      lineas.push(`Fecha inicio: ${operacion.fecha_inicio.toISOString()}`);
+    }
+    if (operacion.fecha_fin) {
+      lineas.push(`Fecha fin: ${operacion.fecha_fin.toISOString()}`);
+    }
+    lineas.push('');
+    lineas.push(`Incidencias incluidas: ${incidencias.length}`);
+
+    incidencias.forEach((inc) => {
+      const tipo = inc.tipo_incidencia?.nombre || 'N/A';
+      const estado = inc.estado_incidencia?.nombre || 'N/A';
+      lineas.push(
+        `- ${inc.codigo} [${tipo}] (Severidad: ${inc.grado_severidad}, Estado: ${estado}) - ${inc.descripcion}`,
+      );
+    });
+
+    if (comentarioAdicional) {
+      lineas.push('');
+      lineas.push('Comentarios adicionales:');
+      lineas.push(comentarioAdicional);
+    }
+
+    const detalle = lineas.join('\n');
+
+    // 4) Crear reporte
+    const reporte = await this.create({ detalle });
+
+    // 5) Registrar relaciones IncidenciaReporte
+    if (incidencias.length > 0) {
+      const relaciones = incidencias.map((inc) =>
+        this.incidenciaReporteRepository.create({
+          id_incidencia: inc.id_incidencia,
+          id_reporte: reporte.id_reporte,
+        }),
+      );
+
+      await this.incidenciaReporteRepository.save(relaciones);
+    }
+
+    return reporte;
+  }
+
+  // Crear reporte asociado a un contenedor y un conjunto de notificaciones de sensores
+  async crearReporteContenedor(
+    id_contenedor: string,
+    notificacionesIds: string[] = [],
+    comentarioAdicional?: string,
+  ) {
+    // 1) Obtener contenedor
+    const contenedor = await this.contenedorRepository.findOne({
+      where: { id_contenedor },
+      relations: ['estado_contenedor', 'tipo_contenedor'],
+    });
+
+    if (!contenedor) {
+      throw new Error(`Contenedor con ID ${id_contenedor} no encontrado`);
+    }
+
+    // 2) Obtener notificaciones del contenedor (filtrando por ids si se envían)
+    const query = this.notificacionRepository
+      .createQueryBuilder('notificacion')
+      .leftJoinAndSelect('notificacion.tipo_notificacion', 'tipo_notificacion')
+      .leftJoinAndSelect('notificacion.sensor', 'sensor')
+      .leftJoinAndSelect('sensor.tipo_sensor', 'tipo_sensor')
+      .leftJoinAndSelect('sensor.contenedor', 'contenedor')
+      .where('contenedor.id_contenedor = :id_contenedor', { id_contenedor })
+      .orderBy('notificacion.fecha_hora', 'ASC');
+
+    if (notificacionesIds && notificacionesIds.length > 0) {
+      query.andWhere('notificacion.id_notificacion IN (:...ids)', {
+        ids: notificacionesIds,
+      });
+    }
+
+    const notificaciones = await query.getMany();
+
+    // 3) Construir detalle del reporte
+    const lineas: string[] = [];
+    lineas.push(`REPORTE DE CONTENEDOR ${contenedor.codigo}`);
+    lineas.push('');
+    lineas.push(`ID Contenedor: ${contenedor.id_contenedor}`);
+    lineas.push(`Tipo: ${contenedor.tipo_contenedor?.nombre || 'N/A'}`);
+    lineas.push(`Estado: ${contenedor.estado_contenedor?.nombre || 'N/A'}`);
+    lineas.push('');
+    lineas.push(`Notificaciones incluidas: ${notificaciones.length}`);
+
+    notificaciones.forEach((n) => {
+      const tipo = n.tipo_notificacion?.nombre || 'N/A';
+      const sensorCodigo = n.sensor?.codigo || 'N/A';
+      const sensorTipo = n.sensor?.tipo_sensor?.nombre || 'N/A';
+      lineas.push(
+        `- ${n.codigo} [${tipo}] Sensor: ${sensorCodigo} (${sensorTipo}) Valor: ${n.valor} Fecha: ${n.fecha_hora.toISOString()}`,
+      );
+    });
+
+    if (comentarioAdicional) {
+      lineas.push('');
+      lineas.push('Comentarios adicionales:');
+      lineas.push(comentarioAdicional);
+    }
+
+    const detalle = lineas.join('\n');
+
+    // 4) Crear reporte
+    const reporte = await this.create({ detalle });
+
+    // 5) Actualizar notificaciones para vincularlas con el reporte
+    if (notificaciones.length > 0) {
+      const ids = notificaciones.map((n) => n.id_notificacion);
+      await this.notificacionRepository.update(
+        { id_notificacion: In(ids) },
+        { id_reporte: reporte.id_reporte },
+      );
+    }
+
+    return reporte;
   }
 
   // Actualizar reporte

@@ -57,6 +57,7 @@ export default function IncidenciasPage() {
   const [tipoFiltro, setTipoFiltro] = useState("");
   const [estadoFiltro, setEstadoFiltro] = useState("");
   const [paginaActual, setPaginaActual] = useState(1);
+  const [codigoFiltro, setCodigoFiltro] = useState("");
 
   // Modal crear/editar
   const [showModal, setShowModal] = useState(false);
@@ -71,7 +72,7 @@ export default function IncidenciasPage() {
 
   useEffect(() => {
     cargarDatos();
-  }, [paginaActual, tipoFiltro, estadoFiltro]);
+  }, [paginaActual, tipoFiltro, estadoFiltro, codigoFiltro]);
 
   const cargarDatos = () => {
     setLoading(true);
@@ -83,6 +84,7 @@ export default function IncidenciasPage() {
 
     if (tipoFiltro) params.append("tipo", tipoFiltro);
     if (estadoFiltro) params.append("estado", estadoFiltro);
+    if (codigoFiltro) params.append("codigo", codigoFiltro);
 
     fetch(`http://localhost:3001/monitoreo/incidencias?${params}`)
       .then((res) => res.json())
@@ -137,6 +139,7 @@ export default function IncidenciasPage() {
   const limpiarFiltros = () => {
     setTipoFiltro("");
     setEstadoFiltro("");
+    setCodigoFiltro("");
     setPaginaActual(1);
   };
 
@@ -193,6 +196,13 @@ export default function IncidenciasPage() {
       return "bg-green-100 text-green-700";
     return "bg-zinc-100 text-zinc-700";
   };
+
+  const incidenciasFiltradas = data
+    ? data.incidencias.filter((inc) => {
+        if (!codigoFiltro) return true;
+        return inc.codigo.toLowerCase().includes(codigoFiltro.toLowerCase());
+      })
+    : [];
 
   return (
     <div className="flex h-screen w-full flex-col overflow-hidden">
@@ -304,7 +314,23 @@ export default function IncidenciasPage() {
               </button>
             </div>
 
-            <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
+            <div className="grid grid-cols-1 gap-4 md:grid-cols-4">
+              <div>
+                <label className="mb-2 block text-sm font-medium text-zinc-700">
+                  Código de Incidencia
+                </label>
+                <input
+                  type="text"
+                  value={codigoFiltro}
+                  onChange={(e) => {
+                    setCodigoFiltro(e.target.value);
+                    setPaginaActual(1);
+                  }}
+                  placeholder="Ej: INC-2405-0001"
+                  className="w-full rounded-lg border border-zinc-300 px-4 py-2 text-sm focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20"
+                />
+              </div>
+
               <div>
                 <label className="mb-2 block text-sm font-medium text-zinc-700">
                   Tipo de Incidencia
@@ -338,17 +364,14 @@ export default function IncidenciasPage() {
                 >
                   <option value="">Todos los estados</option>
                   {estados.map((estado) => (
-                    <option
-                      key={estado.id_estado_incidencia}
-                      value={estado.id_estado_incidencia}
-                    >
+                    <option key={estado.id_estado_incidencia} value={estado.id_estado_incidencia}>
                       {estado.nombre}
                     </option>
                   ))}
                 </select>
               </div>
 
-              <div className="flex items-end">
+              <div className="flex items-end justify-end">
                 <button
                   onClick={cargarDatos}
                   className="flex w-full items-center justify-center gap-2 rounded-lg bg-orange-500 px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-primary/90"
@@ -364,7 +387,7 @@ export default function IncidenciasPage() {
           <div className="rounded-xl border border-zinc-200 bg-white shadow-sm">
             <div className="border-b border-zinc-200 p-6">
               <h2 className="text-lg font-bold text-zinc-900">
-                Incidencias ({data?.total || 0})
+                Incidencias ({incidenciasFiltradas.length || 0})
               </h2>
             </div>
 
@@ -372,7 +395,7 @@ export default function IncidenciasPage() {
               <div className="flex items-center justify-center py-12">
                 <div className="inline-block h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent"></div>
               </div>
-            ) : data && data.incidencias.length > 0 ? (
+            ) : data && incidenciasFiltradas.length > 0 ? (
               <>
                 <div className="overflow-x-auto">
                   <table className="w-full">
@@ -402,7 +425,7 @@ export default function IncidenciasPage() {
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-zinc-200">
-                      {data.incidencias.map((incidencia) => (
+                      {incidenciasFiltradas.map((incidencia) => (
                         <tr
                           key={incidencia.id_incidencia}
                           className="transition-colors hover:bg-zinc-50"
@@ -448,6 +471,13 @@ export default function IncidenciasPage() {
                           </td>
                           <td className="px-6 py-4">
                             <div className="flex items-center justify-end gap-2">
+                              <Link
+                                href={`/monitoreo/incidencias/${incidencia.id_incidencia}`}
+                                className="rounded-lg p-2 text-blue-600 transition-colors hover:bg-blue-50"
+                                title="Ver detalle"
+                              >
+                                <span className="material-symbols-outlined text-lg">visibility</span>
+                              </Link>
                               <button
                                 onClick={() => handleEditarIncidencia(incidencia)}
                                 className="rounded-lg p-2 text-blue-600 transition-colors hover:bg-blue-50"

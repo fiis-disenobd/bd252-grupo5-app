@@ -16,8 +16,11 @@ import { Incidencia } from './entities/incidencia.entity';
 import { TipoIncidencia } from './entities/tipo-incidencia.entity';
 import { EstadoIncidencia } from './entities/estado-incidencia.entity';
 import { Reporte } from './entities/reporte.entity';
+import { IncidenciaReporte } from './entities/incidencia-reporte.entity';
 import { Entrega } from './entities/entrega.entity';
 import { Importador } from './entities/importador.entity';
+import { Documentacion } from './entities/documentacion.entity';
+import { DocumentacionContenedor } from './entities/documentacion-contenedor.entity';
 
 // Shared Entities
 import { Operacion } from '../shared/entities/operacion.entity';
@@ -39,6 +42,7 @@ import { OperacionContenedor } from '../gestion_maritima/entities/operacion-cont
 import { OperacionMaritima } from '../shared/entities/operacion-maritima.entity';
 import { OperacionTerrestre } from '../operaciones_terrestres/entities/operacion-terrestre.entity';
 import { OperacionTerrestreDetalle } from '../operaciones_terrestres/entities/operacion-terrestre-detalle.entity';
+import { TipoDocumento } from '../shared/entities/tipo-documento.entity';
 
 // Controllers
 import { OperacionesController } from './controllers/operaciones.controller';
@@ -49,6 +53,7 @@ import { IncidenciasController } from './controllers/incidencias.controller';
 import { ReportesController } from './controllers/reportes.controller';
 import { EntregasController } from './controllers/entregas.controller';
 import { RecursosController } from './controllers/recursos.controller';
+import { DocumentacionController } from './controllers/documentacion.controller';
 
 // Services
 import { OperacionesService } from './services/operaciones.service';
@@ -59,6 +64,7 @@ import { IncidenciasService } from './services/incidencias.service';
 import { ReportesService } from './services/reportes.service';
 import { EntregasService } from './services/entregas.service';
 import { RecursosService } from './services/recursos.service';
+import { DocumentacionService } from './services/documentacion.service';
 
 @Module({
   imports: [
@@ -77,9 +83,12 @@ import { RecursosService } from './services/recursos.service';
       Incidencia,
       TipoIncidencia,
       EstadoIncidencia,
+      IncidenciaReporte,
       Reporte,
       Entrega,
       Importador,
+      Documentacion,
+      DocumentacionContenedor,
       // Shared entities
       Operacion,
       Contenedor,
@@ -91,6 +100,7 @@ import { RecursosService } from './services/recursos.service';
       EstadoEntrega,
       EstatusNavegacion,
       Ruta,
+      TipoDocumento,
       Puerto,
       Muelle,
       RutaMaritima,
@@ -111,6 +121,7 @@ import { RecursosService } from './services/recursos.service';
     ReportesController,
     EntregasController,
     RecursosController,
+    DocumentacionController,
   ],
   providers: [
     OperacionesService,
@@ -121,6 +132,7 @@ import { RecursosService } from './services/recursos.service';
     ReportesService,
     EntregasService,
     RecursosService,
+    DocumentacionService,
   ],
   exports: [
     OperacionesService,
