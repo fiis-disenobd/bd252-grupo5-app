@@ -101,6 +101,42 @@ export class ReportesService {
     }
   }
 
+  // Ejecutar proceso batch analítico para un rango de 120 días hasta la fecha indicada
+  async ejecutarCierreRango120Dias(fecha_fin?: string) {
+    try {
+      const hoy = new Date();
+      const fechaFin = fecha_fin ? new Date(fecha_fin) : hoy;
+
+      // Normalizar fecha fin a solo fecha (YYYY-MM-DD)
+      const fechaFinStr = fechaFin.toISOString().slice(0, 10);
+
+      // Calcular fecha de inicio (120 días incluyendo la fecha fin: 119 días hacia atrás)
+      const fechaInicio = new Date(fechaFin);
+      fechaInicio.setDate(fechaInicio.getDate() - 119);
+      const fechaInicioStr = fechaInicio.toISOString().slice(0, 10);
+
+      await this.dataSource.query(
+        'SELECT monitoreo_analytics.f_cierre_rango_fechas($1, $2)',
+        [fechaInicioStr, fechaFinStr],
+      );
+
+      return {
+        message:
+          'Proceso batch analítico de los últimos 120 días ejecutado correctamente',
+        fecha_inicio: fechaInicioStr,
+        fecha_fin: fechaFinStr,
+      };
+    } catch (error: any) {
+      console.error(
+        'Error al ejecutar cierre analítico de rango 120 días:',
+        error.message || error,
+      );
+      throw new Error(
+        'Error al ejecutar el proceso batch de cierre analítico de 120 días',
+      );
+    }
+  }
+
   // Obtener un reporte por ID
   async findOne(id: string) {
     try {

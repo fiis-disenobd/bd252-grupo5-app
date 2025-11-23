@@ -30,6 +30,12 @@ export class ReportesController {
     return this.reportesService.ejecutarCierreDiario(fecha_corte);
   }
 
+  // POST /monitoreo/reportes/cierre-rango-120 - Ejecutar proceso batch analítico para los últimos 120 días
+  @Post('cierre-rango-120')
+  ejecutarCierreRango120(@Body('fecha_fin') fecha_fin?: string) {
+    return this.reportesService.ejecutarCierreRango120Dias(fecha_fin);
+  }
+
   // GET /monitoreo/reportes/:id - Obtener un reporte por ID
   @Get(':id')
   findOne(@Param('id') id: string) {

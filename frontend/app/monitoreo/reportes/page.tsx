@@ -96,6 +96,43 @@ export default function ReportesPage() {
     }
   };
 
+  const ejecutarCierreRango120 = async () => {
+    try {
+      setBatchLoading(true);
+      setBatchMessage(null);
+
+      const res = await fetch(
+        "http://localhost:3001/monitoreo/reportes/cierre-rango-120",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ fecha_fin: fechaCorteBatch }),
+        },
+      );
+
+      if (!res.ok) {
+        throw new Error(`Error HTTP ${res.status}`);
+      }
+
+      const data = await res.json();
+      setBatchMessage(
+        `Batch ejecutado para el rango ${data.fecha_inicio} a ${data.fecha_fin}.`,
+      );
+
+      // Recargar la lista de reportes
+      cargarDatos();
+    } catch (error) {
+      console.error("Error ejecutando cierre de rango 120 días:", error);
+      setBatchMessage(
+        "Ocurrió un error al ejecutar el proceso batch de 120 días.",
+      );
+    } finally {
+      setBatchLoading(false);
+    }
+  };
+
   const handleEliminar = (id: string) => {
     setReporteAEliminar(id);
     setShowDeleteModal(true);
@@ -176,22 +213,40 @@ export default function ReportesPage() {
                   className="w-full rounded-lg border border-zinc-300 px-4 py-2 text-sm focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20"
                 />
               </div>
-              <button
-                onClick={ejecutarCierreDiario}
-                disabled={batchLoading || !fechaCorteBatch}
-                className="flex items-center justify-center gap-2 rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-60"
-              >
-                {batchLoading ? (
-                  <span className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" />
-                ) : (
-                  <span className="material-symbols-outlined text-lg">sync</span>
-                )}
-                <span>
-                  {batchLoading
-                    ? "Ejecutando batch..."
-                    : "Ejecutar cierre diario"}
-                </span>
-              </button>
+              <div className="flex flex-col gap-2 sm:flex-row">
+                <button
+                  onClick={ejecutarCierreDiario}
+                  disabled={batchLoading || !fechaCorteBatch}
+                  className="flex items-center justify-center gap-2 rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-60"
+                >
+                  {batchLoading ? (
+                    <span className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" />
+                  ) : (
+                    <span className="material-symbols-outlined text-lg">sync</span>
+                  )}
+                  <span>
+                    {batchLoading
+                      ? "Ejecutando batch..."
+                      : "Ejecutar cierre diario"}
+                  </span>
+                </button>
+                <button
+                  onClick={ejecutarCierreRango120}
+                  disabled={batchLoading || !fechaCorteBatch}
+                  className="flex items-center justify-center gap-2 rounded-lg bg-emerald-600 px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-emerald-700 disabled:cursor-not-allowed disabled:opacity-60"
+                >
+                  {batchLoading ? (
+                    <span className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" />
+                  ) : (
+                    <span className="material-symbols-outlined text-lg">query_stats</span>
+                  )}
+                  <span>
+                    {batchLoading
+                      ? "Ejecutando rango 120 días..."
+                      : "Cierre últimos 120 días"}
+                  </span>
+                </button>
+              </div>
             </div>
           </div>
           {batchMessage && (

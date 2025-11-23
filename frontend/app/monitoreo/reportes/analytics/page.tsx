@@ -396,6 +396,19 @@ export default function ReportesAnalyticsPage() {
           </div>
         </div>
 
+        {/* Nota sobre procesos batch analíticos */}
+        <div className="mb-4 rounded-lg border border-amber-200 bg-amber-50 p-4 text-xs text-amber-800">
+          <p className="font-semibold">Nota sobre los procesos batch analíticos</p>
+          <p className="mt-1">
+            Los gráficos muestran todas las fechas consolidadas en el esquema
+            <span className="font-mono"> monitoreo_analytics</span>, sin distinguir si
+            provienen de un cierre diario o de un cierre masivo de 120 días. Se
+            recomienda ejecutar una sola vez el cierre de los últimos 120 días
+            para poblar el histórico inicial y, a partir de entonces, utilizar
+            únicamente el cierre diario para mantener la información actualizada.
+          </p>
+        </div>
+
         {loading ? (
           <div className="flex items-center justify-center py-16">
             <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent"></div>
