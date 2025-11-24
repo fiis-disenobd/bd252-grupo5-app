@@ -5,7 +5,6 @@ import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { getTripulantes } from '@/app/services/tripulante.service';
-import { asignarTripulantesABuque } from '@/app/services/buque-tripulante.service';
 
 interface Tripulante {
   id_tripulante: string;
@@ -38,7 +37,7 @@ export default function AsignarTripulacionPage() {
   const [buque, setBuque] = useState<Buque | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [asignando, setAsignando] = useState(false);
+  // Esta pantalla solo construye la selección de tripulación y la pasa por query string
 
   useEffect(() => {
     const fetchData = async () => {
@@ -111,23 +110,18 @@ export default function AsignarTripulacionPage() {
     setSeleccionados(nuevosSeleccionados);
   };
 
-  const handleAsignar = async () => {
-  if (!idBuque || seleccionados.size === 0) return;
+  // Restaura el comportamiento original: pasar IDs por query param y volver a /operaciones-maritimas/nueva
+  const handleAsignar = () => {
+    const params = new URLSearchParams(searchParams.toString());
 
-  setAsignando(true);
-  try {
-    await asignarTripulantesABuque(idBuque, Array.from(seleccionados));
-    console.log('Tripulantes asignados exitosamente:', Array.from(seleccionados));
-    
-    // Redirigir de vuelta a la página anterior
-    router.back();
-  } catch (error) {
-    console.error('Error al asignar tripulantes:', error);
-    setError('Error al asignar tripulantes. Por favor, intente nuevamente.');
-  } finally {
-    setAsignando(false);
-  }
-};
+    if (seleccionados.size > 0) {
+      params.set('tripulacion', Array.from(seleccionados).join(','));
+    } else {
+      params.delete('tripulacion');
+    }
+
+    router.push(`/operaciones-maritimas/nueva?${params.toString()}`);
+  };
   return (
     <div className="min-h-screen flex flex-col">
       <Header />
