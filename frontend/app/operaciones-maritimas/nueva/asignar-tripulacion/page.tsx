@@ -5,6 +5,7 @@ import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { getTripulantes } from '@/app/services/tripulante.service';
+import { asignarTripulantesABuque } from '@/app/services/buque-tripulante.service';
 
 interface Tripulante {
   id_tripulante: string;
@@ -19,18 +20,30 @@ interface Tripulante {
   };
 }
 
+interface Buque {
+  id_buque: string;
+  matricula: string;
+  nombre: string;
+  capacidad: number;
+  peso: number;
+  ubicacion_actual: string;
+}
+
 export default function AsignarTripulacionPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const idBuque = searchParams.get('id_buque');
   
   const [tripulantes, setTripulantes] = useState<Tripulante[]>([]);
+  const [buque, setBuque] = useState<Buque | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [asignando, setAsignando] = useState(false);
 
   useEffect(() => {
-    const fetchTripulantes = async () => {
+    const fetchData = async () => {
       try {
+        // Obtener tripulantes
         const todosLosTripulantes = await getTripulantes();
         console.log('Tripulantes recibidos:', todosLosTripulantes);
         
@@ -39,17 +52,26 @@ export default function AsignarTripulacionPage() {
         console.log('Tripulantes disponibles:', disponibles);
         
         setTripulantes(disponibles);
+
+        // Obtener datos del buque si hay id_buque
+        if (idBuque) {
+          const response = await fetch(`http://localhost:3001/monitoreo/buques/${idBuque}`);
+          if (response.ok) {
+            const buqueData = await response.json();
+            setBuque(buqueData);
+          }
+        }
       } catch (err) {
         const errorMessage = err instanceof Error ? err.message : 'Error desconocido';
-        setError(`Error al cargar los tripulantes: ${errorMessage}`);
+        setError(`Error al cargar los datos: ${errorMessage}`);
         console.error('Error detallado:', err);
       } finally {
         setLoading(false);
       }
     };
 
-    fetchTripulantes();
-  }, []);
+    fetchData();
+  }, [idBuque]);
 
   const [seleccionados, setSeleccionados] = useState<Set<string>>(new Set());
   
@@ -89,12 +111,23 @@ export default function AsignarTripulacionPage() {
     setSeleccionados(nuevosSeleccionados);
   };
 
-  const handleAsignar = () => {
-    // Aquí iría la lógica para asignar los tripulantes seleccionados
-    console.log('Tripulantes asignados:', Array.from(seleccionados));
+  const handleAsignar = async () => {
+  if (!idBuque || seleccionados.size === 0) return;
+
+  setAsignando(true);
+  try {
+    await asignarTripulantesABuque(idBuque, Array.from(seleccionados));
+    console.log('Tripulantes asignados exitosamente:', Array.from(seleccionados));
+    
     // Redirigir de vuelta a la página anterior
     router.back();
-  };
+  } catch (error) {
+    console.error('Error al asignar tripulantes:', error);
+    setError('Error al asignar tripulantes. Por favor, intente nuevamente.');
+  } finally {
+    setAsignando(false);
+  }
+};
 
   return (
     <div className="min-h-screen flex flex-col">
@@ -106,9 +139,17 @@ export default function AsignarTripulacionPage() {
             <h1 className="text-2xl font-bold text-gray-800 dark:text-white">
               Asignar Tripulación
             </h1>
-            {idBuque && (
+            {buque ? (
+              <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
+                Buque: <span className="font-semibold">{buque.nombre}</span> ({buque.matricula})
+              </p>
+            ) : idBuque ? (
               <p className="text-sm text-gray-600 dark:text-gray-400">
                 Buque ID: {idBuque}
+              </p>
+            ) : (
+              <p className="text-sm text-red-600 dark:text-red-400">
+                No se ha seleccionado ningún buque
               </p>
             )}
           </div>
@@ -190,14 +231,21 @@ export default function AsignarTripulacionPage() {
         <div className="mt-6 flex justify-end">
           <button
             onClick={handleAsignar}
-            disabled={seleccionados.size === 0}
-            className={`px-6 py-2 rounded-md text-white font-medium ${
-              seleccionados.size > 0
+            disabled={seleccionados.size === 0 || !idBuque || asignando}
+            className={`px-6 py-2 rounded-md text-white font-medium transition-colors ${
+              seleccionados.size > 0 && idBuque && !asignando
                 ? 'bg-blue-600 hover:bg-blue-700'
                 : 'bg-gray-400 cursor-not-allowed'
-            } transition-colors`}
+            }`}
           >
-            Asignar Tripulantes ({seleccionados.size})
+            {asignando ? (
+              <span className="flex items-center gap-2">
+                <span className="material-symbols-outlined animate-spin">refresh</span>
+                Asignando...
+              </span>
+            ) : (
+              `Asignar Tripulantes (${seleccionados.size})`
+            )}
           </button>
         </div>
         </div>

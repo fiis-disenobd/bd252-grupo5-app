@@ -8,6 +8,7 @@ import { RutaMaritima } from './entities/ruta-maritima.entity';
 import { RutaPuertoIntermedio } from './entities/ruta-puerto-intermedio.entity';
 import { OperacionEmpleado } from './entities/operacion-empleado.entity';
 import { OperacionContenedor } from './entities/operacion-contenedor.entity';
+import { BuqueTripulante } from './entities/buque-tripulante.entity';
 
 // Entidades compartidas usadas por los servicios
 import { EstadoOperacion } from '../shared/entities/estado-operacion.entity';
@@ -35,6 +36,7 @@ import { PuertosController } from './controllers/puertos.controller';
 import { MuellesController } from './controllers/muelles.controller';
 import { RutasMaritimasController } from './controllers/rutas-maritimas.controller';
 import { ContenedoresMaritimosController } from './controllers/contenedores.controller';
+import { BuqueTripulanteController } from './controllers/buque-tripulante.controller';
 
 // Services de gestión marítima
 import { EstadosService } from './services/estados.service';
@@ -45,6 +47,7 @@ import { PuertosService } from './services/puertos.service';
 import { MuellesService } from './services/muelles.service';
 import { RutasMaritimasService } from './services/rutas-maritimas.service';
 import { ContenedoresMaritimosService } from './services/contenedores.service';
+import { BuqueTripulanteService } from './services/buque-tripulante.service';
 
 @Module({
   imports: [
@@ -56,6 +59,7 @@ import { ContenedoresMaritimosService } from './services/contenedores.service';
       RutaPuertoIntermedio,
       OperacionEmpleado,
       OperacionContenedor,
+      BuqueTripulante,
       // Entidades compartidas necesarias para los servicios
       EstadoOperacion,
       Vehiculo,
@@ -82,6 +86,7 @@ import { ContenedoresMaritimosService } from './services/contenedores.service';
     RutasMaritimasController,
     TripulantesController,
     ContenedoresMaritimosController,
+    BuqueTripulanteController,
   ],
   providers: [
     EstadosService,
@@ -93,6 +98,7 @@ import { ContenedoresMaritimosService } from './services/contenedores.service';
     RutasMaritimasService,
     TripulantesService,
     ContenedoresMaritimosService,
+    BuqueTripulanteService,
   ],
 })
 export class GestionMaritimaModule {}

@@ -1,7 +1,11 @@
+"use client";
+
 import { Header } from "@/components/Header";
 import Image from "next/image";
 import Link from "next/link";
+import { useState, useEffect } from 'react';
 import { ContenedoresInfo } from "@/components/operaciones-maritimas/ContenedoresInfo";
+import { getTripulantesPorBuque } from "@/app/services/buque-tripulante.service";
 
 type Buque = {
   id_buque: string;
@@ -13,7 +17,7 @@ type Buque = {
 };
 
 type NuevaOperacionMaritimaPageProps = {
-  searchParams: Promise<{
+  searchParams: {
     id_buque?: string;
     routeId?: string;
     routeCode?: string;
@@ -24,23 +28,45 @@ type NuevaOperacionMaritimaPageProps = {
     originDockCode?: string;
     destinationDockCode?: string;
     contenedores?: string;
-  }>;
+  };
 };
 
-export default async function NuevaOperacionMaritimaPage({
+export default function NuevaOperacionMaritimaPage({
   searchParams,
 }: NuevaOperacionMaritimaPageProps) {
-  const resolvedSearchParams = await searchParams;
-  const idBuque = resolvedSearchParams.id_buque;
-  const routeId = resolvedSearchParams.routeId;
-  const routeCode = resolvedSearchParams.routeCode ?? "-";
-  const routeOriginName = resolvedSearchParams.originName ?? "-";
-  const routeDestinationName = resolvedSearchParams.destinationName ?? "-";
-  const routeDistance = resolvedSearchParams.distance ?? "-";
-  const routeDuration = resolvedSearchParams.duration ?? "-";
-  const routeOriginDockCode = resolvedSearchParams.originDockCode ?? "-";
-  const routeDestinationDockCode = resolvedSearchParams.destinationDockCode ?? "-";
-  const contenedoresSeleccionados = resolvedSearchParams.contenedores;
+  const idBuque = searchParams?.id_buque;
+  const routeId = searchParams?.routeId;
+  const routeCode = searchParams?.routeCode ?? "-";
+  const routeOriginName = searchParams?.originName ?? "-";
+  const routeDestinationName = searchParams?.destinationName ?? "-";
+  const routeDistance = searchParams?.distance ?? "-";
+  const routeDuration = searchParams?.duration ?? "-";
+  const routeOriginDockCode = searchParams?.originDockCode ?? "-";
+  const routeDestinationDockCode = searchParams?.destinationDockCode ?? "-";
+  const contenedoresSeleccionados = searchParams?.contenedores;
+
+  const [buque, setBuque] = useState<Buque | null>(null);
+  const [tripulantesAsignados, setTripulantesAsignados] = useState<any[]>([]);
+
+  useEffect(() => {
+    if (idBuque) {
+      // Obtener datos del buque
+      fetch(`http://localhost:3001/monitoreo/buques/${idBuque}`, { cache: "no-store" })
+        .then(response => {
+          if (response.ok) {
+            return response.json();
+          }
+          throw new Error('Error al obtener buque');
+        })
+        .then(data => setBuque(data))
+        .catch(error => console.error("Error al obtener buque para la operación:", error));
+
+      // Obtener tripulantes asignados
+      getTripulantesPorBuque(idBuque)
+        .then(data => setTripulantesAsignados(data))
+        .catch(error => console.error("Error al obtener tripulantes asignados:", error));
+    }
+  }, [idBuque]);
 
   const routeQuery = new URLSearchParams();
   if (routeId) routeQuery.set("routeId", routeId);
@@ -64,22 +90,6 @@ export default async function NuevaOperacionMaritimaPage({
       ? `/operaciones-maritimas/nueva/embarcacion?${qs}`
       : "/operaciones-maritimas/nueva/embarcacion";
   })();
-
-  let buque: Buque | null = null;
-
-  if (idBuque) {
-    try {
-      const response = await fetch(
-        `http://localhost:3001/monitoreo/buques/${idBuque}`,
-        { cache: "no-store" }
-      );
-      if (response.ok) {
-        buque = (await response.json()) as Buque | null;
-      }
-    } catch (error) {
-      console.error("Error al obtener buque para la operación:", error);
-    }
-  }
 
   const vesselNombre = buque?.nombre ?? "Sin embarcación seleccionada";
   const vesselMatricula = buque?.matricula ?? "-";
@@ -390,19 +400,57 @@ export default async function NuevaOperacionMaritimaPage({
                   </span>
                   Tripulación Asignada
                 </h2>
-                <div className="space-y-6">un 
-                  <p className="text-sm text-gray-600 dark:text-gray-400">
-                    Todavía no se ha asignado tripulación
-                  </p>
-                  <Link
-                    href="/operaciones-maritimas/nueva/asignar-tripulacion"
-                    className="inline-flex items-center gap-2 px-4 py-2 bg-[#e6f0fa] text-[#0459af] text-sm font-semibold rounded-lg hover:bg-[#0459af]/20 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#0459af] transition-colors"
-                  >
-                    <span className="material-symbols-outlined text-lg">
-                      group_add
-                    </span>
-                    <span>Asignar Tripulación</span>
-                  </Link>
+                <div className="space-y-6">
+                  {tripulantesAsignados.length === 0 ? (
+                    <>
+                      <p className="text-sm text-gray-600 dark:text-gray-400">
+                        Todavía no se ha asignado tripulación
+                      </p>
+                      <Link
+                        href={`/operaciones-maritimas/nueva/asignar-tripulacion${idBuque ? `?id_buque=${idBuque}` : ''}`}
+                        className="inline-flex items-center gap-2 px-4 py-2 bg-[#e6f0fa] text-[#0459af] text-sm font-semibold rounded-lg hover:bg-[#0459af]/20 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#0459af] transition-colors"
+                      >
+                        <span className="material-symbols-outlined text-lg">
+                          group_add
+                        </span>
+                        <span>Asignar Tripulación</span>
+                      </Link>
+                    </>
+                  ) : (
+                    <>
+                      <div className="space-y-3">
+                        {tripulantesAsignados.map((asignacion) => (
+                          <div key={asignacion.id_buque_tripulante} className="flex items-center justify-between p-3 bg-gray-50 dark:bg-slate-700 rounded-lg">
+                            <div className="flex items-center gap-3">
+                              <div className="w-8 h-8 bg-[#0459af] text-white rounded-full flex items-center justify-center text-sm font-semibold">
+                                {asignacion.tripulante?.empleado?.nombre?.charAt(0) || 'T'}
+                              </div>
+                              <div>
+                                <p className="text-sm font-medium text-gray-900 dark:text-white">
+                                  {asignacion.tripulante?.empleado?.nombre} {asignacion.tripulante?.empleado?.apellido}
+                                </p>
+                                <p className="text-xs text-gray-500 dark:text-gray-400">
+                                  {asignacion.tripulante?.empleado?.codigo} • {asignacion.tripulante?.nacionalidad}
+                                </p>
+                              </div>
+                            </div>
+                            <div className="text-xs text-gray-500 dark:text-gray-400">
+                              {new Date(asignacion.fecha_asignacion).toLocaleDateString()}
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                      <Link
+                        href={`/operaciones-maritimas/nueva/asignar-tripulacion${idBuque ? `?id_buque=${idBuque}` : ''}`}
+                        className="inline-flex items-center gap-2 px-4 py-2 bg-[#e6f0fa] text-[#0459af] text-sm font-semibold rounded-lg hover:bg-[#0459af]/20 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#0459af] transition-colors"
+                      >
+                        <span className="material-symbols-outlined text-lg">
+                          edit
+                        </span>
+                        <span>Modificar Tripulación</span>
+                      </Link>
+                    </>
+                  )}
                 </div>
               </div>
             </div>
