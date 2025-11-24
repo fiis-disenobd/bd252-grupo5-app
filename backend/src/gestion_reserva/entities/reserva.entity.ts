@@ -10,6 +10,7 @@ import { Cliente } from './cliente.entity';
 import { AgenteReservas } from './agente-reservas.entity';
 import { Buque } from '../../shared/entities/buque.entity';
 import { Ruta } from '../../shared/entities/ruta.entity';
+import { EstadoReserva } from '../../shared/entities/estado-reserva.entity';
 import { ReservaContenedor } from './reserva-contenedor.entity';
 import { ReservaOperacionMaritima } from './reserva-operacion-maritima.entity';
 import { ReservaOperacionTerrestre } from './reserva-operacion-terrestre.entity';
@@ -58,6 +59,10 @@ export class Reserva {
   @ManyToOne(() => Ruta)
   @JoinColumn({ name: 'id_ruta' })
   ruta: Ruta;
+
+  @ManyToOne(() => EstadoReserva)
+  @JoinColumn({ name: 'id_estado_reserva' })
+  estado_reserva: EstadoReserva;
 
   @OneToMany(
     () => ReservaContenedor,

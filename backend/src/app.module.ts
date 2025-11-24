@@ -6,6 +6,7 @@ import { AppService } from './app.service';
 import { MonitoreoModule } from './monitoreo/monitoreo.module';
 import { AuthModule } from './auth/auth.module';
 import { GestionMaritimaModule } from './gestion_maritima/gestion_maritima.module';
+import { GestionReservaModule } from './gestion_reserva/gestion_reserva.module';
 
 @Module({
   imports: [
@@ -36,6 +37,7 @@ import { GestionMaritimaModule } from './gestion_maritima/gestion_maritima.modul
     AuthModule,
     MonitoreoModule,
     GestionMaritimaModule,
+    GestionReservaModule,
   ],
   controllers: [AppController],
   providers: [AppService],
