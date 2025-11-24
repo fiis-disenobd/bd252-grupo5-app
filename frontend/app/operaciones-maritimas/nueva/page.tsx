@@ -23,7 +23,7 @@ type NuevaOperacionMaritimaPageProps = {
     destinationDockCode?: string;
     contenedores?: string;
     tripulacion?: string;
-  };
+  }>;
 };
 
 export default async function NuevaOperacionMaritimaPage({
