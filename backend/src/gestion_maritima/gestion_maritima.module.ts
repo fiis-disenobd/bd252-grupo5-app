@@ -30,7 +30,6 @@ import { ContenedorMercancia } from '../shared/entities/contenedor-mercancia.ent
 import { EstatusNavegacion } from '../shared/entities/estatus-navegacion.entity';
 import { Operacion } from '../shared/entities/operacion.entity';
 import { OperacionMaritima } from '../shared/entities/operacion-maritima.entity';
-import { BuqueTripulante } from '../personal_tripulacion/entities/buque-tripulante.entity';
 
 // Controllers de gestión marítima
 import { EstadosController } from './controllers/estados.controller';
@@ -85,7 +84,6 @@ import { OperacionMaritimaService } from './services/operacion-maritima.service'
       EstatusNavegacion,
       Operacion,
       OperacionMaritima,
-      BuqueTripulante,
     ]),
   ],
   controllers: [
