@@ -1,11 +1,3 @@
-"use client";
-
-import { Header } from "@/components/Header";
-import Image from "next/image";
-import Link from "next/link";
-import { useState, useEffect } from 'react';
-import { ContenedoresInfo } from "@/components/operaciones-maritimas/ContenedoresInfo";
-import { getTripulantesPorBuque } from "@/app/services/buque-tripulante.service";
 import OperacionForm from "@/components/operaciones-maritimas/OperacionForm";
 
 type Buque = {
@@ -18,7 +10,8 @@ type Buque = {
 };
 
 type NuevaOperacionMaritimaPageProps = {
-  searchParams: {
+  // Next 16 expone searchParams como una Promise en esta ruta
+  searchParams: Promise<{
     id_buque?: string;
     routeId?: string;
     routeCode?: string;
@@ -33,7 +26,7 @@ type NuevaOperacionMaritimaPageProps = {
   }>;
 };
 
-export default function NuevaOperacionMaritimaPage({
+export default async function NuevaOperacionMaritimaPage({
   searchParams,
 }: NuevaOperacionMaritimaPageProps) {
   const resolvedSearchParams = await searchParams;
