@@ -14,7 +14,7 @@ import { GestionMaritimaModule } from './gestion_maritima/gestion_maritima.modul
       isGlobal: true,
       envFilePath: '.env',
     }),
-    
+
     // Configuración de TypeORM con PostgreSQL
     TypeOrmModule.forRootAsync({
       imports: [ConfigModule],
@@ -31,7 +31,7 @@ import { GestionMaritimaModule } from './gestion_maritima/gestion_maritima.modul
         logging: process.env.NODE_ENV === 'development',
       }),
     }),
-    
+
     // Módulos de la aplicación
     AuthModule,
     MonitoreoModule,
@@ -40,4 +40,4 @@ import { GestionMaritimaModule } from './gestion_maritima/gestion_maritima.modul
   controllers: [AppController],
   providers: [AppService],
 })
-export class AppModule {}
+export class AppModule { }

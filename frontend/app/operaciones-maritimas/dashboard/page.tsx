@@ -370,11 +370,10 @@ export default function DashboardOperacionesMaritimas() {
                     key={pageNumber}
                     type="button"
                     onClick={() => setCurrentPage(pageNumber)}
-                    className={`flex h-8 w-8 items-center justify-center rounded border text-sm ${
-                      isActive
+                    className={`flex h-8 w-8 items-center justify-center rounded border text-sm ${isActive
                         ? "border-[#e54c2a] bg-[#e54c2a] font-semibold text-white"
                         : "border-gray-300 bg-white text-gray-700 hover:bg-gray-50"
-                    }`}
+                      }`}
                   >
                     {pageNumber}
                   </button>
