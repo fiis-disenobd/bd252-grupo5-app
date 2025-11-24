@@ -1,0 +1,12 @@
+# .renderignore
+# Archivos que Render DEBE ignorar al hacer deploy
+# NO pongas dist/ aquí - lo necesitamos para ejecutar
+
+.git
+*.md
+.vscode
+.idea
+test/
+coverage/
+*.spec.ts
+*.test.ts
