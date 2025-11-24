@@ -51,6 +51,11 @@ export class RecursosService {
     }
   }
 
+  // Alias específico para el endpoint de estados de operación
+  async findEstadosOperacion() {
+    return this.findEstados();
+  }
+
   async findOperadores() {
     try {
       return await this.operadorRepository.find({
