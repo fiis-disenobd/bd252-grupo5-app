@@ -20,17 +20,36 @@ import { GestionReservaModule } from './gestion_reserva/gestion_reserva.module';
     TypeOrmModule.forRootAsync({
       imports: [ConfigModule],
       inject: [ConfigService],
-      useFactory: (configService: ConfigService) => ({
-        type: 'postgres',
-        host: configService.get('DATABASE_HOST'),
-        port: +configService.get('DATABASE_PORT'),
-        username: configService.get('DATABASE_USER'),
-        password: configService.get('DATABASE_PASSWORD'),
-        database: configService.get('DATABASE_NAME'),
-        entities: [__dirname + '/**/*.entity{.ts,.js}'],
-        synchronize: false, // En producción debe ser false
-        logging: process.env.NODE_ENV === 'development',
-      }),
+      useFactory: (configService: ConfigService) => {
+        const databaseUrl = configService.get('DATABASE_URL');
+        
+        // Si existe DATABASE_URL (Producción con Supabase)
+        if (databaseUrl) {
+          return {
+            type: 'postgres',
+            url: databaseUrl,
+            entities: [__dirname + '/**/*.entity{.ts,.js}'],
+            synchronize: false,
+            logging: process.env.NODE_ENV === 'development',
+            ssl: {
+              rejectUnauthorized: false, // Para Supabase
+            },
+          };
+        }
+        
+        // Si no (Desarrollo local con pgAdmin)
+        return {
+          type: 'postgres',
+          host: configService.get('DATABASE_HOST'),
+          port: +configService.get('DATABASE_PORT'),
+          username: configService.get('DATABASE_USER'),
+          password: configService.get('DATABASE_PASSWORD'),
+          database: configService.get('DATABASE_NAME'),
+          entities: [__dirname + '/**/*.entity{.ts,.js}'],
+          synchronize: false,
+          logging: process.env.NODE_ENV === 'development',
+        };
+      },
     }),
 
     // Módulos de la aplicación
