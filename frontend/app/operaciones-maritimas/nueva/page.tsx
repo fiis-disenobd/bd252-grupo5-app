@@ -381,19 +381,19 @@ export default async function NuevaOperacionMaritimaPage({
                   </span>
                   Tripulación Asignada
                 </h2>
-                <div className="space-y-6">
+                <div className="space-y-6">un 
                   <p className="text-sm text-gray-600 dark:text-gray-400">
                     Todavía no se ha asignado tripulación
                   </p>
-                  <button
-                    type="button"
+                  <Link
+                    href="/operaciones-maritimas/nueva/asignar-tripulacion"
                     className="inline-flex items-center gap-2 px-4 py-2 bg-[#e6f0fa] text-[#0459af] text-sm font-semibold rounded-lg hover:bg-[#0459af]/20 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#0459af] transition-colors"
                   >
                     <span className="material-symbols-outlined text-lg">
                       group_add
                     </span>
                     <span>Asignar Tripulación</span>
-                  </button>
+                  </Link>
                 </div>
               </div>
             </div>

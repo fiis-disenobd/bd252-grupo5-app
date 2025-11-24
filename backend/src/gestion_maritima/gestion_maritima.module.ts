@@ -15,6 +15,9 @@ import { Vehiculo } from '../shared/entities/vehiculo.entity';
 import { Buque } from '../shared/entities/buque.entity';
 import { Ruta } from '../shared/entities/ruta.entity';
 import { Operador } from '../monitoreo/entities/operador.entity';
+import { Tripulante } from '../shared/entities/tripulante.entity';
+import { TripulantesController } from '../shared/controllers/tripulantes.controller';
+import { TripulantesService } from '../shared/services/tripulantes.service';
 
 // Controllers de gestión marítima
 import { EstadosController } from './controllers/estados.controller';
@@ -50,6 +53,7 @@ import { RutasMaritimasService } from './services/rutas-maritimas.service';
       Buque,
       Ruta,
       Operador,
+      Tripulante,
     ]),
   ],
   controllers: [
@@ -60,6 +64,7 @@ import { RutasMaritimasService } from './services/rutas-maritimas.service';
     PuertosController,
     MuellesController,
     RutasMaritimasController,
+    TripulantesController,
   ],
   providers: [
     EstadosService,
@@ -69,6 +74,7 @@ import { RutasMaritimasService } from './services/rutas-maritimas.service';
     PuertosService,
     MuellesService,
     RutasMaritimasService,
+    TripulantesService,
   ],
 })
 export class GestionMaritimaModule {}
