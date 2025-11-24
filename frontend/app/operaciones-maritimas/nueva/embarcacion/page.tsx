@@ -11,6 +11,10 @@ type Buque = {
   nombre: string;
   capacidad: number;
   id_estado_embarcacion: string;
+  estado_embarcacion?: {
+    id_estado_embarcacion: string;
+    nombre: string;
+  };
   peso: number;
   ubicacion_actual: string | null;
 };
@@ -163,7 +167,7 @@ export default function SeleccionarEmbarcacionPage() {
                           </th>
                           <td className="px-6 py-4">{vessel.capacidad}</td>
                           <td className="px-6 py-4">
-                            {vessel.id_estado_embarcacion || "-"}
+                            {vessel.estado_embarcacion?.nombre || "-"}
                           </td>
                           <td className="px-6 py-4">{vessel.peso}</td>
                           <td className="px-6 py-4">
