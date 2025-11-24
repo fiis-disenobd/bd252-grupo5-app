@@ -15,7 +15,7 @@ import { GestionReservaModule } from './gestion_reserva/gestion_reserva.module';
       isGlobal: true,
       envFilePath: '.env',
     }),
-    
+
     // Configuración de TypeORM con PostgreSQL
     TypeOrmModule.forRootAsync({
       imports: [ConfigModule],
@@ -32,7 +32,7 @@ import { GestionReservaModule } from './gestion_reserva/gestion_reserva.module';
         logging: process.env.NODE_ENV === 'development',
       }),
     }),
-    
+
     // Módulos de la aplicación
     AuthModule,
     MonitoreoModule,
@@ -42,4 +42,4 @@ import { GestionReservaModule } from './gestion_reserva/gestion_reserva.module';
   controllers: [AppController],
   providers: [AppService],
 })
-export class AppModule {}
+export class AppModule { }

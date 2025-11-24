@@ -34,6 +34,7 @@ export default function GestionarContenedoresPage() {
   const [filtroCliente, setFiltroCliente] = useState<string>("");
   const [paginaActual, setPaginaActual] = useState<number>(1);
   const elementosPorPagina = 10;
+  const [routeInfo, setRouteInfo] = useState<string | null>(null);
 
   const getEstadoStyles = (estado?: string) => {
     const base =
@@ -52,6 +53,44 @@ export default function GestionarContenedoresPage() {
 
     return base;
   };
+
+  useEffect(() => {
+    // Obtener información de la ruta desde los parámetros
+    const rutaId = searchParams.get("ruta");
+
+    if (rutaId) {
+      // Fetch route information
+      fetch(`http://localhost:3001/gestion-maritima/rutas-maritimas/${rutaId}`)
+        .then((res) => res.json())
+        .then((data) => {
+          // Construir descripción de la ruta
+          const origen = data.puerto_origen?.nombre || "Origen desconocido";
+          const destino = data.puerto_destino?.nombre || "Destino desconocido";
+
+          let descripcion = `Contenedores con destinos en la ruta ${origen}-${destino}`;
+
+          // Agregar puertos intermedios si existen
+          if (data.puertos_intermedios && data.puertos_intermedios.length > 0) {
+            const intermedios = data.puertos_intermedios
+              .map((pi: any) => pi.puerto?.nombre)
+              .filter(Boolean)
+              .join(" y ");
+
+            if (intermedios) {
+              descripcion += ` con puertos intermedios en ${intermedios}`;
+            }
+          }
+
+          setRouteInfo(descripcion);
+        })
+        .catch((err) => {
+          console.error("Error fetching route info:", err);
+          setRouteInfo("Aún no se ha seleccionado ninguna ruta");
+        });
+    } else {
+      setRouteInfo("Aún no se ha seleccionado ninguna ruta");
+    }
+  }, [searchParams]);
 
   useEffect(() => {
     // Restaurar selección desde localStorage
@@ -135,7 +174,7 @@ export default function GestionarContenedoresPage() {
     const estadoOk =
       !filtroEstado ||
       c.estado_contenedor?.nombre?.toLowerCase() ===
-        filtroEstado.toLowerCase();
+      filtroEstado.toLowerCase();
 
     const mercanciaOk =
       !filtroMercancia ||
@@ -170,8 +209,7 @@ export default function GestionarContenedoresPage() {
                   Gestionar Contenedores Asignados
                 </h2>
                 <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
-                  Contenedores con destinos en la ruta Rotterdam-Hamburgo con
-                  puertos intermedios en Amberes y Valencia
+                  {routeInfo || "Cargando información de la ruta..."}
                 </p>
               </div>
               <span className="font-semibold text-[#0459af]">
@@ -254,12 +292,6 @@ export default function GestionarContenedoresPage() {
                     Capacidad
                   </th>
                   <th className="px-6 py-3" scope="col">
-                    Cliente
-                  </th>
-                  <th className="px-6 py-3" scope="col">
-                    Destino
-                  </th>
-                  <th className="px-6 py-3" scope="col">
                     Dimensiones
                   </th>
                   <th className="px-6 py-3" scope="col">
@@ -275,7 +307,7 @@ export default function GestionarContenedoresPage() {
                   <tr>
                     <td
                       className="px-6 py-6 text-center text-gray-500 dark:text-gray-400"
-                      colSpan={9}
+                      colSpan={7}
                     >
                       Cargando contenedores...
                     </td>
@@ -284,7 +316,7 @@ export default function GestionarContenedoresPage() {
                   <tr>
                     <td
                       className="px-6 py-6 text-center text-gray-500 dark:text-gray-400"
-                      colSpan={9}
+                      colSpan={7}
                     >
                       No hay contenedores disponibles.
                     </td>
@@ -318,10 +350,6 @@ export default function GestionarContenedoresPage() {
                         {container.tipo_contenedor?.nombre || "-"}
                       </td>
                       <td className="px-6 py-4">{container.capacidad}</td>
-                      <td className="px-6 py-4">
-                        {container.cliente || "-"}
-                      </td>
-                      <td className="px-6 py-4">-</td>
                       <td className="px-6 py-4">{container.dimensiones}</td>
                       <td className="px-6 py-4">
                         <span
