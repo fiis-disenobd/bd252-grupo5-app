@@ -14,10 +14,17 @@ import { EstadoOperacion } from '../shared/entities/estado-operacion.entity';
 import { Vehiculo } from '../shared/entities/vehiculo.entity';
 import { Buque } from '../shared/entities/buque.entity';
 import { Ruta } from '../shared/entities/ruta.entity';
+import { Contenedor } from '../shared/entities/contenedor.entity';
+import { EstadoContenedor } from '../shared/entities/estado-contenedor.entity';
+import { TipoContenedor } from '../shared/entities/tipo-contenedor.entity';
 import { Operador } from '../monitoreo/entities/operador.entity';
 import { Tripulante } from '../shared/entities/tripulante.entity';
 import { TripulantesController } from '../shared/controllers/tripulantes.controller';
 import { TripulantesService } from '../shared/services/tripulantes.service';
+import { ReservaContenedor } from '../gestion_reserva/entities/reserva-contenedor.entity';
+import { Reserva } from '../gestion_reserva/entities/reserva.entity';
+import { Cliente } from '../gestion_reserva/entities/cliente.entity';
+import { ContenedorMercancia } from '../shared/entities/contenedor-mercancia.entity';
 
 // Controllers de gestión marítima
 import { EstadosController } from './controllers/estados.controller';
@@ -27,6 +34,7 @@ import { BuquesController } from './controllers/buques.controller';
 import { PuertosController } from './controllers/puertos.controller';
 import { MuellesController } from './controllers/muelles.controller';
 import { RutasMaritimasController } from './controllers/rutas-maritimas.controller';
+import { ContenedoresMaritimosController } from './controllers/contenedores.controller';
 
 // Services de gestión marítima
 import { EstadosService } from './services/estados.service';
@@ -36,6 +44,7 @@ import { BuquesService } from './services/buques.service';
 import { PuertosService } from './services/puertos.service';
 import { MuellesService } from './services/muelles.service';
 import { RutasMaritimasService } from './services/rutas-maritimas.service';
+import { ContenedoresMaritimosService } from './services/contenedores.service';
 
 @Module({
   imports: [
@@ -54,6 +63,13 @@ import { RutasMaritimasService } from './services/rutas-maritimas.service';
       Ruta,
       Operador,
       Tripulante,
+      Contenedor,
+      EstadoContenedor,
+      TipoContenedor,
+      ReservaContenedor,
+      Reserva,
+      Cliente,
+      ContenedorMercancia,
     ]),
   ],
   controllers: [
@@ -65,6 +81,7 @@ import { RutasMaritimasService } from './services/rutas-maritimas.service';
     MuellesController,
     RutasMaritimasController,
     TripulantesController,
+    ContenedoresMaritimosController,
   ],
   providers: [
     EstadosService,
@@ -75,6 +92,7 @@ import { RutasMaritimasService } from './services/rutas-maritimas.service';
     MuellesService,
     RutasMaritimasService,
     TripulantesService,
+    ContenedoresMaritimosService,
   ],
 })
 export class GestionMaritimaModule {}

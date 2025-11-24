@@ -1,6 +1,7 @@
 import { Header } from "@/components/Header";
 import Image from "next/image";
 import Link from "next/link";
+import { ContenedoresInfo } from "@/components/operaciones-maritimas/ContenedoresInfo";
 
 type Buque = {
   id_buque: string;
@@ -22,6 +23,7 @@ type NuevaOperacionMaritimaPageProps = {
     duration?: string;
     originDockCode?: string;
     destinationDockCode?: string;
+    contenedores?: string;
   }>;
 };
 
@@ -38,6 +40,7 @@ export default async function NuevaOperacionMaritimaPage({
   const routeDuration = resolvedSearchParams.duration ?? "-";
   const routeOriginDockCode = resolvedSearchParams.originDockCode ?? "-";
   const routeDestinationDockCode = resolvedSearchParams.destinationDockCode ?? "-";
+  const contenedoresSeleccionados = resolvedSearchParams.contenedores;
 
   const routeQuery = new URLSearchParams();
   if (routeId) routeQuery.set("routeId", routeId);
@@ -52,6 +55,8 @@ export default async function NuevaOperacionMaritimaPage({
   if (routeDestinationDockCode && routeDestinationDockCode !== "-")
     routeQuery.set("destinationDockCode", routeDestinationDockCode);
   if (idBuque) routeQuery.set("id_buque", idBuque);
+  if (contenedoresSeleccionados)
+    routeQuery.set("contenedores", contenedoresSeleccionados);
 
   const cambiarEmbarcacionHref = (() => {
     const qs = routeQuery.toString();
@@ -363,7 +368,11 @@ export default async function NuevaOperacionMaritimaPage({
                     </p>
                   </div>
                   <Link
-                    href="/operaciones-maritimas/nueva/ruta"
+                    href={
+                      routeQuery.toString()
+                        ? `/operaciones-maritimas/nueva/ruta?${routeQuery.toString()}`
+                        : "/operaciones-maritimas/nueva/ruta"
+                    }
                     className="w-full flex items-center justify-center gap-2 px-4 py-2.5 bg-[#e6f0fa] text-[#0459af] text-sm font-semibold rounded-lg hover:bg-[#0459af]/20 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#0459af] transition-colors"
                   >
                     <span className="material-symbols-outlined text-lg">
@@ -409,7 +418,9 @@ export default async function NuevaOperacionMaritimaPage({
                   Información de Contenedores
                 </h2>
                 <Link
-                  href="/operaciones-maritimas/nueva/contenedores"
+                  href={routeQuery.toString()
+                    ? `/operaciones-maritimas/nueva/contenedores?${routeQuery.toString()}`
+                    : "/operaciones-maritimas/nueva/contenedores"}
                   className="flex items-center gap-2 px-4 py-2 bg-[#e6f0fa] text-[#0459af] text-sm font-semibold rounded-lg hover:bg-[#0459af]/20 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#0459af] transition-colors self-start md:self-center"
                 >
                   <span className="material-symbols-outlined text-lg">
@@ -418,42 +429,7 @@ export default async function NuevaOperacionMaritimaPage({
                   Gestionar contenedores
                 </Link>
               </div>
-              <div className="w-full overflow-x-auto">
-                <table className="w-full text-sm text-left text-gray-500 dark:text-gray-400">
-                  <thead className="text-xs text-gray-700 uppercase bg-gray-50 dark:bg-slate-700 dark:text-gray-400">
-                    <tr>
-                      <th className="px-6 py-4" scope="col">
-                        Código
-                      </th>
-                      <th className="px-6 py-4" scope="col">
-                        Peso (Kg)
-                      </th>
-                      <th className="px-6 py-4" scope="col">
-                        Capacidad (Kg)
-                      </th>
-                      <th className="px-6 py-4" scope="col">
-                        Dimensiones (ft)
-                      </th>
-                      <th className="px-6 py-4" scope="col">
-                        Mercancía
-                      </th>
-                      <th className="px-6 py-4" scope="col">
-                        Estado
-                      </th>
-                      <th className="px-6 py-4" scope="col">
-                        Tipo
-                      </th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    <tr className="bg-white dark:bg-slate-800 hover:bg-gray-50 dark:hover:bg-slate-700/50">
-                      <td className="px-6 py-6 text-center text-gray-600 dark:text-gray-400" colSpan={7}>
-                        Sin contenedores seleccionados aún
-                      </td>
-                    </tr>
-                  </tbody>
-                </table>
-              </div>
+              <ContenedoresInfo selectedIdsParam={contenedoresSeleccionados} />
             </div>
           </div>
 
