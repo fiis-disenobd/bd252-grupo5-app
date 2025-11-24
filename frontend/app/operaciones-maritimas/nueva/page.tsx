@@ -1,3 +1,11 @@
+"use client";
+
+import { Header } from "@/components/Header";
+import Image from "next/image";
+import Link from "next/link";
+import { useState, useEffect } from 'react';
+import { ContenedoresInfo } from "@/components/operaciones-maritimas/ContenedoresInfo";
+import { getTripulantesPorBuque } from "@/app/services/buque-tripulante.service";
 import OperacionForm from "@/components/operaciones-maritimas/OperacionForm";
 
 type Buque = {
@@ -10,7 +18,7 @@ type Buque = {
 };
 
 type NuevaOperacionMaritimaPageProps = {
-  searchParams: Promise<{
+  searchParams: {
     id_buque?: string;
     routeId?: string;
     routeCode?: string;
@@ -25,7 +33,7 @@ type NuevaOperacionMaritimaPageProps = {
   }>;
 };
 
-export default async function NuevaOperacionMaritimaPage({
+export default function NuevaOperacionMaritimaPage({
   searchParams,
 }: NuevaOperacionMaritimaPageProps) {
   const resolvedSearchParams = await searchParams;

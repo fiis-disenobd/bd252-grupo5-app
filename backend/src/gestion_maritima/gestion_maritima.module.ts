@@ -8,6 +8,7 @@ import { RutaMaritima } from './entities/ruta-maritima.entity';
 import { RutaPuertoIntermedio } from './entities/ruta-puerto-intermedio.entity';
 import { OperacionEmpleado } from './entities/operacion-empleado.entity';
 import { OperacionContenedor } from './entities/operacion-contenedor.entity';
+import { BuqueTripulante } from './entities/buque-tripulante.entity';
 import { OperacionRutaMaritima } from './entities/operacion-ruta-maritima.entity';
 
 // Entidades compartidas usadas por los servicios
@@ -40,6 +41,7 @@ import { PuertosController } from './controllers/puertos.controller';
 import { MuellesController } from './controllers/muelles.controller';
 import { RutasMaritimasController } from './controllers/rutas-maritimas.controller';
 import { ContenedoresMaritimosController } from './controllers/contenedores.controller';
+import { BuqueTripulanteController } from './controllers/buque-tripulante.controller';
 import { OperacionMaritimaController } from './controllers/operacion-maritima.controller';
 
 // Services de gestión marítima
@@ -51,6 +53,7 @@ import { PuertosService } from './services/puertos.service';
 import { MuellesService } from './services/muelles.service';
 import { RutasMaritimasService } from './services/rutas-maritimas.service';
 import { ContenedoresMaritimosService } from './services/contenedores.service';
+import { BuqueTripulanteService } from './services/buque-tripulante.service';
 import { OperacionMaritimaService } from './services/operacion-maritima.service';
 
 @Module({
@@ -63,6 +66,7 @@ import { OperacionMaritimaService } from './services/operacion-maritima.service'
       RutaPuertoIntermedio,
       OperacionEmpleado,
       OperacionContenedor,
+      BuqueTripulante,
       OperacionRutaMaritima,
       // Entidades compartidas necesarias para los servicios
       EstadoOperacion,
@@ -94,6 +98,7 @@ import { OperacionMaritimaService } from './services/operacion-maritima.service'
     RutasMaritimasController,
     TripulantesController,
     ContenedoresMaritimosController,
+    BuqueTripulanteController,
     OperacionMaritimaController,
   ],
   providers: [
@@ -106,6 +111,7 @@ import { OperacionMaritimaService } from './services/operacion-maritima.service'
     RutasMaritimasService,
     TripulantesService,
     ContenedoresMaritimosService,
+    BuqueTripulanteService,
     OperacionMaritimaService,
   ],
 })
