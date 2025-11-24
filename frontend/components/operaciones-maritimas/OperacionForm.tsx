@@ -46,6 +46,7 @@ type OperacionFormProps = {
 export default function OperacionForm({ buque, searchParams }: OperacionFormProps) {
     const router = useRouter();
     const [estado, setEstado] = useState("");
+    const [estadosDisponibles, setEstadosDisponibles] = useState<{ id_estado_operacion: string; nombre: string }[]>([]);
     const [fechaInicio, setFechaInicio] = useState("");
     const [fechaFin, setFechaFin] = useState("");
     const [tripulacionAsignada, setTripulacionAsignada] = useState<Tripulante[]>([]);
@@ -86,6 +87,14 @@ export default function OperacionForm({ buque, searchParams }: OperacionFormProp
             ? `/operaciones-maritimas/nueva/embarcacion?${qs}`
             : "/operaciones-maritimas/nueva/embarcacion";
     })();
+
+    // Fetch available operation states
+    useEffect(() => {
+        fetch("http://localhost:3001/monitoreo/estados")
+            .then((res) => res.json())
+            .then((data) => setEstadosDisponibles(data))
+            .catch((err) => console.error("Error loading estados:", err));
+    }, []);
 
     useEffect(() => {
         if (tripulacionIds) {
@@ -234,18 +243,6 @@ export default function OperacionForm({ buque, searchParams }: OperacionFormProp
                                         </span>
                                         <span>{new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })} (Automático)</span>
                                     </div>
-                                    <div className="flex items-center gap-2">
-                                        <span className="material-symbols-outlined text-lg">
-                                            person
-                                        </span>
-                                        <span>Usuario: J. Perez</span>
-                                    </div>
-                                    <div className="flex items-center gap-2">
-                                        <span className="material-symbols-outlined text-lg">
-                                            anchor
-                                        </span>
-                                        <span>Puerto: Algeciras</span>
-                                    </div>
                                 </div>
                             </div>
                             <div className="flex items-center space-x-4">
@@ -266,15 +263,6 @@ export default function OperacionForm({ buque, searchParams }: OperacionFormProp
                         </div>
                     </header>
 
-                    <div className="mb-8 flex space-x-4">
-                        <button
-                            type="button"
-                            className="flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-[#e6f0fa] dark:hover:bg-[#0459af]/20 text-gray-600 dark:text-gray-400 hover:text-[#0459af] dark:hover:text-white bg-white dark:bg-slate-800 shadow-sm border border-gray-200 dark:border-slate-700"
-                        >
-                            <span className="material-symbols-outlined">print</span>
-                            <span>Generar Documentos</span>
-                        </button>
-                    </div>
 
                     <div className="grid grid-cols-1 xl:grid-cols-5 gap-8">
                         <div className="xl:col-span-3 space-y-8">
@@ -372,12 +360,12 @@ export default function OperacionForm({ buque, searchParams }: OperacionFormProp
                                             onChange={(e) => setEstado(e.target.value)}
                                             className="block w-full rounded-lg bg-[#f5f7f8] dark:bg-slate-700 border-gray-200 dark:border-slate-700 shadow-sm focus:border-[#0459af] focus:ring focus:ring-[#0459af] focus:ring-opacity-50 text-sm py-2.5 px-4"
                                         >
-                                            <option>Seleccione estado</option>
-                                            <option>En Planificación</option>
-                                            <option>En Progreso</option>
-                                            <option>Completada</option>
-                                            <option>Cancelada</option>
-                                            <option>En Espera</option>
+                                            <option value="">Seleccione estado</option>
+                                            {estadosDisponibles.map((est) => (
+                                                <option key={est.id_estado_operacion} value={est.nombre}>
+                                                    {est.nombre}
+                                                </option>
+                                            ))}
                                         </select>
                                     </div>
 
