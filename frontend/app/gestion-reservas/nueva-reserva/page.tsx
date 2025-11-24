@@ -69,7 +69,11 @@ export default function NuevaReserva() {
         {/* Header */}
         <div className="bg-white rounded-t-lg border-b border-gray-200 px-8 py-6">
           <div className="flex items-center gap-3 mb-2">
-            <span className="material-symbols-outlined text-3xl text-[#003366]">directions_boat</span>
+            <img
+              src="/favicon/favicon-96x96.png"
+              alt="Hapag-Lloyd"
+              className="h-8 w-auto"
+            />
             <span className="text-xl font-bold text-[#003366]">Hapag-Lloyd</span>
           </div>
           <h1 className="text-3xl font-bold text-gray-900 mt-4">Nueva Reserva</h1>

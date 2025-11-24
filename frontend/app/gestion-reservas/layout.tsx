@@ -20,7 +20,11 @@ export default function GestionReservasLayout({
       <div className="bg-white border-b border-gray-200">
         <div className="px-8 py-4">
           <div className="flex items-center gap-3 mb-4">
-            <span className="material-symbols-outlined text-3xl text-[#003366]">directions_boat</span>
+            <img
+              src="/favicon/favicon-96x96.png"
+              alt="Hapag-Lloyd"
+              className="h-8 w-auto"
+            />
             <span className="text-xl font-bold text-[#003366]">Hapag-Lloyd</span>
           </div>
 
