@@ -368,7 +368,11 @@ export default async function NuevaOperacionMaritimaPage({
                     </p>
                   </div>
                   <Link
-                    href="/operaciones-maritimas/nueva/ruta"
+                    href={
+                      routeQuery.toString()
+                        ? `/operaciones-maritimas/nueva/ruta?${routeQuery.toString()}`
+                        : "/operaciones-maritimas/nueva/ruta"
+                    }
                     className="w-full flex items-center justify-center gap-2 px-4 py-2.5 bg-[#e6f0fa] text-[#0459af] text-sm font-semibold rounded-lg hover:bg-[#0459af]/20 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#0459af] transition-colors"
                   >
                     <span className="material-symbols-outlined text-lg">

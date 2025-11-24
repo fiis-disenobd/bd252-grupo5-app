@@ -69,6 +69,8 @@ export default function SeleccionRutasMaritimasPage() {
   const destinationNameFromQuery = searchParams.get("destinationName") || "";
   const distanceFromQuery = searchParams.get("distance") || "";
   const durationFromQuery = searchParams.get("duration") || "";
+  const idBuque = searchParams.get("id_buque");
+  const contenedores = searchParams.get("contenedores");
   const mapContainerRef = useRef<HTMLDivElement | null>(null);
   const mapRef = useRef<L.Map | null>(null);
   const markersRef = useRef<L.Marker[]>([]);
@@ -727,7 +729,8 @@ export default function SeleccionRutasMaritimasPage() {
                     const destinationDockCode = destinationDock?.codigo ?? "";
 
                     router.push(
-                      `/operaciones-maritimas/nueva?id_buque=${""}` +
+                      `/operaciones-maritimas/nueva?id_buque=${idBuque ?? ""}` +
+                      `&contenedores=${encodeURIComponent(contenedores ?? "")}` +
                       `&routeId=${selectedRouteIdFromQuery ?? ""}` +
                       `&routeCode=${encodeURIComponent(routeCode)}` +
                       `&originId=${originPortIdFromQuery ?? ""}` +
@@ -750,7 +753,18 @@ export default function SeleccionRutasMaritimasPage() {
                   Limpiar mapa
                 </button>
                 <Link
-                  href="/operaciones-maritimas/nueva"
+                  href={
+                    `/operaciones-maritimas/nueva?id_buque=${idBuque ?? ""}` +
+                    `&contenedores=${encodeURIComponent(contenedores ?? "")}` +
+                    `&routeId=${selectedRouteIdFromQuery ?? ""}` +
+                    `&routeCode=${encodeURIComponent(rutaMapa?.codigo ?? "")}` +
+                    `&originId=${originPortIdFromQuery ?? ""}` +
+                    `&destinationId=${destinationPortIdFromQuery ?? ""}` +
+                    `&originName=${encodeURIComponent(originNameFromQuery)}` +
+                    `&destinationName=${encodeURIComponent(destinationNameFromQuery)}` +
+                    `&distance=${encodeURIComponent(distanceFromQuery)}` +
+                    `&duration=${encodeURIComponent(durationFromQuery)}`
+                  }
                   className="px-4 py-2 text-sm font-bold text-gray-700 dark:text-gray-200 bg-white dark:bg-slate-800 rounded-md hover:bg-gray-100 dark:hover:bg-slate-700 shadow-lg"
                 >
                   Cancelar
