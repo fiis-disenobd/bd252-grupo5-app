@@ -7,11 +7,19 @@ export default function NuevaReserva() {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
   const [clientes, setClientes] = useState<any[]>([]);
+  const [contenedores, setContenedores] = useState<any[]>([]);
   const [rutas, setRutas] = useState<any[]>([]);
+  const [buques, setBuques] = useState<any[]>([]);
+  const [agentes, setAgentes] = useState<any[]>([]);
+  
+  // TODO: Reemplaza este UUID con el valor real de tu base de datos
+  // Ejecuta: SELECT id_estado_reserva FROM shared.estadoreserva WHERE nombre = 'Confirmada'
+  const ESTADO_CONFIRMADA_UUID = "REEMPLAZA-CON-TU-UUID-AQUI";
   const [formData, setFormData] = useState({
     codigo: "",
     ruc_cliente: "",
-    id_ruta: "",
+    id_contenedor: "",
+    id_ruta_maritima: "",
     id_buque: "",
     id_agente_reservas: "",
     id_estado_reserva: "",
@@ -25,9 +33,27 @@ export default function NuevaReserva() {
           setClientes(await clientesRes.json());
         }
 
-        const rutasRes = await fetch("http://localhost:3001/gestion-maritima/rutas");
+        const contenedoresRes = await fetch("http://localhost:3001/monitoreo/contenedores?estado=Disponible");
+        if (contenedoresRes.ok) {
+          const data = await contenedoresRes.json();
+          setContenedores(data);
+        }
+
+        const rutasRes = await fetch("http://localhost:3001/gestion-reserva/rutas-maritimas");
         if (rutasRes.ok) {
           setRutas(await rutasRes.json());
+        }
+
+        const buquesRes = await fetch("http://localhost:3001/gestion-reserva/buques-operaciones");
+        if (buquesRes.ok) {
+          const buquesData = await buquesRes.json();
+          setBuques(buquesData);
+        }
+
+        const agentesRes = await fetch("http://localhost:3001/gestion-reserva/agentes");
+        if (agentesRes.ok) {
+          const agentesData = await agentesRes.json();
+          setAgentes(agentesData);
         }
       } catch (error) {
         console.error("Error fetching data:", error);
@@ -42,10 +68,43 @@ export default function NuevaReserva() {
     setLoading(true);
 
     try {
+      // Validar que tengamos los datos necesarios
+      if (buques.length === 0) {
+        alert("No hay buques disponibles");
+        return;
+      }
+
+      if (agentes.length === 0) {
+        alert("No hay agentes de reserva disponibles");
+        return;
+      }
+
+      // Encontrar la ruta seleccionada para obtener el id_ruta
+      const rutaSeleccionada = rutas.find(r => r.id_ruta_maritima === formData.id_ruta_maritima);
+      
+      // Generar código automático
+      const codigo = `RES-${Date.now()}`;
+      
+      // Preparar datos en el formato que espera el backend
+      const reservaData = {
+        codigo: codigo,
+        ruc_cliente: formData.ruc_cliente,
+        id_ruta: rutaSeleccionada?.id_ruta || "",
+        id_buque: buques[0].id_buque, // Primer buque disponible
+        id_agente_reservas: agentes[0].id_agente_reservas, // Primer agente disponible
+        id_estado_reserva: '6df420ae-11c7-4fd4-ba29-8b5edfba782c', // Estado "Confirmada"
+        contenedores: [
+          {
+            id_contenedor: formData.id_contenedor,
+            cantidad: 1
+          }
+        ]
+      };
+
       const res = await fetch("http://localhost:3001/gestion-reserva/reservas", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(formData),
+        body: JSON.stringify(reservaData),
       });
 
       if (res.ok) {
@@ -82,25 +141,10 @@ export default function NuevaReserva() {
         {/* Formulario */}
         <div className="bg-white rounded-b-lg shadow-lg p-8">
           <form onSubmit={handleSubmit} className="space-y-6">
-            {/* Código */}
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Código de Reserva *
-              </label>
-              <input
-                type="text"
-                required
-                value={formData.codigo}
-                onChange={(e) => setFormData({ ...formData, codigo: e.target.value })}
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-700"
-                placeholder="RES-2024-001"
-              />
-            </div>
-
             {/* Cliente */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
-                Cliente *
+                Cliente
               </label>
               <div className="relative">
                 <select
@@ -122,22 +166,47 @@ export default function NuevaReserva() {
               </div>
             </div>
 
-            {/* Ruta */}
+            {/* Contenedor */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
-                Ruta *
+                Contenedor
               </label>
               <div className="relative">
                 <select
                   required
-                  value={formData.id_ruta}
-                  onChange={(e) => setFormData({ ...formData, id_ruta: e.target.value })}
+                  value={formData.id_contenedor}
+                  onChange={(e) => setFormData({ ...formData, id_contenedor: e.target.value })}
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 appearance-none bg-white text-gray-700"
+                >
+                  <option value="">Seleccionar contenedor</option>
+                  {contenedores.map((contenedor) => (
+                    <option key={contenedor.id_contenedor} value={contenedor.id_contenedor}>
+                      {contenedor.codigo} - {contenedor.tipo_contenedor?.nombre || 'N/A'}
+                    </option>
+                  ))}
+                </select>
+                <span className="material-symbols-outlined absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none">
+                  expand_more
+                </span>
+              </div>
+            </div>
+
+            {/* Ruta */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Ruta
+              </label>
+              <div className="relative">
+                <select
+                  required
+                  value={formData.id_ruta_maritima}
+                  onChange={(e) => setFormData({ ...formData, id_ruta_maritima: e.target.value })}
                   className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 appearance-none bg-white text-gray-700"
                 >
                   <option value="">Seleccionar Ruta</option>
                   {rutas.map((ruta) => (
-                    <option key={ruta.id_ruta} value={ruta.id_ruta}>
-                      {ruta.puerto_origen?.nombre || "Origen"} → {ruta.puerto_destino?.nombre || "Destino"}
+                    <option key={ruta.id_ruta_maritima} value={ruta.id_ruta_maritima}>
+                      {ruta.puerto_origen} → {ruta.puerto_destino}
                     </option>
                   ))}
                 </select>

@@ -75,7 +75,7 @@ export default function ReservasActivas() {
                 placeholder="Buscar por ID de reserva"
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full pl-10 pr-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full pl-10 pr-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-700"
               />
             </div>
 
@@ -84,11 +84,9 @@ export default function ReservasActivas() {
               <select
                 value={filterCliente}
                 onChange={(e) => setFilterCliente(e.target.value)}
-                className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 appearance-none bg-white"
+                className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 appearance-none bg-white text-gray-700"
               >
                 <option value="">Cliente</option>
-                <option value="acme">Acme Corp</option>
-                <option value="beta">Beta Industries</option>
               </select>
               <span className="material-symbols-outlined absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none">
                 expand_more
@@ -100,11 +98,9 @@ export default function ReservasActivas() {
               <select
                 value={filterFecha}
                 onChange={(e) => setFilterFecha(e.target.value)}
-                className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 appearance-none bg-white"
+                className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 appearance-none bg-white text-gray-700"
               >
                 <option value="">Fecha</option>
-                <option value="hoy">Hoy</option>
-                <option value="semana">Esta semana</option>
               </select>
               <span className="material-symbols-outlined absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none">
                 expand_more
@@ -116,12 +112,9 @@ export default function ReservasActivas() {
               <select
                 value={filterEstado}
                 onChange={(e) => setFilterEstado(e.target.value)}
-                className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 appearance-none bg-white"
+                className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 appearance-none bg-white text-gray-700"
               >
                 <option value="">Estado</option>
-                <option value="confirmada">Confirmada</option>
-                <option value="finalizada">Finalizada</option>
-                <option value="cancelada">Cancelada</option>
               </select>
               <span className="material-symbols-outlined absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none">
                 expand_more

@@ -9,4 +9,9 @@ export class TarifasController {
   async getTarifas() {
     return this.tarifasService.findAllTarifas();
   }
+
+  @Get('rutas-maritimas')
+  async getRutasMaritimas() {
+    return this.tarifasService.findAllRutasMaritimas();
+  }
 }
