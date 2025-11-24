@@ -2,16 +2,16 @@ import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 
-// shared
+// shared entities
 import { EstadoOperacion } from '../../shared/entities/estado-operacion.entity';
 import { Vehiculo } from '../../shared/entities/vehiculo.entity';
 import { Buque } from '../../shared/entities/buque.entity';
 import { Ruta } from '../../shared/entities/ruta.entity';
 
-// monitoreo
+// monitoreo entities
 import { Operador } from '../../monitoreo/entities/operador.entity';
 
-// gestion_maritima (entities están al lado de services)
+// gestion_maritima entities
 import { Puerto } from '../entities/puerto.entity';
 import { Muelle } from '../entities/muelle.entity';
 import { RutaMaritima } from '../entities/ruta-maritima.entity';
@@ -21,26 +21,29 @@ import { RutaPuertoIntermedio } from '../entities/ruta-puerto-intermedio.entity'
 export class RecursosService {
   constructor(
     @InjectRepository(EstadoOperacion)
-    private estadoOperacionRepository: Repository<EstadoOperacion>,
+    private readonly estadoOperacionRepository: Repository<EstadoOperacion>,
     @InjectRepository(Operador)
-    private operadorRepository: Repository<Operador>,
+    private readonly operadorRepository: Repository<Operador>,
     @InjectRepository(Vehiculo)
-    private vehiculoRepository: Repository<Vehiculo>,
+    private readonly vehiculoRepository: Repository<Vehiculo>,
     @InjectRepository(Buque)
-    private buqueRepository: Repository<Buque>,
+    private readonly buqueRepository: Repository<Buque>,
     @InjectRepository(Puerto)
-    private puertoRepository: Repository<Puerto>,
+    private readonly puertoRepository: Repository<Puerto>,
     @InjectRepository(Muelle)
-    private muelleRepository: Repository<Muelle>,
+    private readonly muelleRepository: Repository<Muelle>,
     @InjectRepository(Ruta)
-    private rutaRepository: Repository<Ruta>,
+    private readonly rutaRepository: Repository<Ruta>,
     @InjectRepository(RutaMaritima)
-    private rutaMaritimaRepository: Repository<RutaMaritima>,
+    private readonly rutaMaritimaRepository: Repository<RutaMaritima>,
     @InjectRepository(RutaPuertoIntermedio)
-    private rutaPuertoIntermedioRepository: Repository<RutaPuertoIntermedio>,
-  ) {}
+    private readonly rutaPuertoIntermedioRepository: Repository<RutaPuertoIntermedio>,
+  ) { }
 
-  async findEstados() {
+  // ---------------------------------------------------------------------
+  // Estado Operacion
+  // ---------------------------------------------------------------------
+  async findEstados(): Promise<EstadoOperacion[]> {
     try {
       return await this.estadoOperacionRepository.find({
         order: { nombre: 'ASC' },
@@ -51,7 +54,15 @@ export class RecursosService {
     }
   }
 
-  async findOperadores() {
+  // Alias used by the frontend dropdown
+  async findEstadosOperacion(): Promise<EstadoOperacion[]> {
+    return this.findEstados();
+  }
+
+  // ---------------------------------------------------------------------
+  // Operadores
+  // ---------------------------------------------------------------------
+  async findOperadores(): Promise<Operador[]> {
     try {
       return await this.operadorRepository.find({
         relations: ['empleado'],
@@ -63,7 +74,10 @@ export class RecursosService {
     }
   }
 
-  async findVehiculos() {
+  // ---------------------------------------------------------------------
+  // Vehículos
+  // ---------------------------------------------------------------------
+  async findVehiculos(): Promise<Vehiculo[]> {
     try {
       return await this.vehiculoRepository
         .createQueryBuilder('v')
@@ -77,20 +91,22 @@ export class RecursosService {
     }
   }
 
-  async findBuques() {
-  try {
-    // Devolver todos los buques (si luego quieres, podemos añadir un filtro configurable)
-    return await this.buqueRepository.find({
-      relations: ['estado_embarcacion'],
-      order: { nombre: 'ASC' },
-    });
-  } catch (error) {
-    console.error('Error al obtener buques:', error);
-    return [];
-  }
+  // ---------------------------------------------------------------------
+  // Buques
+  // ---------------------------------------------------------------------
+  async findBuques(): Promise<Buque[]> {
+    try {
+      return await this.buqueRepository.find({
+        relations: ['estado_embarcacion'],
+        order: { nombre: 'ASC' },
+      });
+    } catch (error) {
+      console.error('Error al obtener buques:', error);
+      return [];
+    }
   }
 
-  async findBuqueById(id: string) {
+  async findBuqueById(id: string): Promise<Buque | null> {
     try {
       return await this.buqueRepository.findOne({ where: { id_buque: id } });
     } catch (error) {
@@ -99,7 +115,10 @@ export class RecursosService {
     }
   }
 
-  async findPuertos() {
+  // ---------------------------------------------------------------------
+  // Puertos
+  // ---------------------------------------------------------------------
+  async findPuertos(): Promise<Puerto[]> {
     try {
       return await this.puertoRepository.find({
         order: { nombre: 'ASC' },
@@ -110,10 +129,13 @@ export class RecursosService {
     }
   }
 
-  async findMuellesByPuerto(id_puerto: string) {
+  // ---------------------------------------------------------------------
+  // Muelles
+  // ---------------------------------------------------------------------
+  async findMuellesByPuerto(puertoId: string): Promise<Muelle[]> {
     try {
       return await this.muelleRepository.find({
-        where: { id_puerto },
+        where: { id_puerto: puertoId },
         order: { codigo: 'ASC' },
       });
     } catch (error) {
@@ -122,13 +144,13 @@ export class RecursosService {
     }
   }
 
+  // ---------------------------------------------------------------------
+  // Rutas Marítimas
+  // ---------------------------------------------------------------------
   async findRutasMaritimasBetweenPuertos(id_puerto_origen: string, id_puerto_destino: string) {
     try {
       const rutas = await this.rutaMaritimaRepository.find({
-        where: {
-          id_puerto_origen,
-          id_puerto_destino,
-        },
+        where: { id_puerto_origen, id_puerto_destino },
         relations: ['ruta', 'puertos_intermedios', 'puertos_intermedios.puerto'],
         order: { codigo: 'ASC' },
       });

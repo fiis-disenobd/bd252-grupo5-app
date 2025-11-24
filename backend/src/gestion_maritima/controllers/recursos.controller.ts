@@ -3,11 +3,16 @@ import { RecursosService } from '../services/recursos.service';
 
 @Controller('monitoreo')
 export class RecursosController {
-  constructor(private readonly recursosService: RecursosService) {}
+  constructor(private readonly recursosService: RecursosService) { }
 
   @Get('estados')
   async getEstados() {
     return this.recursosService.findEstados();
+  }
+
+  @Get('estados-operacion')
+  async getEstadosOperacion() {
+    return this.recursosService.findEstadosOperacion();
   }
 
   @Get('operadores')

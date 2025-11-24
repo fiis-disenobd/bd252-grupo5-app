@@ -8,7 +8,7 @@ export class RutasMaritimasService {
   constructor(
     @InjectRepository(RutaMaritima)
     private readonly rutaMaritimaRepository: Repository<RutaMaritima>,
-  ) {}
+  ) { }
 
   async findRutasMaritimasBetweenPuertos(id_puerto_origen: string, id_puerto_destino: string) {
     try {
@@ -89,6 +89,8 @@ export class RutasMaritimasService {
       return {
         id: ruta.id_ruta_maritima,
         codigo: ruta.codigo,
+        id_puerto_origen: ruta.id_puerto_origen,
+        id_puerto_destino: ruta.id_puerto_destino,
         puertos,
       };
     } catch (error) {
