@@ -159,15 +159,37 @@ export class ContenedoresService {
 
   async getEstadisticas() {
     try {
-      const total = await this.contenedorRepository.count();
-      
-      const porEstado = await this.contenedorRepository
-        .createQueryBuilder('c')
-        .leftJoin('c.estado_contenedor', 'ec')
-        .select('ec.nombre', 'estado')
-        .addSelect('COUNT(c.id_contenedor)', 'cantidad')
-        .groupBy('ec.nombre')
-        .getRawMany();
+      // Total de contenedores usando SQL explícito
+      const totalRows = await this.contenedorRepository.query(
+        `
+        SELECT COUNT(*)::int AS total
+        FROM shared.contenedor
+        `,
+      );
+
+      const total =
+        totalRows && totalRows.length > 0
+          ? Number(totalRows[0].total) || 0
+          : 0;
+
+      // Contenedores por estado usando SQL explícito
+      const porEstadoRows = await this.contenedorRepository.query(
+        `
+        SELECT 
+          ec.nombre AS estado,
+          COUNT(c.id_contenedor)::int AS cantidad
+        FROM shared.contenedor c
+        JOIN shared.estadocontenedor ec 
+          ON ec.id_estado_contenedor = c.id_estado_contenedor
+        GROUP BY ec.nombre
+        ORDER BY ec.nombre ASC
+        `,
+      );
+
+      const porEstado = porEstadoRows.map((row: any) => ({
+        estado: row.estado,
+        cantidad: Number(row.cantidad),
+      }));
 
       return {
         total,

@@ -22,6 +22,7 @@ import { Importador } from './entities/importador.entity';
 import { ImportadorDireccion } from './entities/importador-direccion.entity';
 import { Documentacion } from './entities/documentacion.entity';
 import { DocumentacionContenedor } from './entities/documentacion-contenedor.entity';
+import { LecturaSensor } from './entities/lectura-sensor.entity';
 
 // Shared Entities
 import { Operacion } from '../shared/entities/operacion.entity';
@@ -38,6 +39,7 @@ import { EstadoContenedor } from '../shared/entities/estado-contenedor.entity';
 import { TipoContenedor } from '../shared/entities/tipo-contenedor.entity';
 import { EstadoEntrega } from '../shared/entities/estado-entrega.entity';
 import { EstatusNavegacion } from '../shared/entities/estatus-navegacion.entity';
+import { EstadoLectura } from '../shared/entities/estado-lectura.entity';
 import { OperacionEmpleado } from '../gestion_maritima/entities/operacion-empleado.entity';
 import { OperacionContenedor } from '../gestion_maritima/entities/operacion-contenedor.entity';
 import { OperacionMaritima } from '../shared/entities/operacion-maritima.entity';
@@ -92,6 +94,7 @@ import { DocumentacionService } from './services/documentacion.service';
       Documentacion,
       DocumentacionContenedor,
       // Shared entities
+      LecturaSensor,
       Operacion,
       Contenedor,
       Vehiculo,
@@ -101,6 +104,7 @@ import { DocumentacionService } from './services/documentacion.service';
       TipoContenedor,
       EstadoEntrega,
       EstatusNavegacion,
+      EstadoLectura,
       Ruta,
       TipoDocumento,
       Puerto,

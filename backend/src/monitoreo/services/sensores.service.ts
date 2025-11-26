@@ -3,6 +3,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, MoreThanOrEqual } from 'typeorm';
 import { Sensor } from '../entities/sensor.entity';
 import { Notificacion } from '../entities/notificacion.entity';
+import { LecturaSensor } from '../entities/lectura-sensor.entity';
 
 @Injectable()
 export class SensoresService {
@@ -11,6 +12,8 @@ export class SensoresService {
     private sensorRepository: Repository<Sensor>,
     @InjectRepository(Notificacion)
     private notificacionRepository: Repository<Notificacion>,
+    @InjectRepository(LecturaSensor)
+    private lecturaSensorRepository: Repository<LecturaSensor>,
   ) {}
 
   async findByContenedor(id_contenedor: string) {
@@ -184,14 +187,40 @@ export class SensoresService {
         take: 20,
       });
 
-      // Generar datos de lecturas simuladas (en producción vendrían de una tabla de lecturas)
-      const lecturas = this.generarLecturasSimuladas(sensor.tipo_sensor?.nombre || 'Temperatura', 50);
+      // Obtener lecturas reales desde la tabla monitoreo.lecturasensor usando SQL explícito
+      const lecturasDb: Array<{
+        fecha_hora: Date;
+        valor: string | number;
+        unidad: string;
+        estado: string | null;
+      }> = await this.lecturaSensorRepository.query(
+        `
+        SELECT 
+          ls.fecha_hora,
+          ls.valor,
+          ls.unidad,
+          el.nombre AS estado
+        FROM monitoreo.lecturasensor ls
+        JOIN shared.estadolectura el ON el.id_estado_lectura = ls.id_estado_lectura
+        WHERE ls.id_sensor = $1
+        ORDER BY ls.fecha_hora DESC
+        LIMIT 50
+        `,
+        [id_sensor],
+      );
+
+      const lecturas = lecturasDb.map((l) => ({
+        fecha_hora: l.fecha_hora,
+        valor: Number(l.valor),
+        unidad: l.unidad,
+        estado: l.estado ?? 'Normal',
+      }));
 
       return {
         ...sensor,
         notificaciones,
         lecturas,
-        ultima_lectura: lecturas[0],
+        ultima_lectura: lecturas[0] ?? null,
       };
     } catch (error) {
       console.error('Error en findOneDetalle sensor:', error.message);
@@ -210,10 +239,49 @@ export class SensoresService {
         return null;
       }
 
-      // Generar datos analíticos (en producción calcularías esto de datos reales)
-      const lecturas = this.generarLecturasSimuladas(sensor.tipo_sensor?.nombre || 'Temperatura', 100);
-      
-      const valores = lecturas.map(l => l.valor);
+      // Obtener lecturas reales desde la tabla monitoreo.lecturasensor usando SQL explícito
+      const lecturasDb: Array<{
+        fecha_hora: Date;
+        valor: string | number;
+        unidad: string;
+      }> = await this.lecturaSensorRepository.query(
+        `
+        SELECT 
+          ls.fecha_hora,
+          ls.valor,
+          ls.unidad
+        FROM monitoreo.lecturasensor ls
+        WHERE ls.id_sensor = $1
+        ORDER BY ls.fecha_hora DESC
+        LIMIT 100
+        `,
+        [id_sensor],
+      );
+
+      if (lecturasDb.length === 0) {
+        return {
+          sensor,
+          estadisticas: {
+            promedio: 0,
+            maximo: 0,
+            minimo: 0,
+            desviacion_estandar: 0,
+            total_lecturas: 0,
+          },
+          lecturas_por_hora: [],
+          tendencia: 'estable',
+          alertas_generadas: await this.notificacionRepository.count({ where: { id_sensor } }),
+        };
+      }
+
+      const lecturas = lecturasDb.map((l) => ({
+        fecha_hora: l.fecha_hora,
+        valor: Number(l.valor),
+        unidad: l.unidad,
+        estado: undefined,
+      }));
+
+      const valores = lecturas.map((l) => l.valor);
       const promedio = valores.reduce((a, b) => a + b, 0) / valores.length;
       const maximo = Math.max(...valores);
       const minimo = Math.min(...valores);

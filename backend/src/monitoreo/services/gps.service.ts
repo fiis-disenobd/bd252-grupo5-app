@@ -18,10 +18,22 @@ export class GpsService {
 
   async getPosicionesContenedores() {
     try {
-      return await this.posicionContenedorRepository.find({
-        order: { fecha_hora: 'DESC' },
-        take: 100,
-      });
+      // SQL explícito: últimas posiciones de contenedores
+      const rows = await this.posicionContenedorRepository.query(
+        `
+        SELECT 
+          id_posicion,
+          id_contenedor,
+          latitud,
+          longitud,
+          fecha_hora
+        FROM monitoreo.posicioncontenedor
+        ORDER BY fecha_hora DESC
+        LIMIT 100
+        `,
+      );
+
+      return rows;
     } catch (error) {
       console.error('Error en getPosicionesContenedores:', error.message);
       return []; // Devolver array vacío si hay error
@@ -30,10 +42,24 @@ export class GpsService {
 
   async getUltimaPosicionContenedor(id_contenedor: string) {
     try {
-      return await this.posicionContenedorRepository.findOne({
-        where: { id_contenedor },
-        order: { fecha_hora: 'DESC' },
-      });
+      // SQL explícito: última posición de un contenedor
+      const rows = await this.posicionContenedorRepository.query(
+        `
+        SELECT 
+          id_posicion,
+          id_contenedor,
+          latitud,
+          longitud,
+          fecha_hora
+        FROM monitoreo.posicioncontenedor
+        WHERE id_contenedor = $1
+        ORDER BY fecha_hora DESC
+        LIMIT 1
+        `,
+        [id_contenedor],
+      );
+
+      return rows[0] ?? null;
     } catch (error) {
       console.error('Error en getUltimaPosicionContenedor:', error.message);
       return null;
@@ -42,11 +68,24 @@ export class GpsService {
 
   async getHistorialPosicionesContenedor(id_contenedor: string, limit = 50) {
     try {
-      return await this.posicionContenedorRepository.find({
-        where: { id_contenedor },
-        order: { fecha_hora: 'DESC' },
-        take: limit,
-      });
+      // SQL explícito: historial de posiciones de un contenedor
+      const rows = await this.posicionContenedorRepository.query(
+        `
+        SELECT 
+          id_posicion,
+          id_contenedor,
+          latitud,
+          longitud,
+          fecha_hora
+        FROM monitoreo.posicioncontenedor
+        WHERE id_contenedor = $1
+        ORDER BY fecha_hora DESC
+        LIMIT $2
+        `,
+        [id_contenedor, limit],
+      );
+
+      return rows;
     } catch (error) {
       console.error('Error en getHistorialPosicionesContenedor:', error.message);
       return [];
@@ -55,15 +94,23 @@ export class GpsService {
 
   async getAllPosiciones() {
     try {
-      // Obtener últimas posiciones de contenedores con sus relaciones
-      const contenedores = await this.posicionContenedorRepository
-        .createQueryBuilder('pc')
-        .leftJoinAndSelect('pc.contenedor', 'c')
-        .leftJoinAndSelect('c.estado_contenedor', 'ec')
-        .distinctOn(['pc.id_contenedor'])
-        .orderBy('pc.id_contenedor')
-        .addOrderBy('pc.fecha_hora', 'DESC')
-        .getMany();
+      // Obtener últimas posiciones de contenedores con SQL explícito
+      const contRows = await this.posicionContenedorRepository.query(
+        `
+        SELECT DISTINCT ON (pc.id_contenedor)
+          pc.id_posicion,
+          pc.id_contenedor,
+          pc.latitud,
+          pc.longitud,
+          pc.fecha_hora,
+          c.codigo AS contenedor_codigo,
+          ec.nombre AS estado_contenedor_nombre
+        FROM monitoreo.posicioncontenedor pc
+        JOIN shared.contenedor c ON c.id_contenedor = pc.id_contenedor
+        LEFT JOIN shared.estadocontenedor ec ON ec.id_estado_contenedor = c.id_estado_contenedor
+        ORDER BY pc.id_contenedor, pc.fecha_hora DESC
+        `,
+      );
 
       // Obtener últimas posiciones de vehículos con su estado
       const vehiculos = await this.posicionVehiculoRepository
@@ -86,19 +133,21 @@ export class GpsService {
         .getMany();
 
       // Formatear datos para el mapa
+      const assetsContenedores = contRows.map((pc: any) => ({
+        id: pc.id_posicion,
+        code: pc.contenedor_codigo || `CNT-${pc.id_contenedor.substring(0, 8)}`,
+        type: 'container',
+        position: [Number(pc.latitud), Number(pc.longitud)],
+        status: pc.estado_contenedor_nombre || 'Desconocido',
+        statusColor: this.getStatusColor(pc.estado_contenedor_nombre),
+        icon: 'inventory_2',
+        lastUpdate: pc.fecha_hora,
+        speed: 'N/A',
+        temp: 'N/A',
+      }));
+
       const assets = [
-        ...contenedores.map(pc => ({
-          id: pc.id_posicion,
-          code: pc.contenedor?.codigo || `CNT-${pc.id_contenedor.substring(0, 8)}`,
-          type: 'container',
-          position: [Number(pc.latitud), Number(pc.longitud)],
-          status: pc.contenedor?.estado_contenedor?.nombre || 'Desconocido',
-          statusColor: this.getStatusColor(pc.contenedor?.estado_contenedor?.nombre),
-          icon: 'inventory_2',
-          lastUpdate: pc.fecha_hora,
-          speed: 'N/A',
-          temp: 'N/A',
-        })),
+        ...assetsContenedores,
         ...vehiculos.map(pv => ({
           id: pv.id_posicion,
           code: pv.vehiculo?.placa || `VEH-${pv.id_vehiculo.substring(0, 8)}`,

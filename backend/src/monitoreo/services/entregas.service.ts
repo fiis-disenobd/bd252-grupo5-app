@@ -239,23 +239,55 @@ export class EntregasService {
   // Obtener estadísticas
   async getEstadisticas() {
     try {
-      const total = await this.entregaRepository.count();
+      // Total de entregas usando SQL explícito
+      const totalRows = await this.entregaRepository.query(
+        `
+        SELECT COUNT(*)::int AS total
+        FROM monitoreo.entrega
+        `,
+      );
+
+      const total =
+        totalRows && totalRows.length > 0
+          ? Number(totalRows[0].total) || 0
+          : 0;
 
       const hoy = new Date();
       const inicioMes = new Date(hoy.getFullYear(), hoy.getMonth(), 1);
       const finMes = new Date(hoy.getFullYear(), hoy.getMonth() + 1, 0);
 
-      const esteMes = await this.entregaRepository
-        .createQueryBuilder('entrega')
-        .where('entrega.fecha_entrega >= :inicio', { inicio: inicioMes })
-        .andWhere('entrega.fecha_entrega <= :fin', { fin: finMes })
-        .getCount();
+      // Entregas de este mes usando SQL explícito
+      const esteMesRows = await this.entregaRepository.query(
+        `
+        SELECT COUNT(*)::int AS total
+        FROM monitoreo.entrega
+        WHERE fecha_entrega >= $1
+          AND fecha_entrega <= $2
+        `,
+        [inicioMes, finMes],
+      );
 
-      const pendientes = await this.entregaRepository
-        .createQueryBuilder('entrega')
-        .leftJoin('entrega.estado_entrega', 'estado')
-        .where('estado.nombre = :nombre', { nombre: 'Pendiente' })
-        .getCount();
+      const esteMes =
+        esteMesRows && esteMesRows.length > 0
+          ? Number(esteMesRows[0].total) || 0
+          : 0;
+
+      // Entregas pendientes (estado "Pendiente") usando SQL explícito
+      const pendientesRows = await this.entregaRepository.query(
+        `
+        SELECT COUNT(*)::int AS total
+        FROM monitoreo.entrega e
+        JOIN shared.estadoentrega ee 
+          ON ee.id_estado_entrega = e.id_estado_entrega
+        WHERE ee.nombre = $1
+        `,
+        ['Pendiente'],
+      );
+
+      const pendientes =
+        pendientesRows && pendientesRows.length > 0
+          ? Number(pendientesRows[0].total) || 0
+          : 0;
 
       return {
         total,

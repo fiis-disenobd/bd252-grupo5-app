@@ -55,25 +55,45 @@ export class OperacionesService {
 
   async findAll(estado?: string) {
     try {
-      const queryBuilder = this.operacionRepository
-        .createQueryBuilder('o')
-        .leftJoinAndSelect('o.estado_operacion', 'eo')
-        .select([
-          'o.id_operacion',
-          'o.codigo',
-          'o.fecha_inicio',
-          'o.fecha_fin',
-          'eo.nombre',
-          'eo.id_estado_operacion',
-        ]);
+      // Consulta base de operaciones usando SQL explícito sobre shared.operacion
+      // Si se envía "estado", se filtra por nombre de estado; caso contrario trae todas
+      const rows: Array<{
+        id_operacion: string;
+        codigo: string;
+        fecha_inicio: Date;
+        fecha_fin: Date | null;
+        id_estado_operacion: string;
+        estado_nombre: string;
+      }> = await this.operacionRepository.query(
+        `
+        SELECT 
+          o.id_operacion,
+          o.codigo,
+          o.fecha_inicio,
+          o.fecha_fin,
+          eo.id_estado_operacion,
+          eo.nombre AS estado_nombre
+        FROM shared.operacion o
+        JOIN shared.estadooperacion eo 
+          ON o.id_estado_operacion = eo.id_estado_operacion
+        WHERE ($1::text IS NULL OR eo.nombre = $1)
+        ORDER BY o.fecha_inicio DESC
+        `,
+        [estado ?? null],
+      );
 
-      if (estado) {
-        queryBuilder.where('eo.nombre = :estado', { estado });
-      }
-
-      queryBuilder.orderBy('o.fecha_inicio', 'DESC');
-
-      const operacionesBase = await queryBuilder.getMany();
+      // Adaptar filas crudas al mismo shape que devolvía TypeORM (incluyendo estado_operacion)
+      const operacionesBase = rows.map((row) => ({
+        id_operacion: row.id_operacion,
+        codigo: row.codigo,
+        fecha_inicio: row.fecha_inicio,
+        fecha_fin: row.fecha_fin,
+        id_estado_operacion: row.id_estado_operacion,
+        estado_operacion: {
+          id_estado_operacion: row.id_estado_operacion,
+          nombre: row.estado_nombre,
+        },
+      })) as any[];
 
       // Enriquecer cada operación con operador, buque y cantidad de contenedores
       const enriquecidas = [] as any[];
@@ -422,15 +442,23 @@ export class OperacionesService {
         .where('LOWER(ec.nombre) = :estado', { estado: 'en transito' })
         .getCount();
 
-      // Alertas pendientes: notificaciones de los últimos 7 días
+      // Alertas pendientes: notificaciones de los últimos 7 días (SQL explícito)
       const haceSieteDias = new Date();
       haceSieteDias.setDate(haceSieteDias.getDate() - 7);
 
-      const alertasPendientes = await this.notificacionRepository.count({
-        where: {
-          fecha_hora: MoreThanOrEqual(haceSieteDias),
-        },
-      });
+      const alertasRows = await this.notificacionRepository.query(
+        `
+        SELECT COUNT(*)::int AS total
+        FROM monitoreo.notificacion
+        WHERE fecha_hora >= $1
+        `,
+        [haceSieteDias],
+      );
+
+      const alertasPendientes =
+        alertasRows && alertasRows.length > 0
+          ? Number(alertasRows[0].total) || 0
+          : 0;
 
       // Entregas de hoy
       const hoy = new Date();

@@ -14,7 +14,7 @@ export default function NuevaReserva() {
   
   // TODO: Reemplaza este UUID con el valor real de tu base de datos
   // Ejecuta: SELECT id_estado_reserva FROM shared.estadoreserva WHERE nombre = 'Confirmada'
-  const ESTADO_CONFIRMADA_UUID = "REEMPLAZA-CON-TU-UUID-AQUI";
+  const ESTADO_CONFIRMADA_UUID = "ef595dba-433f-48a9-92f4-3952ad15684c";
   const [formData, setFormData] = useState({
     codigo: "",
     ruc_cliente: "",
@@ -92,7 +92,7 @@ export default function NuevaReserva() {
         id_ruta: rutaSeleccionada?.id_ruta || "",
         id_buque: buques[0].id_buque, // Primer buque disponible
         id_agente_reservas: agentes[0].id_agente_reservas, // Primer agente disponible
-        id_estado_reserva: '6df420ae-11c7-4fd4-ba29-8b5edfba782c', // Estado "Confirmada"
+        id_estado_reserva: 'ef595dba-433f-48a9-92f4-3952ad15684c', // Estado "Confirmada"
         contenedores: [
           {
             id_contenedor: formData.id_contenedor,
