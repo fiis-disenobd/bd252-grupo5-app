@@ -11,6 +11,8 @@ import { BuqueTripulante } from '../../personal_tripulacion/entities/buque-tripu
 import { EstadoOperacion } from '../../shared/entities/estado-operacion.entity';
 import { EstatusNavegacion } from '../../shared/entities/estatus-navegacion.entity';
 import { Tripulante } from '../../shared/entities/tripulante.entity';
+import { Contenedor } from '../../shared/entities/contenedor.entity';
+import { ContenedorMercancia } from '../../shared/entities/contenedor-mercancia.entity';
 
 @Injectable()
 export class OperacionMaritimaService {
@@ -117,44 +119,36 @@ export class OperacionMaritimaService {
             await queryRunner.release();
         }
     }
-    async findAll() {
-        const operations = await this.dataSource.getRepository(OperacionMaritima)
+    async findAll(page: number = 1, limit: number = 10) {
+        const skip = (page - 1) * limit;
+
+        const [operations, total] = await this.dataSource.getRepository(OperacionMaritima)
             .createQueryBuilder('om')
             .leftJoinAndSelect('om.operacion', 'op')
             .leftJoinAndSelect('om.buque', 'buque')
             .leftJoinAndSelect('om.estatus_navegacion', 'estatus')
             .leftJoinAndSelect('op.estado_operacion', 'estado')
-            // Join with OperacionContenedor to get containers
-            .leftJoinAndMapMany('op.operacionContenedores', OperacionContenedor, 'oc', 'oc.id_operacion = op.id_operacion')
-            // Join with Contenedor
-            .leftJoinAndSelect('oc.contenedor', 'contenedor')
-            // Join with ContenedorMercancia
-            .leftJoinAndMapMany('contenedor.mercancias', 'ContenedorMercancia', 'cm', 'cm.id_contenedor = contenedor.id_contenedor')
-            .getMany();
+            .orderBy('om.codigo', 'ASC')
+            .skip(skip)
+            .take(limit)
+            .getManyAndCount();
 
-        return operations.map(om => {
-            // Extract merchandise types
-            const merchandiseTypes = new Set<string>();
-            const op = om.operacion as any;
-            if (op.operacionContenedores) {
-                op.operacionContenedores.forEach((oc: any) => {
-                    if (oc.contenedor && oc.contenedor.mercancias) {
-                        oc.contenedor.mercancias.forEach((cm: any) => {
-                            merchandiseTypes.add(cm.tipo_mercancia);
-                        });
-                    }
-                });
-            }
-
-            return {
-                code: om.codigo,
-                containers: om.cantidad_contenedores,
-                status: om.estatus_navegacion?.nombre || 'Desconocido',
-                progress: Number(om.porcentaje_trayecto),
-                ship: om.buque?.nombre || 'Desconocido',
-                merchandise: Array.from(merchandiseTypes).join(', ') || 'Sin mercancía',
-                correctionNote: null // Placeholder as logic for this is not defined yet
-            };
-        });
+        return {
+            data: operations.map(om => {
+                return {
+                    code: om.codigo,
+                    containers: om.cantidad_contenedores,
+                    status: om.operacion?.estado_operacion?.nombre || 'Desconocido',
+                    progress: Number(om.porcentaje_trayecto),
+                    ship: om.buque?.nombre || 'Desconocido',
+                    merchandise: 'Sin mercancía', // Simplified for now
+                    correctionNote: null
+                };
+            }),
+            total,
+            page,
+            limit,
+            totalPages: Math.ceil(total / limit)
+        };
     }
 }

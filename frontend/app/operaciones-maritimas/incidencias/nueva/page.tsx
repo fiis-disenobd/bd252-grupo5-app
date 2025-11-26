@@ -1,18 +1,81 @@
 "use client";
 
-import { useMemo } from "react";
+import { useMemo, useState, useEffect } from "react";
 import Link from "next/link";
-import { useSearchParams } from "next/navigation";
+import { useSearchParams, useRouter } from "next/navigation";
 import { Header } from "@/components/Header";
+import { tiposIncidenciaAPI, TipoIncidencia } from "@/lib/api/tipos-incidencia";
+import { incidenciasAPI } from "@/lib/api/incidencias";
+import { useAuth } from "@/context/AuthContext";
 
 const defaultOperation = "OP-2024-002";
 
 export default function NuevaIncidenciaPage() {
+  const router = useRouter();
   const params = useSearchParams();
+  const { token } = useAuth();
   const operationCode = useMemo(
     () => params.get("op") ?? defaultOperation,
     [params],
   );
+  const [tiposIncidencia, setTiposIncidencia] = useState<TipoIncidencia[]>([]);
+  const [loadingTipos, setLoadingTipos] = useState(true);
+
+  // Form State
+  const [description, setDescription] = useState("");
+  const [severity, setSeverity] = useState(3);
+  const [selectedTipoId, setSelectedTipoId] = useState("");
+  const [submitting, setSubmitting] = useState(false);
+
+  useEffect(() => {
+    const fetchTipos = async () => {
+      try {
+        const tipos = await tiposIncidenciaAPI.getTipos();
+        setTiposIncidencia(tipos);
+        if (tipos.length > 0) {
+          setSelectedTipoId(tipos[0].id_tipo_incidencia);
+        }
+      } catch (error) {
+        console.error("Error fetching incident types:", error);
+      } finally {
+        setLoadingTipos(false);
+      }
+    };
+
+    fetchTipos();
+  }, []);
+
+  const handleSubmit = async () => {
+    if (!description.trim()) {
+      alert("Por favor ingrese una descripción");
+      return;
+    }
+    if (!selectedTipoId) {
+      alert("Por favor seleccione un tipo de incidencia");
+      return;
+    }
+    if (!token) {
+      alert("No hay sesión activa. Por favor inicie sesión.");
+      return;
+    }
+
+    setSubmitting(true);
+    try {
+      await incidenciasAPI.create({
+        codigo_operacion: operationCode,
+        descripcion: description,
+        grado_severidad: severity,
+        id_tipo_incidencia: selectedTipoId,
+      }, token);
+      alert("Incidencia registrada correctamente");
+      router.push(`/operaciones-maritimas/incidencias?op=${operationCode}`);
+    } catch (error: any) {
+      console.error("Error creating incident:", error);
+      alert(error.message || "Error al registrar la incidencia");
+    } finally {
+      setSubmitting(false);
+    }
+  };
 
   return (
     <div className="flex min-h-screen flex-col bg-white text-[#111827] dark:bg-[#0f1923] dark:text-[#f3f4f6]">
@@ -39,7 +102,7 @@ export default function NuevaIncidenciaPage() {
               <h3 className="mb-6 text-xl font-semibold">
                 Formulario de Registro de Incidencia
               </h3>
-              <form className="space-y-6">
+              <form className="space-y-6" onSubmit={(e) => { e.preventDefault(); handleSubmit(); }}>
                 <div>
                   <label
                     htmlFor="description"
@@ -51,6 +114,8 @@ export default function NuevaIncidenciaPage() {
                     id="description"
                     name="description"
                     rows={4}
+                    value={description}
+                    onChange={(e) => setDescription(e.target.value)}
                     placeholder="Describa detalladamente la incidencia..."
                     className="mt-1 block w-full rounded-lg border border-[#e5e7eb] bg-[#f5f7f8] text-sm text-[#111827] shadow-sm focus:border-[#0459af] focus:outline-none focus:ring-[#0459af] dark:border-[#374151] dark:bg-[#0f1923] dark:text-[#f3f4f6]"
                   />
@@ -58,19 +123,21 @@ export default function NuevaIncidenciaPage() {
 
                 <div>
                   <p className="text-sm font-medium text-[#6b7280] dark:text-[#9ca3af]">
-                    Grado de Severidad
+                    Grado de Severidad (1 - 5)
                   </p>
-                  <div className="mt-2 space-y-2 sm:flex sm:space-y-0 sm:space-x-4">
-                    {["Baja", "Media", "Alta", "Crítica"].map((label) => (
-                      <label key={label} className="flex items-center gap-3">
+                  <div className="mt-2 flex gap-4">
+                    {[1, 2, 3, 4, 5].map((level) => (
+                      <label key={level} className="flex cursor-pointer items-center gap-2">
                         <input
                           type="radio"
                           name="severity"
-                          defaultChecked={label === "Media"}
+                          value={level}
+                          checked={severity === level}
+                          onChange={() => setSeverity(level)}
                           className="h-4 w-4 border-[#e5e7eb] text-[#0459af] focus:ring-[#0459af] dark:border-[#374151]"
                         />
                         <span className="text-sm font-medium text-[#111827] dark:text-[#f3f4f6]">
-                          {label}
+                          {level}
                         </span>
                       </label>
                     ))}
@@ -87,15 +154,22 @@ export default function NuevaIncidenciaPage() {
                   <select
                     id="incidence-type"
                     name="incidence-type"
+                    value={selectedTipoId}
+                    onChange={(e) => setSelectedTipoId(e.target.value)}
                     className="mt-1 block w-full rounded-lg border border-[#e5e7eb] bg-[#f5f7f8] text-sm text-[#111827] shadow-sm focus:border-[#0459af] focus:outline-none focus:ring-[#0459af] dark:border-[#374151] dark:bg-[#0f1923] dark:text-[#f3f4f6]"
-                    defaultValue="Daño a la Carga"
+                    disabled={loadingTipos}
                   >
-                    <option>Daño a la Carga</option>
-                    <option>Retraso en Operación</option>
-                    <option>Falla de Equipo</option>
-                    <option>Incidente de Seguridad</option>
-                    <option>Problema de Documentación</option>
-                    <option>Otro</option>
+                    {loadingTipos ? (
+                      <option>Cargando tipos de incidencia...</option>
+                    ) : tiposIncidencia.length > 0 ? (
+                      tiposIncidencia.map((tipo) => (
+                        <option key={tipo.id_tipo_incidencia} value={tipo.id_tipo_incidencia}>
+                          {tipo.nombre}
+                        </option>
+                      ))
+                    ) : (
+                      <option value="">No hay tipos de incidencia disponibles</option>
+                    )}
                   </select>
                 </div>
               </form>
@@ -107,7 +181,7 @@ export default function NuevaIncidenciaPage() {
                   <span className="font-medium text-[#111827] dark:text-[#f3f4f6]">
                     Fecha y Hora:
                   </span>{" "}
-                  18/07/2024 10:30 AM
+                  {new Date().toLocaleString()}
                 </p>
                 <p>
                   <span className="font-medium text-[#111827] dark:text-[#f3f4f6]">
@@ -134,9 +208,11 @@ export default function NuevaIncidenciaPage() {
             </Link>
             <button
               type="button"
-              className="rounded-lg bg-[#0459af] px-6 py-2 text-sm font-semibold text-white transition-colors hover:bg-[#0459af]/90"
+              onClick={handleSubmit}
+              disabled={submitting}
+              className="rounded-lg bg-[#0459af] px-6 py-2 text-sm font-semibold text-white transition-colors hover:bg-[#0459af]/90 disabled:opacity-50"
             >
-              Registrar Incidencia
+              {submitting ? "Registrando..." : "Registrar Incidencia"}
             </button>
           </div>
         </div>
@@ -144,4 +220,3 @@ export default function NuevaIncidenciaPage() {
     </div>
   );
 }
-

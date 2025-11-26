@@ -1,46 +1,15 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useMemo, useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { Header } from "@/components/Header";
+import { operacionesAPI, OperacionMaritima, PaginatedResponse } from "@/lib/api/operaciones-maritimas";
 
-type Operation = {
-  code: string;
-  ship: string;
-  type: string;
-  status: "Completado" | "En curso" | "Pendiente";
-};
-
-const operations: Operation[] = [
-  {
-    code: "OP-2024-001",
-    ship: "MSC Isabella",
-    type: "Operación Portuaria",
-    status: "Completado",
-  },
-  {
-    code: "OP-2024-002",
-    ship: "Evergreen Marine",
-    type: "Operación Marítima",
-    status: "En curso",
-  },
-  {
-    code: "OP-2024-003",
-    ship: "Maersk Line",
-    type: "Operación Portuaria",
-    status: "Pendiente",
-  },
-  {
-    code: "OP-2024-004",
-    ship: "CMA CGM",
-    type: "Operación Marítima",
-    status: "Completado",
-  },
-];
+type OperationStatus = "Completado" | "En curso" | "Pendiente" | "Desconocido";
 
 const statusBadgeStyles: Record<
-  Operation["status"],
+  OperationStatus,
   { light: string; dark: string }
 > = {
   Completado: {
@@ -55,24 +24,100 @@ const statusBadgeStyles: Record<
     light: "bg-[#fee2e2] text-[#991b1b]",
     dark: "dark:bg-[#991b1b] dark:text-[#fecaca]",
   },
+  Desconocido: {
+    light: "bg-[#f3f4f6] text-[#6b7280]",
+    dark: "dark:bg-[#374151] dark:text-[#d1d5db]",
+  },
 };
 
 export default function RegistrarIncidenciaPage() {
-  const [selectedCode, setSelectedCode] = useState<string | null>(
-    operations[1].code,
-  );
+  const [selectedCode, setSelectedCode] = useState<string | null>(null);
   const [query, setQuery] = useState("");
+  const [currentPage, setCurrentPage] = useState(1);
+  const [operationsData, setOperationsData] = useState<PaginatedResponse<OperacionMaritima> | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const router = useRouter();
 
+  useEffect(() => {
+    fetchOperations();
+  }, [currentPage]);
+
+  const fetchOperations = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      const data = await operacionesAPI.getOperaciones(currentPage, 10);
+      setOperationsData(data);
+      
+      // Set default selection if no operation is selected
+      if (!selectedCode && data.data.length > 0) {
+        setSelectedCode(data.data[0].code);
+      }
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Error al cargar operaciones");
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const filteredOperations = useMemo(() => {
-    if (!query.trim()) return operations;
+    if (!operationsData || !query.trim()) return operationsData?.data || [];
     const lower = query.toLowerCase();
-    return operations.filter(
+    return operationsData.data.filter(
       (op) =>
         op.code.toLowerCase().includes(lower) ||
         op.ship.toLowerCase().includes(lower),
     );
-  }, [query]);
+  }, [operationsData, query]);
+
+  const handlePageChange = (page: number) => {
+    setCurrentPage(page);
+  };
+
+  const getStatusBadge = (status: string): { light: string; dark: string } => {
+    return statusBadgeStyles[status as OperationStatus] || statusBadgeStyles.Desconocido;
+  };
+
+  if (loading && !operationsData) {
+    return (
+      <div className="flex min-h-screen flex-col bg-[#f5f7f8] text-[#111827] dark:bg-[#0f1923] dark:text-[#f3f4f6]">
+        <Header />
+        <main className="container mx-auto flex flex-grow flex-col px-4 py-8 sm:px-6 lg:px-8">
+          <div className="mx-auto w-full max-w-6xl">
+            <div className="flex items-center justify-center py-12">
+              <div className="text-center">
+                <div className="mb-4 h-8 w-8 animate-spin rounded-full border-4 border-[#0459af] border-t-transparent"></div>
+                <p className="text-[#6b7280] dark:text-[#9ca3af]">Cargando operaciones...</p>
+              </div>
+            </div>
+          </div>
+        </main>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="flex min-h-screen flex-col bg-[#f5f7f8] text-[#111827] dark:bg-[#0f1923] dark:text-[#f3f4f6]">
+        <Header />
+        <main className="container mx-auto flex flex-grow flex-col px-4 py-8 sm:px-6 lg:px-8">
+          <div className="mx-auto w-full max-w-6xl">
+            <div className="rounded-xl bg-red-50 p-6 dark:bg-red-900/20">
+              <h3 className="mb-2 text-lg font-semibold text-red-800 dark:text-red-200">Error</h3>
+              <p className="text-red-600 dark:text-red-300">{error}</p>
+              <button
+                onClick={fetchOperations}
+                className="mt-4 rounded-lg bg-red-600 px-4 py-2 text-white hover:bg-red-700"
+              >
+                Reintentar
+              </button>
+            </div>
+          </div>
+        </main>
+      </div>
+    );
+  }
 
   return (
     <div className="flex min-h-screen flex-col bg-[#f5f7f8] text-[#111827] dark:bg-[#0f1923] dark:text-[#f3f4f6]">
@@ -134,9 +179,6 @@ export default function RegistrarIncidenciaPage() {
                       Nombre del Buque
                     </th>
                     <th scope="col" className="px-6 py-3 text-left">
-                      Tipo de Operación
-                    </th>
-                    <th scope="col" className="px-6 py-3 text-left">
                       Estado
                     </th>
                   </tr>
@@ -144,7 +186,7 @@ export default function RegistrarIncidenciaPage() {
                 <tbody className="divide-y divide-[#e5e7eb] bg-white dark:divide-[#374151] dark:bg-[#1a2a3a]">
                   {filteredOperations.map((operation) => {
                     const isSelected = selectedCode === operation.code;
-                    const badge = statusBadgeStyles[operation.status];
+                    const badge = getStatusBadge(operation.status);
                     return (
                       <tr
                         key={operation.code}
@@ -170,11 +212,6 @@ export default function RegistrarIncidenciaPage() {
                         >
                           {operation.ship}
                         </td>
-                        <td
-                          className={`px-6 py-4 text-sm ${isSelected ? "text-[#0459af]" : "text-[#6b7280] dark:text-[#9ca3af]"}`}
-                        >
-                          {operation.type}
-                        </td>
                         <td className="px-6 py-4 text-sm">
                           <span
                             className={`inline-flex rounded-full px-2 py-1 text-xs font-semibold ${badge.light} ${badge.dark}`}
@@ -191,26 +228,57 @@ export default function RegistrarIncidenciaPage() {
 
             <footer className="flex flex-col items-center justify-between gap-4 border-t border-[#e5e7eb] px-6 py-4 text-sm text-[#6b7280] dark:border-[#374151] dark:text-[#9ca3af] sm:flex-row">
               <p>
-                Mostrando {filteredOperations.length} de {operations.length}{" "}
+                Mostrando {filteredOperations.length} de {operationsData?.total || 0}{" "}
                 operaciones
               </p>
               <div className="flex space-x-1">
-                {["<", "1", "2", "3", ">"].map((item, index) => {
-                  const isActive = item === "1";
-                  return (
+                {operationsData && (
+                  <>
                     <button
-                      key={`${item}-${index}`}
                       type="button"
+                      onClick={() => handlePageChange(currentPage - 1)}
+                      disabled={currentPage === 1}
                       className={`rounded-lg border px-3 py-1 transition-colors ${
-                        isActive
-                          ? "border-[#0459af] bg-[#0459af] text-white"
+                        currentPage === 1
+                          ? "border-[#e5e7eb] text-[#9ca3af] cursor-not-allowed dark:border-[#374151] dark:text-[#6b7280]"
                           : "border-[#e5e7eb] text-[#374151] hover:bg-[#f5f7f8] dark:border-[#374151] dark:text-[#f3f4f6] dark:hover:bg-[#25384f]"
                       }`}
                     >
-                      {item}
+                      &lt;
                     </button>
-                  );
-                })}
+                    
+                    {Array.from({ length: operationsData.totalPages }, (_, i) => i + 1).map((pageNum) => {
+                      const isActive = pageNum === currentPage;
+                      return (
+                        <button
+                          key={pageNum}
+                          type="button"
+                          onClick={() => handlePageChange(pageNum)}
+                          className={`rounded-lg border px-3 py-1 transition-colors ${
+                            isActive
+                              ? "border-[#0459af] bg-[#0459af] text-white"
+                              : "border-[#e5e7eb] text-[#374151] hover:bg-[#f5f7f8] dark:border-[#374151] dark:text-[#f3f4f6] dark:hover:bg-[#25384f]"
+                          }`}
+                        >
+                          {pageNum}
+                        </button>
+                      );
+                    })}
+                    
+                    <button
+                      type="button"
+                      onClick={() => handlePageChange(currentPage + 1)}
+                      disabled={currentPage === operationsData.totalPages}
+                      className={`rounded-lg border px-3 py-1 transition-colors ${
+                        currentPage === operationsData.totalPages
+                          ? "border-[#e5e7eb] text-[#9ca3af] cursor-not-allowed dark:border-[#374151] dark:text-[#6b7280]"
+                          : "border-[#e5e7eb] text-[#374151] hover:bg-[#f5f7f8] dark:border-[#374151] dark:text-[#f3f4f6] dark:hover:bg-[#25384f]"
+                      }`}
+                    >
+                      &gt;
+                    </button>
+                  </>
+                )}
               </div>
             </footer>
           </section>

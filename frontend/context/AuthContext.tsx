@@ -15,7 +15,7 @@ interface Usuario {
     id_operador: string;
     turno: string;
     zona_monitoreo: string;
-  };
+  } | null;
 }
 
 interface AuthContextType {
@@ -24,6 +24,7 @@ interface AuthContextType {
   login: (correo: string, contrasena: string) => Promise<void>;
   logout: () => void;
   reloadUser: () => Promise<void>;
+  setAuthData: (token: string, usuario: Usuario) => void;
   isAuthenticated: boolean;
   loading: boolean;
 }
@@ -43,32 +44,21 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     if (tokenGuardado && usuarioGuardado) {
       setToken(tokenGuardado);
-      
-      // Recargar perfil completo desde el backend para asegurar datos actualizados
-      fetch("http://localhost:3001/auth/profile", {
-        headers: {
-          Authorization: `Bearer ${tokenGuardado}`,
-        },
-      })
-        .then((res) => {
-          if (res.ok) {
-            return res.json();
-          }
-          throw new Error("Token inválido");
-        })
-        .then((data) => {
-          setUsuario(data);
-          localStorage.setItem("usuario", JSON.stringify(data));
-          setLoading(false);
-        })
-        .catch(() => {
-          // Si falla, limpiar sesión
-          localStorage.removeItem("token");
-          localStorage.removeItem("usuario");
-          setToken(null);
-          setUsuario(null);
-          setLoading(false);
-        });
+
+      try {
+        // Intentar parsear el usuario guardado
+        const usuarioData = JSON.parse(usuarioGuardado);
+        setUsuario(usuarioData);
+        setLoading(false);
+      } catch (error) {
+        // Si falla el parseo, limpiar sesión
+        console.error("Error parsing usuario from localStorage:", error);
+        localStorage.removeItem("token");
+        localStorage.removeItem("usuario");
+        setToken(null);
+        setUsuario(null);
+        setLoading(false);
+      }
     } else {
       setLoading(false);
     }
@@ -156,12 +146,20 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   };
 
+  const setAuthData = (newToken: string, newUsuario: Usuario) => {
+    setToken(newToken);
+    setUsuario(newUsuario);
+    localStorage.setItem("token", newToken);
+    localStorage.setItem("usuario", JSON.stringify(newUsuario));
+  };
+
   const value: AuthContextType = {
     usuario,
     token,
     login,
     logout,
     reloadUser,
+    setAuthData,
     isAuthenticated: !!token && !!usuario,
     loading,
   };

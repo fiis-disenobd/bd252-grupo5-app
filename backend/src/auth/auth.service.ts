@@ -24,7 +24,7 @@ export class AuthService {
     @InjectRepository(Operador)
     private operadorRepository: Repository<Operador>,
     private jwtService: JwtService,
-  ) {}
+  ) { }
 
   // Login simplificado - Solo para operadores de monitoreo
   async login(loginDto: LoginDto) {
@@ -205,7 +205,7 @@ export class AuthService {
     // TODO: Para producción, usar bcrypt.compare
     const isPasswordValid = changePasswordDto.contrasenaActual === usuario.contrasena;
     // const isPasswordValid = await bcrypt.compare(changePasswordDto.contrasenaActual, usuario.contrasena);
-    
+
     if (!isPasswordValid) {
       throw new UnauthorizedException('La contraseña actual es incorrecta');
     }
@@ -235,13 +235,13 @@ export class AuthService {
       throw new NotFoundException('Usuario no encontrado');
     }
 
+    if (!usuario.empleado) {
+      throw new NotFoundException('El usuario no tiene un empleado asociado');
+    }
+
     const operador = await this.operadorRepository.findOne({
       where: { id_empleado: usuario.id_empleado },
     });
-
-    if (!operador) {
-      throw new NotFoundException('Operador no encontrado');
-    }
 
     return {
       id_usuario: usuario.id_usuario,
@@ -254,11 +254,11 @@ export class AuthService {
         dni: usuario.empleado.dni,
         direccion: usuario.empleado.direccion,
       },
-      operador: {
+      operador: operador ? {
         id_operador: operador.id_operador,
         turno: operador.turno,
         zona_monitoreo: operador.zona_monitoreo,
-      },
+      } : null,
     };
   }
 }

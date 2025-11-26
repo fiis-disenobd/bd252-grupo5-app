@@ -18,7 +18,7 @@ const modules = [
     icon: "directions_boat",
     title: "Operaciones Marítimas",
     description: "Supervisar actividades marítimas",
-    href: "/operaciones-maritimas",
+    href: "/login-operaciones-maritimas",
   },
   {
     icon: "warehouse",

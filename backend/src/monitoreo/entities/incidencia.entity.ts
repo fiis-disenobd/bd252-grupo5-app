@@ -2,6 +2,7 @@ import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, JoinColumn } from 't
 import { Operacion } from '../../shared/entities/operacion.entity';
 import { TipoIncidencia } from './tipo-incidencia.entity';
 import { EstadoIncidencia } from './estado-incidencia.entity';
+import { Usuario } from '../../shared/entities/usuario.entity';
 
 @Entity({ schema: 'shared', name: 'incidencia' })
 export class Incidencia {
@@ -43,4 +44,8 @@ export class Incidencia {
   @ManyToOne(() => EstadoIncidencia)
   @JoinColumn({ name: 'id_estado_incidencia' })
   estado_incidencia: EstadoIncidencia;
+
+  @ManyToOne(() => Usuario)
+  @JoinColumn({ name: 'id_usuario' })
+  usuario: Usuario;
 }

@@ -147,4 +147,4 @@ import { DocumentacionService } from './services/documentacion.service';
     GpsService,
   ],
 })
-export class MonitoreoModule {}
+export class MonitoreoModule { }
