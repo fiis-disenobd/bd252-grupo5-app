@@ -163,15 +163,28 @@ export default function IncidenciasPage() {
   const confirmarEliminar = () => {
     if (!incidenciaEliminar) return;
 
+    const token = typeof window !== "undefined" ? localStorage.getItem("token") : null;
+
     fetch(`http://localhost:3001/monitoreo/incidencias/${incidenciaEliminar}`, {
       method: "DELETE",
+      headers: {
+        ...(token ? { Authorization: `Bearer ${token}` } : {}),
+      },
     })
-      .then(() => {
+      .then((res) => {
+        if (!res.ok) {
+          return res
+            .json()
+            .catch(() => ({}))
+            .then((err) => {
+              throw new Error(err.message || `Error ${res.status}`);
+            });
+        }
         setShowDeleteModal(false);
         setIncidenciaEliminar(null);
         cargarDatos();
       })
-      .catch((err) => console.error("Error:", err));
+      .catch((err) => console.error("Error al eliminar incidencia:", err));
   };
 
   const getSeveridadColor = (severidad: number) => {
