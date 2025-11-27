@@ -5,20 +5,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import L from "leaflet";
 import "leaflet/dist/leaflet.css";
-
-if (typeof window !== "undefined") {
-  delete (L.Icon.Default.prototype as any)._getIconUrl;
-  L.Icon.Default.mergeOptions({
-    iconRetinaUrl:
-      "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-icon-2x.png",
-    iconUrl:
-      "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-icon.png",
-    shadowUrl:
-      "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-shadow.png",
-  });
-}
 
 type Puerto = {
   id_puerto: string;
@@ -72,9 +59,9 @@ export default function SeleccionRutasMaritimasPage() {
   const idBuque = searchParams.get("id_buque");
   const contenedores = searchParams.get("contenedores");
   const mapContainerRef = useRef<HTMLDivElement | null>(null);
-  const mapRef = useRef<L.Map | null>(null);
-  const markersRef = useRef<L.Marker[]>([]);
-  const polylineRef = useRef<L.Polyline | null>(null);
+  const mapRef = useRef<any | null>(null);
+  const markersRef = useRef<any[]>([]);
+  const polylineRef = useRef<any | null>(null);
 
   useEffect(() => {
     const loadPuertos = async () => {
@@ -204,20 +191,43 @@ export default function SeleccionRutasMaritimasPage() {
   useEffect(() => {
     if (!mapContainerRef.current || mapRef.current) return;
 
-    const map = L.map(mapContainerRef.current, {
-      center: [0, 0],
-      zoom: 2,
-      zoomControl: false,
-    });
+    let isMounted = true;
 
-    L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
-      attribution: "© OpenStreetMap contributors",
-      maxZoom: 19,
-    }).addTo(map);
+    const initMap = async () => {
+      if (typeof window === "undefined") return;
+      const leaflet = await import("leaflet");
+      const L = leaflet.default ?? leaflet;
 
-    mapRef.current = map;
+      delete (L.Icon.Default.prototype as any)._getIconUrl;
+      L.Icon.Default.mergeOptions({
+        iconRetinaUrl:
+          "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-icon-2x.png",
+        iconUrl:
+          "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-icon.png",
+        shadowUrl:
+          "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-shadow.png",
+      });
+
+      if (!isMounted || !mapContainerRef.current || mapRef.current) return;
+
+      const map = L.map(mapContainerRef.current, {
+        center: [0, 0],
+        zoom: 2,
+        zoomControl: false,
+      });
+
+      L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+        attribution: "© OpenStreetMap contributors",
+        maxZoom: 19,
+      }).addTo(map);
+
+      mapRef.current = map;
+    };
+
+    initMap();
 
     return () => {
+      isMounted = false;
       if (mapRef.current) {
         mapRef.current.remove();
         mapRef.current = null;
@@ -230,94 +240,105 @@ export default function SeleccionRutasMaritimasPage() {
   useEffect(() => {
     if (!mapRef.current) return;
 
-    markersRef.current.forEach((marker) => marker.remove());
-    markersRef.current = [];
+    let isCancelled = false;
 
-    if (polylineRef.current) {
-      polylineRef.current.remove();
-      polylineRef.current = null;
-    }
+    const updateMap = async () => {
+      if (typeof window === "undefined") return;
+      const leaflet = await import("leaflet");
+      const L = leaflet.default ?? leaflet;
 
-    if (geoPoints.length === 0) return;
+      if (isCancelled || !mapRef.current) return;
 
-    const bounds = L.latLngBounds([]);
-    const baseLatLngs: [number, number][] = [];
+      markersRef.current.forEach((marker) => marker.remove());
+      markersRef.current = [];
 
-    geoPoints.forEach((punto) => {
-      const marker = L.marker([punto.lat, punto.lng]);
-
-      marker.bindPopup(
-        `<div style="font-size: 11px;">
-          <div style="font-weight: bold; margin-bottom: 4px;">${punto.nombre}</div>
-          <div style="margin-bottom: 4px; text-transform: capitalize;">Tipo: ${punto.tipo}</div>
-          <div style="word-break: break-word;">${punto.direccion}</div>
-        </div>`
-      );
-
-      marker.addTo(mapRef.current!);
-      markersRef.current.push(marker);
-      bounds.extend([punto.lat, punto.lng]);
-      baseLatLngs.push([punto.lat, punto.lng]);
-    });
-
-    // Generar puntos intermedios con una curva Bézier cuadrática sencilla
-    const detailedLatLngs: [number, number][] = [];
-    const segments = 32; // cantidad de pasos entre cada par de puertos
-
-    for (let i = 0; i < baseLatLngs.length - 1; i++) {
-      const [lat1, lng1] = baseLatLngs[i];
-      const [lat2, lng2] = baseLatLngs[i + 1];
-
-      // Punto medio base
-      const midLat = (lat1 + lat2) / 2;
-      const midLng = (lng1 + lng2) / 2;
-
-      // Desplazar el punto de control ligeramente para "curvar" hacia el mar
-      const dLat = lat2 - lat1;
-      const dLng = lng2 - lng1;
-
-      // Vector perpendicular (rotar 90 grados)
-      const perpLat = -dLng;
-      const perpLng = dLat;
-
-      const scale = 0.2; // qué tanto curvamos la ruta
-      const controlLat = midLat + perpLat * scale * 0.01;
-      const controlLng = midLng + perpLng * scale * 0.01;
-
-      for (let step = 0; step <= segments; step++) {
-        const t = step / segments;
-        const oneMinusT = 1 - t;
-
-        // Bézier cuadrática: B(t) = (1-t)^2 * P0 + 2(1-t)t * C + t^2 * P1
-        const lat =
-          oneMinusT * oneMinusT * lat1 +
-          2 * oneMinusT * t * controlLat +
-          t * t * lat2;
-
-        const lng =
-          oneMinusT * oneMinusT * lng1 +
-          2 * oneMinusT * t * controlLng +
-          t * t * lng2;
-
-        detailedLatLngs.push([lat, lng]);
+      if (polylineRef.current) {
+        polylineRef.current.remove();
+        polylineRef.current = null;
       }
-    }
 
-    if (detailedLatLngs.length >= 2) {
-      const polyline = L.polyline(detailedLatLngs, {
-        color: "#ff0000",
-        weight: 3,
-        opacity: 0.9,
+      if (geoPoints.length === 0) return;
+
+      const bounds = L.latLngBounds([]);
+      const baseLatLngs: [number, number][] = [];
+
+      geoPoints.forEach((punto) => {
+        const marker = L.marker([punto.lat, punto.lng]);
+
+        marker.bindPopup(
+          `<div style="font-size: 11px;">
+            <div style="font-weight: bold; margin-bottom: 4px;">${punto.nombre}</div>
+            <div style="margin-bottom: 4px; text-transform: capitalize;">Tipo: ${punto.tipo}</div>
+            <div style="word-break: break-word;">${punto.direccion}</div>
+          </div>`
+        );
+
+        marker.addTo(mapRef.current!);
+        markersRef.current.push(marker);
+        bounds.extend([punto.lat, punto.lng]);
+        baseLatLngs.push([punto.lat, punto.lng]);
       });
-      polyline.addTo(mapRef.current!);
-      polylineRef.current = polyline;
-    }
 
-    if (geoPoints.length === 1) {
-      mapRef.current.setView([geoPoints[0].lat, geoPoints[0].lng], 6);
-    } else {
-      mapRef.current.fitBounds(bounds, { padding: [40, 40] });
-    }
+      const detailedLatLngs: [number, number][] = [];
+      const segments = 32;
+
+      for (let i = 0; i < baseLatLngs.length - 1; i++) {
+        const [lat1, lng1] = baseLatLngs[i];
+        const [lat2, lng2] = baseLatLngs[i + 1];
+
+        const midLat = (lat1 + lat2) / 2;
+        const midLng = (lng1 + lng2) / 2;
+
+        const dLat = lat2 - lat1;
+        const dLng = lng2 - lng1;
+
+        const perpLat = -dLng;
+        const perpLng = dLat;
+
+        const scale = 0.2;
+        const controlLat = midLat + perpLat * scale * 0.01;
+        const controlLng = midLng + perpLng * scale * 0.01;
+
+        for (let step = 0; step <= segments; step++) {
+          const t = step / segments;
+          const oneMinusT = 1 - t;
+
+          const lat =
+            oneMinusT * oneMinusT * lat1 +
+            2 * oneMinusT * t * controlLat +
+            t * t * lat2;
+
+          const lng =
+            oneMinusT * oneMinusT * lng1 +
+            2 * oneMinusT * t * controlLng +
+            t * t * lng2;
+
+          detailedLatLngs.push([lat, lng]);
+        }
+      }
+
+      if (detailedLatLngs.length >= 2) {
+        const polyline = L.polyline(detailedLatLngs, {
+          color: "#ff0000",
+          weight: 3,
+          opacity: 0.9,
+        });
+        polyline.addTo(mapRef.current!);
+        polylineRef.current = polyline;
+      }
+
+      if (geoPoints.length === 1) {
+        mapRef.current.setView([geoPoints[0].lat, geoPoints[0].lng], 6);
+      } else {
+        mapRef.current.fitBounds(bounds, { padding: [40, 40] });
+      }
+    };
+
+    updateMap();
+
+    return () => {
+      isCancelled = true;
+    };
   }, [geoPoints]);
 
   const mapCenter = useMemo(() => {

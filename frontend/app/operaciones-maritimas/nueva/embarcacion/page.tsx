@@ -2,7 +2,7 @@
 
 import { Header } from "@/components/Header";
 import Link from "next/link";
-import { useEffect, useMemo, useState } from "react";
+import { Suspense, useEffect, useMemo, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 
 type Buque = {
@@ -19,7 +19,7 @@ type Buque = {
   ubicacion_actual: string | null;
 };
 
-export default function SeleccionarEmbarcacionPage() {
+function SeleccionarEmbarcacionContent() {
   const [selectedVessel, setSelectedVessel] = useState<string | null>(null);
   const [vessels, setVessels] = useState<Buque[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
@@ -352,6 +352,14 @@ export default function SeleccionarEmbarcacionPage() {
         </div>
       </main>
     </div>
+  );
+}
+
+export default function SeleccionarEmbarcacionPage() {
+  return (
+    <Suspense fallback={<div className="flex min-h-screen items-center justify-center bg-[#f5f7f8] dark:bg-[#0f1923]">Cargando embarcaciones...</div>}>
+      <SeleccionarEmbarcacionContent />
+    </Suspense>
   );
 }
 

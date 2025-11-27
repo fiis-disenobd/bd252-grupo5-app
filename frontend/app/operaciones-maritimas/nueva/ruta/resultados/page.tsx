@@ -2,7 +2,7 @@
 
 import { Header } from "@/components/Header";
 import Link from "next/link";
-import { useEffect, useState } from "react";
+import { Suspense, useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 
 type RutaResultado = {
@@ -14,13 +14,12 @@ type RutaResultado = {
   puertosIntermedios: string[];
 };
 
-export default function RutasDisponiblesPage() {
+function RutasDisponiblesContent() {
   const searchParams = useSearchParams();
   const originId = searchParams.get("originId");
   const destinationId = searchParams.get("destinationId");
   const originName = searchParams.get("originName") || "Origen";
   const destinationName = searchParams.get("destinationName") || "Destino";
-
   const router = useRouter();
 
   const [rutas, setRutas] = useState<RutaResultado[]>([]);
@@ -30,7 +29,7 @@ export default function RutasDisponiblesPage() {
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [total, setTotal] = useState(0);
-  const itemsPerPage = 10;
+  const [itemsPerPage] = useState(10);
 
   useEffect(() => {
     const loadRutas = async () => {
@@ -304,6 +303,14 @@ export default function RutasDisponiblesPage() {
         </div>
       </main>
     </div>
+  );
+}
+
+export default function RutasDisponiblesPage() {
+  return (
+    <Suspense fallback={<div className="flex min-h-screen items-center justify-center bg-[#f5f7f8] dark:bg-[#0f1923]">Cargando rutas...</div>}>
+      <RutasDisponiblesContent />
+    </Suspense>
   );
 }
 
