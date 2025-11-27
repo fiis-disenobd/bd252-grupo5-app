@@ -548,15 +548,19 @@ export default function SeleccionRutasMaritimasPage() {
                       (p) => p.id_puerto === destinationPortId
                     );
 
-                    const originName = encodeURIComponent(
-                      originPort?.nombre || ""
-                    );
-                    const destinationName = encodeURIComponent(
-                      destinationPort?.nombre || ""
-                    );
+                    const originName = originPort?.nombre || "";
+                    const destinationName = destinationPort?.nombre || "";
+
+                    const params = new URLSearchParams();
+                    params.set('originId', originPortId);
+                    params.set('destinationId', destinationPortId);
+                    params.set('originName', originName);
+                    params.set('destinationName', destinationName);
+                    if (idBuque) params.set('id_buque', idBuque);
+                    if (contenedores) params.set('contenedores', contenedores);
 
                     router.push(
-                      `/operaciones-maritimas/nueva/ruta/resultados?originId=${originPortId}&destinationId=${destinationPortId}&originName=${originName}&destinationName=${destinationName}`
+                      `/operaciones-maritimas/nueva/ruta/resultados?${params.toString()}`
                     );
                   }}
                   className="flex items-center justify-center gap-2 w-full rounded-md h-10 px-4 bg-[#F98C00] text-white text-sm font-bold hover:bg-orange-500 transition-colors mt-4 disabled:bg-gray-400 disabled:cursor-not-allowed"

@@ -256,7 +256,16 @@ export default function RutasDisponiblesPage() {
 
           <div className="mt-8 flex justify-end gap-4">
             <Link
-              href="/operaciones-maritimas/nueva/ruta"
+              href={(() => {
+                const idBuque = searchParams.get("id_buque");
+                const contenedores = searchParams.get("contenedores");
+                const params = new URLSearchParams();
+                if (idBuque) params.set('id_buque', idBuque);
+                if (contenedores) params.set('contenedores', contenedores);
+                return params.toString()
+                  ? `/operaciones-maritimas/nueva/ruta?${params.toString()}`
+                  : "/operaciones-maritimas/nueva/ruta";
+              })()}
               className="rounded-lg border border-gray-300 dark:border-gray-600 px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-700/50"
             >
               Volver a Selección de Puertos
@@ -270,8 +279,22 @@ export default function RutasDisponiblesPage() {
                 const selectedRuta = rutas.find((r) => r.id === selectedRouteId);
                 const distancia = selectedRuta?.distancia ?? "";
                 const duracion = selectedRuta?.duracion ?? "";
+                const idBuque = searchParams.get("id_buque");
+                const contenedores = searchParams.get("contenedores");
+
+                const params = new URLSearchParams();
+                params.set('routeId', selectedRouteId);
+                if (originId) params.set('originId', originId);
+                if (destinationId) params.set('destinationId', destinationId);
+                params.set('originName', originName);
+                params.set('destinationName', destinationName);
+                params.set('distance', String(distancia));
+                params.set('duration', duracion || "");
+                if (idBuque) params.set('id_buque', idBuque);
+                if (contenedores) params.set('contenedores', contenedores);
+
                 router.push(
-                  `/operaciones-maritimas/nueva/ruta?routeId=${selectedRouteId}&originId=${originId ?? ""}&destinationId=${destinationId ?? ""}&originName=${encodeURIComponent(originName)}&destinationName=${encodeURIComponent(destinationName)}&distance=${encodeURIComponent(String(distancia))}&duration=${encodeURIComponent(duracion || "")}`
+                  `/operaciones-maritimas/nueva/ruta?${params.toString()}`
                 );
               }}
             >

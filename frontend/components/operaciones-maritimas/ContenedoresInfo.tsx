@@ -30,14 +30,21 @@ export function ContenedoresInfo({ selectedIdsParam }: ContenedoresInfoProps) {
       try {
         setLoading(true);
         const res = await fetch(
-          "http://localhost:3001/operaciones-maritimas/contenedores"
+          "http://localhost:3001/operaciones-maritimas/contenedores?limit=1000"
         );
         if (!res.ok) {
           setContenedores([]);
           return;
         }
         const data = await res.json();
-        setContenedores(Array.isArray(data) ? data : []);
+        // Handle both paginated and non-paginated responses
+        if (data.data && Array.isArray(data.data)) {
+          setContenedores(data.data);
+        } else if (Array.isArray(data)) {
+          setContenedores(data);
+        } else {
+          setContenedores([]);
+        }
       } catch (error) {
         console.error("Error cargando contenedores para info:", error);
         setContenedores([]);
