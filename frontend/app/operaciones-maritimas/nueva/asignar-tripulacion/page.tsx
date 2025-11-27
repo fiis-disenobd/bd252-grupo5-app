@@ -1,7 +1,7 @@
 "use client";
 
 import { Header } from "@/components/Header";
-import { useState, useEffect } from 'react';
+import { Suspense, useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { getTripulantes } from '@/app/services/tripulante.service';
@@ -28,7 +28,7 @@ interface Buque {
   ubicacion_actual: string;
 }
 
-export default function AsignarTripulacionPage() {
+function AsignarTripulacionContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const idBuque = searchParams.get('id_buque');
@@ -226,5 +226,13 @@ export default function AsignarTripulacionPage() {
         </div>
       </main>
     </div>
+  );
+}
+
+export default function AsignarTripulacionPage() {
+  return (
+    <Suspense fallback={<div className="min-h-screen flex flex-col"><Header /><main className="flex-1 container mx-auto p-6">Cargando...</main></div>}>
+      <AsignarTripulacionContent />
+    </Suspense>
   );
 }

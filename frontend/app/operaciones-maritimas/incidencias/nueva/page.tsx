@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState, useEffect } from "react";
+import { Suspense, useMemo, useState, useEffect } from "react";
 import Link from "next/link";
 import { useSearchParams, useRouter } from "next/navigation";
 import { Header } from "@/components/Header";
@@ -10,7 +10,7 @@ import { useAuth } from "@/context/AuthContext";
 
 const defaultOperation = "OP-2024-002";
 
-export default function NuevaIncidenciaPage() {
+function NuevaIncidenciaContent() {
   const router = useRouter();
   const params = useSearchParams();
   const { token } = useAuth();
@@ -218,5 +218,13 @@ export default function NuevaIncidenciaPage() {
         </div>
       </main>
     </div>
+  );
+}
+
+export default function NuevaIncidenciaPage() {
+  return (
+    <Suspense fallback={<div className="flex min-h-screen items-center justify-center">Cargando...</div>}>
+      <NuevaIncidenciaContent />
+    </Suspense>
   );
 }

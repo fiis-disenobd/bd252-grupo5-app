@@ -2,7 +2,7 @@
 
 import { Header } from "@/components/Header";
 import Link from "next/link";
-import { useEffect, useState } from "react";
+import { Suspense, useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 
 interface Contenedor {
@@ -20,7 +20,7 @@ interface Contenedor {
   mercancia?: string | null;
 }
 
-export default function GestionarContenedoresPage() {
+function GestionarContenedoresContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [selectedContainers, setSelectedContainers] = useState<Set<string>>(
@@ -428,6 +428,14 @@ export default function GestionarContenedoresPage() {
         </button>
       </footer>
     </div>
+  );
+}
+
+export default function GestionarContenedoresPage() {
+  return (
+    <Suspense fallback={<div className="flex min-h-screen items-center justify-center bg-[#f5f7f8] dark:bg-[#0f1923]">Cargando contenedores...</div>}>
+      <GestionarContenedoresContent />
+    </Suspense>
   );
 }
 
