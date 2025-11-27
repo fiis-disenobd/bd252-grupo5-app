@@ -118,4 +118,65 @@ export class OperacionesIncidenciasService {
             totalPages: Math.ceil(total / limit),
         };
     }
+
+    async marcarParaInvestigacion(
+        codigoOperacion: string,
+        tipoInspeccion: string,
+        prioridad: string,
+        fecha: string,
+        hora: string,
+        idUsuario?: string,
+    ) {
+        try {
+            // Buscar la operación marítima por código
+            const operacionMaritima = await this.operacionMaritimaRepository.findOne({
+                where: { codigo: codigoOperacion },
+                relations: ['operacion'],
+            });
+
+            if (!operacionMaritima) {
+                throw new Error('Operación no encontrada');
+            }
+
+            const idOperacion = operacionMaritima.id_operacion;
+
+            // Generar código de inspección
+            const codigoInspeccion = `INS-${Date.now()}`;
+
+            // Combinar fecha y hora
+            const fechaHora = `${fecha} ${hora}:00`;
+
+            // Insertar inspección usando query raw
+            const result = await this.operacionMaritimaRepository.query(`
+                INSERT INTO gestion_maritima.Inspeccion (
+                    id_inspeccion,
+                    codigo,
+                    fecha,
+                    id_tipo_inspeccion,
+                    id_estado_inspeccion,
+                    id_prioridad,
+                    id_operacion,
+                    id_usuario
+                ) VALUES (
+                    gen_random_uuid(),
+                    $1,
+                    $2::timestamp,
+                    (SELECT id_tipo_inspeccion FROM shared.TipoInspeccion WHERE nombre = $3 LIMIT 1),
+                    (SELECT id_estado_inspeccion FROM shared.EstadoInspeccion WHERE nombre = 'Pendiente' LIMIT 1),
+                    (SELECT id_prioridad FROM gestion_maritima.Prioridad WHERE nombre = $4 LIMIT 1),
+                    $5,
+                    $6
+                ) RETURNING id_inspeccion, codigo
+            `, [codigoInspeccion, fechaHora, tipoInspeccion, prioridad, idOperacion, idUsuario || null]);
+
+            return {
+                success: true,
+                inspeccion: result[0],
+                message: 'Operación marcada para investigación exitosamente',
+            };
+        } catch (error) {
+            console.error('Error al marcar para investigación:', error);
+            throw error;
+        }
+    }
 }

@@ -1,4 +1,4 @@
-import { Controller, Get, Query } from '@nestjs/common';
+import { Controller, Get, Post, Body, Query } from '@nestjs/common';
 import { OperacionesIncidenciasService } from '../services/operaciones-incidencias.service';
 
 @Controller('gestion-maritima/operaciones-incidencias')
@@ -19,6 +19,27 @@ export class OperacionesIncidenciasController {
             limit ? parseInt(limit) : 10,
             search,
             severidadMin ? parseInt(severidadMin) : undefined,
+        );
+    }
+
+    @Post('marcar-investigacion')
+    async marcarParaInvestigacion(
+        @Body() body: {
+            codigoOperacion: string;
+            tipoInspeccion: string;
+            prioridad: string;
+            fecha: string;
+            hora: string;
+            idUsuario?: string;
+        }
+    ) {
+        return this.operacionesIncidenciasService.marcarParaInvestigacion(
+            body.codigoOperacion,
+            body.tipoInspeccion,
+            body.prioridad,
+            body.fecha,
+            body.hora,
+            body.idUsuario,
         );
     }
 }

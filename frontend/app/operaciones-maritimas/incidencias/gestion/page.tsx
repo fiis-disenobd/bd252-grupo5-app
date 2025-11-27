@@ -9,6 +9,7 @@ import {
 
 export default function GestionIncidenciasOperacionesPage() {
   const [operaciones, setOperaciones] = useState<OperacionConIncidencias[]>([]);
+  const [todasOperaciones, setTodasOperaciones] = useState<OperacionConIncidencias[]>([]);
   const [loading, setLoading] = useState(true);
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
@@ -18,20 +19,50 @@ export default function GestionIncidenciasOperacionesPage() {
   const [severidadMin, setSeveridadMin] = useState<number | undefined>();
   const [selectedIncident, setSelectedIncident] = useState<any | null>(null);
   const [showModal, setShowModal] = useState(false);
-  const [selectedRowId, setSelectedRowId] = useState<string | null>(null);
+  const [selectedOperation, setSelectedOperation] = useState<string>("");
+  const [tipoInspeccion, setTipoInspeccion] = useState<string>("");
+  const [prioridad, setPrioridad] = useState<string>("");
+  const [fechaCreacion, setFechaCreacion] = useState<string>(new Date().toISOString().split('T')[0]);
+  const [horaCreacion, setHoraCreacion] = useState<string>(new Date().toTimeString().slice(0, 5));
   const limit = 10;
 
   useEffect(() => {
-    fetchOperaciones();
-  }, [page, search, severidadMin]);
+    fetchTodasOperaciones();
+  }, []);
+
+  useEffect(() => {
+    if (selectedOperation) {
+      fetchOperaciones();
+    } else {
+      setOperaciones([]);
+      setTotal(0);
+      setTotalPages(1);
+    }
+  }, [page, search, severidadMin, selectedOperation]);
+
+  const fetchTodasOperaciones = async () => {
+    try {
+      const response = await operacionesIncidenciasAPI.getOperacionesConIncidencias(
+        1,
+        1000,
+        undefined,
+        undefined,
+      );
+      setTodasOperaciones(response.data);
+    } catch (error) {
+      console.error("Error fetching all operaciones:", error);
+    }
+  };
 
   const fetchOperaciones = async () => {
+    if (!selectedOperation) return;
+
     setLoading(true);
     try {
       const response = await operacionesIncidenciasAPI.getOperacionesConIncidencias(
         page,
         limit,
-        search || undefined,
+        selectedOperation,
         severidadMin,
       );
       setOperaciones(response.data);
@@ -74,8 +105,58 @@ export default function GestionIncidenciasOperacionesPage() {
     setShowModal(true);
   };
 
-  const handleRowClick = (codigoOperacion: string) => {
-    setSelectedRowId(codigoOperacion === selectedRowId ? null : codigoOperacion);
+  const handleMarcarInvestigacion = async () => {
+    if (!selectedOperation || !tipoInspeccion || !prioridad) {
+      alert("Por favor, complete todos los campos requeridos");
+      return;
+    }
+
+    if (!confirm(`¿Está seguro de marcar la operación ${selectedOperation} para investigación?`)) {
+      return;
+    }
+
+    try {
+      const response = await fetch(
+        "http://localhost:3001/gestion-maritima/operaciones-incidencias/marcar-investigacion",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            codigoOperacion: selectedOperation,
+            tipoInspeccion,
+            prioridad,
+            fecha: fechaCreacion,
+            hora: horaCreacion,
+          }),
+        }
+      );
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || "Error al marcar para investigación");
+      }
+
+      const result = await response.json();
+
+      alert(
+        `Operación ${selectedOperation} marcada para investigación exitosamente.\n\n` +
+        `Código de inspección: ${result.inspeccion.codigo}`
+      );
+
+      // Limpiar el formulario
+      setTipoInspeccion("");
+      setPrioridad("");
+      setFechaCreacion(new Date().toISOString().split('T')[0]);
+      setHoraCreacion(new Date().toTimeString().slice(0, 5));
+
+      // Recargar las operaciones
+      fetchOperaciones();
+    } catch (error) {
+      console.error("Error al marcar para investigación:", error);
+      alert(`Error al marcar la operación para investigación: ${error instanceof Error ? error.message : 'Error desconocido'}`);
+    }
   };
 
   return (
@@ -89,28 +170,27 @@ export default function GestionIncidenciasOperacionesPage() {
         </section>
 
         <section className="rounded-lg bg-white p-4 shadow-sm md:p-6">
-          <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-            <div className="flex flex-1 items-center gap-3 rounded-md border border-gray-200 px-3 py-2">
-              <span className="text-lg" aria-hidden>
-                🔍
-              </span>
-              <input
-                type="text"
-                placeholder="Buscar por código de operación, nombre del buque..."
-                className="w-full border-none bg-transparent text-sm outline-none placeholder:text-gray-400 md:text-base"
-                value={searchInput}
-                onChange={(e) => setSearchInput(e.target.value)}
-                onKeyPress={handleKeyPress}
-              />
+          <div className="flex flex-col gap-4">
+            <div className="flex flex-col gap-2">
+              <label className="text-sm font-medium text-gray-700">
+                Seleccionar Operación
+              </label>
+              <select
+                value={selectedOperation}
+                onChange={(e) => {
+                  setSelectedOperation(e.target.value);
+                  setPage(1);
+                }}
+                className="block w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm shadow-sm focus:border-[#003d5c] focus:outline-none focus:ring-1 focus:ring-[#003d5c]"
+              >
+                <option value="">Seleccione una operación</option>
+                {todasOperaciones.map((op) => (
+                  <option key={op.codigo_operacion} value={op.codigo_operacion}>
+                    {op.codigo_operacion} - {op.buque}
+                  </option>
+                ))}
+              </select>
             </div>
-            <button
-              type="button"
-              onClick={handleSearch}
-              className="inline-flex items-center justify-center gap-2 rounded-md bg-[#003d5c] px-4 py-2 text-sm font-medium text-white shadow-sm transition-colors hover:bg-[#00547a] md:text-base"
-            >
-              <span aria-hidden>🔍</span>
-              <span>Buscar</span>
-            </button>
           </div>
 
           <div className="mt-4 flex flex-wrap gap-2">
@@ -185,7 +265,13 @@ export default function GestionIncidenciasOperacionesPage() {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-200 bg-white text-gray-700">
-                  {operaciones.length === 0 ? (
+                  {!selectedOperation ? (
+                    <tr>
+                      <td colSpan={7} className="px-4 py-8 text-center text-gray-500">
+                        Por favor, seleccione una operación para ver sus incidencias
+                      </td>
+                    </tr>
+                  ) : operaciones.length === 0 ? (
                     <tr>
                       <td colSpan={7} className="px-4 py-8 text-center text-gray-500">
                         No se encontraron operaciones con incidencias
@@ -197,11 +283,7 @@ export default function GestionIncidenciasOperacionesPage() {
                       return (
                         <tr
                           key={op.codigo_operacion}
-                          className={`cursor-pointer transition-colors ${selectedRowId === op.codigo_operacion
-                              ? "bg-blue-50 hover:bg-blue-100"
-                              : "hover:bg-gray-50"
-                            }`}
-                          onClick={() => handleRowClick(op.codigo_operacion)}
+                          className="hover:bg-gray-50"
                         >
                           <td className="px-4 py-3 text-sm font-medium text-gray-900">
                             {op.codigo_operacion}
@@ -307,7 +389,11 @@ export default function GestionIncidenciasOperacionesPage() {
               <label className="text-sm font-medium text-gray-700">
                 Tipo de Inspección
               </label>
-              <select className="block w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm shadow-sm focus:border-orange-500 focus:outline-none focus:ring-1 focus:ring-orange-500">
+              <select
+                value={tipoInspeccion}
+                onChange={(e) => setTipoInspeccion(e.target.value)}
+                className="block w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm shadow-sm focus:border-orange-500 focus:outline-none focus:ring-1 focus:ring-orange-500"
+              >
                 <option>Seleccionar Tipo</option>
                 <option>Inspección de Seguridad</option>
                 <option>Inspección de Carga</option>
@@ -318,7 +404,11 @@ export default function GestionIncidenciasOperacionesPage() {
 
             <div className="flex flex-col gap-2">
               <label className="text-sm font-medium text-gray-700">Prioridad</label>
-              <select className="block w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm shadow-sm focus:border-orange-500 focus:outline-none focus:ring-1 focus:ring-orange-500">
+              <select
+                value={prioridad}
+                onChange={(e) => setPrioridad(e.target.value)}
+                className="block w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm shadow-sm focus:border-orange-500 focus:outline-none focus:ring-1 focus:ring-orange-500"
+              >
                 <option>Seleccionar Prioridad</option>
                 <option>Baja</option>
                 <option>Media</option>
@@ -333,7 +423,8 @@ export default function GestionIncidenciasOperacionesPage() {
               </label>
               <input
                 type="date"
-                defaultValue={new Date().toISOString().split('T')[0]}
+                value={fechaCreacion}
+                onChange={(e) => setFechaCreacion(e.target.value)}
                 className="block w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm shadow-sm focus:border-orange-500 focus:outline-none focus:ring-1 focus:ring-orange-500"
               />
             </div>
@@ -344,7 +435,8 @@ export default function GestionIncidenciasOperacionesPage() {
               </label>
               <input
                 type="time"
-                defaultValue={new Date().toTimeString().slice(0, 5)}
+                value={horaCreacion}
+                onChange={(e) => setHoraCreacion(e.target.value)}
                 className="block w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm shadow-sm focus:border-orange-500 focus:outline-none focus:ring-1 focus:ring-orange-500"
               />
             </div>
@@ -360,7 +452,9 @@ export default function GestionIncidenciasOperacionesPage() {
             </button>
             <button
               type="button"
-              className="rounded-md bg-orange-500 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-orange-600"
+              onClick={handleMarcarInvestigacion}
+              disabled={!selectedOperation || !tipoInspeccion || !prioridad}
+              className="rounded-md bg-orange-500 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-orange-600 disabled:bg-gray-400 disabled:cursor-not-allowed"
             >
               Marcar para Investigación
             </button>
