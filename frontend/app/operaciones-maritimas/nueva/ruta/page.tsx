@@ -3,7 +3,7 @@
 import { Header } from "@/components/Header";
 import Image from "next/image";
 import Link from "next/link";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { Suspense, useEffect, useMemo, useRef, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import "leaflet/dist/leaflet.css";
 
@@ -31,7 +31,7 @@ type RutaMapaDetalle = {
   puertos: RutaMapaPuerto[];
 };
 
-export default function SeleccionRutasMaritimasPage() {
+function SeleccionRutasMaritimasContent() {
   const [isDetailsOpen, setIsDetailsOpen] = useState(true);
   const [puertos, setPuertos] = useState<Puerto[]>([]);
   const [originCountry, setOriginCountry] = useState<string>("");
@@ -834,6 +834,18 @@ export default function SeleccionRutasMaritimasPage() {
         </div>
       </main>
     </div>
+  );
+}
+
+export default function SeleccionRutasMaritimasPage() {
+  return (
+    <Suspense fallback={
+      <div className="flex min-h-screen items-center justify-center bg-gray-50 dark:bg-[#0f1923]">
+        Cargando rutas marítimas...
+      </div>
+    }>
+      <SeleccionRutasMaritimasContent />
+    </Suspense>
   );
 }
 
