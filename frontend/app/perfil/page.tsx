@@ -251,7 +251,7 @@ export default function PerfilPage() {
               <div className="flex items-center gap-2 rounded-lg bg-blue-50 p-3 dark:bg-blue-900/20">
                 <span className="material-symbols-outlined text-blue-600 dark:text-blue-400">schedule</span>
                 <p className="text-sm font-semibold text-blue-900 dark:text-blue-300">
-                  {usuario.operador.turno}
+                  {usuario.operador.turno ?? "Sin turno asignado"}
                 </p>
               </div>
             </div>
@@ -263,7 +263,7 @@ export default function PerfilPage() {
               <div className="flex items-center gap-2 rounded-lg bg-green-50 p-3 dark:bg-green-900/20">
                 <span className="material-symbols-outlined text-green-600 dark:text-green-400">location_on</span>
                 <p className="text-sm font-semibold text-green-900 dark:text-green-300">
-                  {usuario.operador.zona_monitoreo}
+                  {usuario.operador.zona_monitoreo ?? "Sin zona asignada"}
                 </p>
               </div>
             </div>
