@@ -31,8 +31,9 @@ export default function GestionarContenedoresPage() {
   const [loading, setLoading] = useState<boolean>(false);
   const [filtroEstado, setFiltroEstado] = useState<string>("");
   const [filtroMercancia, setFiltroMercancia] = useState<string>("");
-  const [filtroCliente, setFiltroCliente] = useState<string>("");
   const [paginaActual, setPaginaActual] = useState<number>(1);
+  const [totalPaginas, setTotalPaginas] = useState<number>(1);
+  const [total, setTotal] = useState<number>(0);
   const elementosPorPagina = 10;
   const [routeInfo, setRouteInfo] = useState<string | null>(null);
 
@@ -113,30 +114,48 @@ export default function GestionarContenedoresPage() {
     const fetchContenedores = async () => {
       try {
         setLoading(true);
+
+        const params = new URLSearchParams();
+        params.append('page', paginaActual.toString());
+        params.append('limit', elementosPorPagina.toString());
+        if (filtroEstado) params.append('estado', filtroEstado);
+        if (filtroMercancia) params.append('mercancia', filtroMercancia);
+
         const res = await fetch(
-          "http://localhost:3001/operaciones-maritimas/contenedores"
+          `http://localhost:3001/operaciones-maritimas/contenedores?${params.toString()}`
         );
         if (!res.ok) {
           setContainers([]);
+          setTotalPaginas(1);
+          setTotal(0);
           return;
         }
         const data = await res.json();
-        const lista = Array.isArray(data) ? data : [];
-        setContainers(lista);
+        if (data.data && Array.isArray(data.data)) {
+          setContainers(data.data);
+          setTotalPaginas(data.totalPages);
+          setTotal(data.total);
+        } else {
+          setContainers([]);
+          setTotalPaginas(1);
+          setTotal(0);
+        }
       } catch (error) {
         console.error("Error cargando contenedores:", error);
         setContainers([]);
+        setTotalPaginas(1);
+        setTotal(0);
       } finally {
         setLoading(false);
       }
     };
 
     fetchContenedores();
-  }, []);
+  }, [paginaActual, filtroEstado, filtroMercancia]);
 
   useEffect(() => {
     setPaginaActual(1);
-  }, [filtroEstado, filtroMercancia, filtroCliente]);
+  }, [filtroEstado, filtroMercancia]);
 
   const handleSelectAll = (checked: boolean) => {
     setSelectAll(checked);
@@ -170,32 +189,7 @@ export default function GestionarContenedoresPage() {
     setSelectAll(false);
   };
 
-  const filteredContainers = containers.filter((c) => {
-    const estadoOk =
-      !filtroEstado ||
-      c.estado_contenedor?.nombre?.toLowerCase() ===
-      filtroEstado.toLowerCase();
 
-    const mercanciaOk =
-      !filtroMercancia ||
-      (c.mercancia || "")
-        .toLowerCase()
-        .includes(filtroMercancia.toLowerCase());
-
-    const clienteOk =
-      !filtroCliente ||
-      c.cliente?.toLowerCase() === filtroCliente.toLowerCase();
-
-    return estadoOk && mercanciaOk && clienteOk;
-  });
-
-  const totalPaginas =
-    Math.ceil(filteredContainers.length / elementosPorPagina) || 1;
-
-  const paginaSegura = Math.min(paginaActual, totalPaginas);
-  const inicio = (paginaSegura - 1) * elementosPorPagina;
-  const fin = inicio + elementosPorPagina;
-  const contenedoresPagina = filteredContainers.slice(inicio, fin);
 
   return (
     <div className="flex flex-col min-h-screen bg-[#f5f7f8] dark:bg-[#0f1923] font-display">
@@ -253,19 +247,6 @@ export default function GestionarContenedoresPage() {
                     <option value="Frutas">Frutas</option>
                   </select>
                 </div>
-                <div>
-                  <select
-                    className="w-full sm:w-auto border border-gray-300 dark:border-gray-600 rounded-lg bg-[#f5f7f8] dark:bg-gray-800 text-gray-700 dark:text-gray-300 focus:ring-2 focus:ring-[#0459af] focus:border-transparent"
-                    value={filtroCliente}
-                    onChange={(e) => setFiltroCliente(e.target.value)}
-                  >
-                    <option value="">Cliente</option>
-                    <option value="Global Exports Inc.">Global Exports Inc.</option>
-                    <option value="Oceanic Trading Co.">Oceanic Trading Co.</option>
-                    <option value="Chemical Solutions Ltd.">Chemical Solutions Ltd.</option>
-                    <option value="AgriProducts Corp.">AgriProducts Corp.</option>
-                  </select>
-                </div>
               </div>
             </div>
           </div>
@@ -312,7 +293,7 @@ export default function GestionarContenedoresPage() {
                       Cargando contenedores...
                     </td>
                   </tr>
-                ) : filteredContainers.length === 0 ? (
+                ) : containers.length === 0 ? (
                   <tr>
                     <td
                       className="px-6 py-6 text-center text-gray-500 dark:text-gray-400"
@@ -322,7 +303,7 @@ export default function GestionarContenedoresPage() {
                     </td>
                   </tr>
                 ) : (
-                  contenedoresPagina.map((container) => (
+                  containers.map((container) => (
                     <tr
                       key={container.id_contenedor}
                       className="bg-white dark:bg-slate-800 border-b dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-800"
@@ -384,12 +365,12 @@ export default function GestionarContenedoresPage() {
             </div>
             <div className="flex items-center gap-2 text-sm text-gray-500 dark:text-gray-400">
               <span>
-                Página {paginaSegura} de {totalPaginas}
+                Página {paginaActual} de {totalPaginas}
               </span>
               <button
                 type="button"
                 className="p-1 rounded-md hover:bg-gray-100 dark:hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed"
-                disabled={paginaSegura <= 1}
+                disabled={paginaActual <= 1}
                 onClick={() =>
                   setPaginaActual((prev) => Math.max(1, prev - 1))
                 }
@@ -401,7 +382,7 @@ export default function GestionarContenedoresPage() {
               <button
                 type="button"
                 className="p-1 rounded-md hover:bg-gray-100 dark:hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed"
-                disabled={paginaSegura >= totalPaginas}
+                disabled={paginaActual >= totalPaginas}
                 onClick={() =>
                   setPaginaActual((prev) =>
                     Math.min(totalPaginas, prev + 1),

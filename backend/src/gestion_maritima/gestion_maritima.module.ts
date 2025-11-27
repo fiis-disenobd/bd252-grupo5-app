@@ -13,6 +13,7 @@ import { OperacionRutaMaritima } from './entities/operacion-ruta-maritima.entity
 
 // Entidades compartidas usadas por los servicios
 import { EstadoOperacion } from '../shared/entities/estado-operacion.entity';
+import { EstadoEmbarcacion } from '../shared/entities/estado-embarcacion.entity';
 import { Vehiculo } from '../shared/entities/vehiculo.entity';
 import { Buque } from '../shared/entities/buque.entity';
 import { Ruta } from '../shared/entities/ruta.entity';
@@ -86,6 +87,7 @@ import { OperacionesIncidenciasService } from './services/operaciones-incidencia
       OperacionRutaMaritima,
       // Entidades compartidas necesarias para los servicios
       EstadoOperacion,
+      EstadoEmbarcacion,
       Vehiculo,
       Buque,
       Ruta,

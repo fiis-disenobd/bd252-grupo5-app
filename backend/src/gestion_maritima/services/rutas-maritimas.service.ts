@@ -10,29 +10,83 @@ export class RutasMaritimasService {
     private readonly rutaMaritimaRepository: Repository<RutaMaritima>,
   ) { }
 
-  async findRutasMaritimasBetweenPuertos(id_puerto_origen: string, id_puerto_destino: string) {
+  async findRutasMaritimasBetweenPuertos(
+    id_puerto_origen: string,
+    id_puerto_destino: string,
+    page: number = 1,
+    limit: number = 10,
+  ) {
     try {
-      const rutas = await this.rutaMaritimaRepository.find({
-        where: {
-          id_puerto_origen,
-          id_puerto_destino,
-        },
-        relations: ['ruta', 'puertos_intermedios', 'puertos_intermedios.puerto'],
-        order: { codigo: 'ASC' },
-      });
+      const offset = (page - 1) * limit;
 
-      return rutas.map((ruta) => ({
-        id: ruta.id_ruta_maritima,
-        codigo: ruta.codigo,
-        distancia: ruta.distancia,
-        duracion: ruta.ruta?.duracion ?? null,
-        tarifa: ruta.ruta?.tarifa ?? null,
-        puertosIntermedios:
-          ruta.puertos_intermedios?.map((ri) => ri.puerto?.nombre).filter(Boolean) || [],
+      const query = `
+        SELECT 
+            rm.id_ruta_maritima,
+            rm.codigo,
+            rm.distancia,
+            r.duracion,
+            r.tarifa
+        FROM gestion_maritima.RutaMaritima rm
+        JOIN shared.Ruta r ON rm.id_ruta = r.id_ruta
+        JOIN gestion_maritima.Puerto po ON rm.id_puerto_origen = po.id_puerto
+        JOIN gestion_maritima.Puerto pd ON rm.id_puerto_destino = pd.id_puerto
+        WHERE rm.id_puerto_origen = $1 
+          AND rm.id_puerto_destino = $2
+        ORDER BY rm.codigo
+        LIMIT $3 OFFSET $4
+      `;
+
+      const countQuery = `
+        SELECT COUNT(*) as total
+        FROM gestion_maritima.RutaMaritima rm
+        WHERE rm.id_puerto_origen = $1 
+          AND rm.id_puerto_destino = $2
+      `;
+
+      const [rutas, countResult] = await Promise.all([
+        this.rutaMaritimaRepository.query(query, [id_puerto_origen, id_puerto_destino, limit, offset]),
+        this.rutaMaritimaRepository.query(countQuery, [id_puerto_origen, id_puerto_destino])
+      ]);
+
+      const total = parseInt(countResult[0].total, 10);
+
+      const rutasConPuertos = await Promise.all(rutas.map(async (ruta: any) => {
+        const puertosQuery = `
+            SELECT 
+                p.nombre
+            FROM gestion_maritima.RutaPuertoIntermedio rpi
+            JOIN gestion_maritima.Puerto p ON rpi.id_puerto = p.id_puerto
+            WHERE rpi.id_ruta_maritima = $1 
+            ORDER BY p.nombre
+        `;
+        const puertos = await this.rutaMaritimaRepository.query(puertosQuery, [ruta.id_ruta_maritima]);
+
+        return {
+          id: ruta.id_ruta_maritima,
+          codigo: ruta.codigo,
+          distancia: ruta.distancia,
+          duracion: ruta.duracion,
+          tarifa: ruta.tarifa,
+          puertosIntermedios: puertos.map((p: any) => p.nombre)
+        };
       }));
+
+      return {
+        data: rutasConPuertos,
+        total,
+        page,
+        limit,
+        totalPages: Math.ceil(total / limit)
+      };
     } catch (error) {
       console.error('Error al obtener rutas marítimas entre puertos:', error);
-      return [];
+      return {
+        data: [],
+        total: 0,
+        page,
+        limit,
+        totalPages: 0
+      };
     }
   }
 

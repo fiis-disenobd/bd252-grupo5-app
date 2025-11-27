@@ -105,7 +105,7 @@ export class OperacionesIncidenciasService {
                     fecha_hora: inc.fecha_hora,
                     descripcion: inc.descripcion,
                     estado: inc.estado_incidencia?.nombre || 'N/A',
-                    usuario: inc.usuario?.email || 'N/A',
+                    usuario: inc.usuario?.correo_electronico || 'N/A',
                 })),
             };
         });

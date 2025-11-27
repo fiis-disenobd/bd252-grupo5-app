@@ -27,6 +27,10 @@ export default function RutasDisponiblesPage() {
   const [loading, setLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
   const [selectedRouteId, setSelectedRouteId] = useState<string | null>(null);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const [total, setTotal] = useState(0);
+  const itemsPerPage = 10;
 
   useEffect(() => {
     const loadRutas = async () => {
@@ -37,16 +41,20 @@ export default function RutasDisponiblesPage() {
         setLoading(true);
         setError(null);
         const response = await fetch(
-          `http://localhost:3001/monitoreo/rutas-maritimas?origen=${originId}&destino=${destinationId}`
+          `http://localhost:3001/monitoreo/rutas-maritimas?origen=${originId}&destino=${destinationId}&page=${currentPage}&limit=${itemsPerPage}`
         );
         if (!response.ok) {
           throw new Error("No se pudieron obtener las rutas marítimas.");
         }
         const data = await response.json();
-        if (Array.isArray(data)) {
-          setRutas(data as RutaResultado[]);
+        if (data.data && Array.isArray(data.data)) {
+          setRutas(data.data as RutaResultado[]);
+          setTotalPages(data.totalPages);
+          setTotal(data.total);
         } else {
           setRutas([]);
+          setTotalPages(0);
+          setTotal(0);
         }
       } catch (e) {
         console.error(e);
@@ -58,7 +66,11 @@ export default function RutasDisponiblesPage() {
     };
 
     loadRutas();
-  }, [originId, destinationId]);
+  }, [originId, destinationId, currentPage]);
+
+  const handlePageChange = (page: number) => {
+    setCurrentPage(page);
+  };
 
   return (
     <div className="relative flex min-h-screen w-full flex-col bg-[#f5f7f8] dark:bg-[#0f1923] font-display">
@@ -155,11 +167,10 @@ export default function RutasDisponiblesPage() {
                     <tr
                       key={ruta.id}
                       onClick={() => setSelectedRouteId(ruta.id)}
-                      className={`cursor-pointer transition-colors ${
-                        selectedRouteId === ruta.id
-                          ? "bg-[#0459af]/10 dark:bg-[#0459af]/20"
-                          : "hover:bg-gray-50 dark:hover:bg-white/5"
-                      }`}
+                      className={`cursor-pointer transition-colors ${selectedRouteId === ruta.id
+                        ? "bg-[#0459af]/10 dark:bg-[#0459af]/20"
+                        : "hover:bg-gray-50 dark:hover:bg-white/5"
+                        }`}
                     >
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
                         {ruta.codigo}
@@ -182,6 +193,65 @@ export default function RutasDisponiblesPage() {
                   ))}
               </tbody>
             </table>
+          </div>
+
+          {/* Pagination Controls */}
+          <div className="flex items-center justify-between border-t border-gray-200 bg-white px-4 py-3 sm:px-6 dark:border-gray-700 dark:bg-slate-800 rounded-b-lg">
+            <div className="flex flex-1 justify-between sm:hidden">
+              <button
+                onClick={() => handlePageChange(Math.max(1, currentPage - 1))}
+                disabled={currentPage === 1}
+                className="relative inline-flex items-center rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 disabled:opacity-50 dark:border-gray-600 dark:bg-slate-700 dark:text-gray-200"
+              >
+                Anterior
+              </button>
+              <button
+                onClick={() => handlePageChange(Math.min(totalPages, currentPage + 1))}
+                disabled={currentPage === totalPages}
+                className="relative ml-3 inline-flex items-center rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 disabled:opacity-50 dark:border-gray-600 dark:bg-slate-700 dark:text-gray-200"
+              >
+                Siguiente
+              </button>
+            </div>
+            <div className="hidden sm:flex sm:flex-1 sm:items-center sm:justify-between">
+              <div>
+                <p className="text-sm text-gray-700 dark:text-gray-300">
+                  Mostrando <span className="font-medium">{rutas.length > 0 ? (currentPage - 1) * itemsPerPage + 1 : 0}</span> a <span className="font-medium">{Math.min(currentPage * itemsPerPage, total)}</span> de <span className="font-medium">{total}</span> resultados
+                </p>
+              </div>
+              <div>
+                <nav className="isolate inline-flex -space-x-px rounded-md shadow-sm" aria-label="Pagination">
+                  <button
+                    onClick={() => handlePageChange(Math.max(1, currentPage - 1))}
+                    disabled={currentPage === 1}
+                    className="relative inline-flex items-center rounded-l-md px-2 py-2 text-gray-400 ring-1 ring-inset ring-gray-300 hover:bg-gray-50 focus:z-20 focus:outline-offset-0 disabled:opacity-50 dark:ring-gray-600 dark:hover:bg-slate-700"
+                  >
+                    <span className="sr-only">Anterior</span>
+                    <span className="material-symbols-outlined text-sm">chevron_left</span>
+                  </button>
+                  {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
+                    <button
+                      key={page}
+                      onClick={() => handlePageChange(page)}
+                      className={`relative inline-flex items-center px-4 py-2 text-sm font-semibold ${currentPage === page
+                        ? "z-10 bg-[#0459af] text-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#0459af]"
+                        : "text-gray-900 ring-1 ring-inset ring-gray-300 hover:bg-gray-50 focus:z-20 focus:outline-offset-0 dark:text-gray-200 dark:ring-gray-600 dark:hover:bg-slate-700"
+                        }`}
+                    >
+                      {page}
+                    </button>
+                  ))}
+                  <button
+                    onClick={() => handlePageChange(Math.min(totalPages, currentPage + 1))}
+                    disabled={currentPage === totalPages}
+                    className="relative inline-flex items-center rounded-r-md px-2 py-2 text-gray-400 ring-1 ring-inset ring-gray-300 hover:bg-gray-50 focus:z-20 focus:outline-offset-0 disabled:opacity-50 dark:ring-gray-600 dark:hover:bg-slate-700"
+                  >
+                    <span className="sr-only">Siguiente</span>
+                    <span className="material-symbols-outlined text-sm">chevron_right</span>
+                  </button>
+                </nav>
+              </div>
+            </div>
           </div>
 
           <div className="mt-8 flex justify-end gap-4">

@@ -28,73 +28,84 @@ export class ContenedoresMaritimosService {
     private readonly contenedorMercanciaRepository: Repository<ContenedorMercancia>,
   ) { }
 
-  async findContenedores() {
+  async findContenedores(
+    page: number = 1,
+    limit: number = 10,
+    estado?: string,
+    mercancia?: string,
+  ) {
     try {
-      const contenedores = await this.contenedorRepository.find({
-        relations: ['estado_contenedor', 'tipo_contenedor'],
-        order: { codigo: 'ASC' },
-      });
+      const offset = (page - 1) * limit;
 
-      if (!contenedores.length) {
-        return [];
+      let query = `
+        SELECT   
+            c.id_contenedor,
+            c.codigo,
+            tc.nombre AS tipo_nombre,    
+            c.capacidad,
+            c.dimensiones,
+            ec.nombre AS estado,      
+            cm.tipo_mercancia
+        FROM shared.Contenedor c
+        JOIN shared.EstadoContenedor ec ON c.id_estado_contenedor = ec.id_estado_contenedor
+        JOIN shared.TipoContenedor tc ON c.id_tipo_contenedor = tc.id_tipo_contenedor
+        LEFT JOIN shared.ContenedorMercancia cm ON c.id_contenedor = cm.id_contenedor
+        WHERE 1=1
+      `;
+
+      const params: any[] = [];
+      let paramIndex = 1;
+
+      if (estado) {
+        query += ` AND ec.nombre = $${paramIndex++}`;
+        params.push(estado);
+      }
+      if (mercancia) {
+        query += ` AND cm.tipo_mercancia ILIKE $${paramIndex++}`;
+        params.push(`%${mercancia}%`);
       }
 
-      const idsContenedores = contenedores.map((c) => c.id_contenedor);
-      console.log('Buscando mercancía para', idsContenedores.length, 'contenedores');
-      console.log('Primer ID:', idsContenedores[0]);
+      const countQuery = `SELECT COUNT(DISTINCT subquery.id_contenedor) as total FROM (${query}) as subquery`;
 
-      // Obtener mercancías asociadas a cada contenedor usando query raw
-      let mercanciaPorContenedor = new Map<string, string[]>();
-      try {
-        const rawMercancias = await this.contenedorMercanciaRepository.query(
-          `SELECT id_contenedor, tipo_mercancia 
-           FROM shared.contenedormercancia 
-           WHERE id_contenedor = ANY($1)`,
-          [idsContenedores]
-        );
+      query += ` ORDER BY c.codigo LIMIT $${paramIndex++} OFFSET $${paramIndex++}`;
+      params.push(limit, offset);
 
-        console.log('Mercancías encontradas (raw):', rawMercancias.length);
-        if (rawMercancias.length > 0) {
-          console.log('Primera mercancía (raw):', rawMercancias[0]);
-        }
+      const [data, countResult] = await Promise.all([
+        this.contenedorRepository.query(query, params),
+        this.contenedorRepository.query(countQuery, params.slice(0, -2))
+      ]);
 
-        for (const cm of rawMercancias) {
-          const lista = mercanciaPorContenedor.get(cm.id_contenedor) || [];
-          lista.push(cm.tipo_mercancia);
-          mercanciaPorContenedor.set(cm.id_contenedor, lista);
-        }
-      } catch (mercanciaError) {
-        console.error('Error obteniendo mercancías:', mercanciaError);
-        // Continuar sin mercancías
-      }
+      const total = parseInt(countResult[0].total, 10);
 
-      // Obtener reservas asociadas a cada contenedor (para cliente) - opcional
-      let clientePorContenedor = new Map<string, string>();
-      try {
-        const reservasContenedores = await this.reservaContenedorRepository.find({
-          where: { id_contenedor: In(idsContenedores) },
-          relations: ['reserva', 'reserva.cliente'],
-        });
-
-        for (const rc of reservasContenedores) {
-          const nombreCliente = rc.reserva?.cliente?.razon_social;
-          if (nombreCliente && !clientePorContenedor.has(rc.id_contenedor)) {
-            clientePorContenedor.set(rc.id_contenedor, nombreCliente);
-          }
-        }
-      } catch (clienteError) {
-        console.error('Error obteniendo clientes:', clienteError);
-        // Continuar sin clientes
-      }
-
-      return contenedores.map((c) => ({
-        ...c,
-        cliente: clientePorContenedor.get(c.id_contenedor) || null,
-        mercancia: mercanciaPorContenedor.get(c.id_contenedor)?.join(', ') || null,
-      }));
+      return {
+        data: data.map((row: any) => ({
+          id_contenedor: row.id_contenedor,
+          codigo: row.codigo,
+          tipo_contenedor: {
+            nombre: row.tipo_nombre
+          },
+          capacidad: row.capacidad,
+          dimensiones: row.dimensiones,
+          estado_contenedor: {
+            nombre: row.estado
+          },
+          mercancia: row.tipo_mercancia,
+          cliente: null // Not included in the SQL query
+        })),
+        total,
+        page,
+        limit,
+        totalPages: Math.ceil(total / limit)
+      };
     } catch (error) {
       console.error('Error al obtener contenedores marítimos:', error);
-      throw error;
+      return {
+        data: [],
+        total: 0,
+        page,
+        limit,
+        totalPages: 0
+      };
     }
   }
 }

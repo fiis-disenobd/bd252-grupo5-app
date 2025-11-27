@@ -1,4 +1,4 @@
-import { Injectable, InternalServerErrorException, NotFoundException } from '@nestjs/common';
+import { Injectable, InternalServerErrorException, NotFoundException, BadRequestException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { DataSource, Repository } from 'typeorm';
 import { CreateOperacionMaritimaDto } from '../dto/create-operacion-maritima.dto';
@@ -32,84 +32,129 @@ export class OperacionMaritimaService {
         await queryRunner.startTransaction();
 
         try {
-            // 1. Get Status IDs
-            const estadoOperacion = await this.estadoOperacionRepository.findOne({
-                where: { nombre: createDto.estado_nombre },
-            });
-            if (!estadoOperacion) throw new NotFoundException(`Estado operacion '${createDto.estado_nombre}' not found`);
+            if (createDto.fecha_fin && new Date(createDto.fecha_fin) <= new Date(createDto.fecha_inicio)) {
+                throw new BadRequestException('La fecha de fin debe ser posterior a la fecha de inicio');
+            }
 
-            const estatusNavegacion = await this.estatusNavegacionRepository.findOne({
-                where: { nombre: createDto.estatus_navegacion_nombre || 'En Puerto' },
-            });
-            if (!estatusNavegacion) throw new NotFoundException(`Estatus navegacion '${createDto.estatus_navegacion_nombre || 'En Puerto'}' not found`);
+            // Paso 1: Insertar operación base
+            const operacionResult = await queryRunner.query(`
+                INSERT INTO shared.Operacion (
+                    id_operacion,
+                    codigo,
+                    fecha_inicio,
+                    fecha_fin,
+                    id_estado_operacion
+                ) VALUES (
+                    gen_random_uuid(),
+                    $1,
+                    $2,
+                    $3,
+                    (SELECT id_estado_operacion FROM shared.EstadoOperacion WHERE nombre = $4 LIMIT 1)
+                ) RETURNING id_operacion;
+            `, [
+                createDto.codigo,
+                createDto.fecha_inicio,
+                createDto.fecha_fin || null,
+                createDto.estado_nombre
+            ]);
 
-            // 2. Create Operacion
-            const operacion = new Operacion();
-            operacion.codigo = createDto.codigo;
-            operacion.fecha_inicio = new Date(createDto.fecha_inicio);
-            if (createDto.fecha_fin) operacion.fecha_fin = new Date(createDto.fecha_fin);
-            operacion.id_estado_operacion = estadoOperacion.id_estado_operacion;
+            const idOperacion = operacionResult[0].id_operacion;
 
-            const savedOperacion = await queryRunner.manager.save(Operacion, operacion);
+            // Paso 2: Insertar operación marítima
+            // Generamos un código para la operación marítima basado en el de la operación
+            const codigoMaritimo = createDto.codigo.replace('OP-', 'OPM-');
 
-            // 3. Create OperacionMaritima
-            const operacionMaritima = new OperacionMaritima();
-            operacionMaritima.id_operacion = savedOperacion.id_operacion;
-            operacionMaritima.codigo = createDto.codigo; // Assuming same code
-            operacionMaritima.cantidad_contenedores = createDto.cantidad_contenedores || 0;
-            operacionMaritima.id_estatus_navegacion = estatusNavegacion.id_estatus_navegacion;
-            operacionMaritima.porcentaje_trayecto = createDto.porcentaje_trayecto || 0;
-            operacionMaritima.id_buque = createDto.id_buque;
+            const opMaritimaResult = await queryRunner.query(`
+                INSERT INTO shared.OperacionMaritima (
+                    id_operacion_maritima,
+                    id_operacion,
+                    codigo,
+                    cantidad_contenedores,
+                    id_estatus_navegacion,
+                    porcentaje_trayecto,
+                    id_buque
+                ) VALUES (
+                    gen_random_uuid(),
+                    $1,
+                    $2,
+                    $3,
+                    (SELECT id_estatus_navegacion FROM shared.EstatusNavegacion WHERE nombre = $4 LIMIT 1),
+                    $5,
+                    $6
+                ) RETURNING id_operacion_maritima;
+            `, [
+                idOperacion,
+                codigoMaritimo,
+                createDto.cantidad_contenedores,
+                createDto.estatus_navegacion_nombre || 'En Puerto',
+                createDto.porcentaje_trayecto || 0,
+                createDto.id_buque
+            ]);
 
-            const savedOperacionMaritima = await queryRunner.manager.save(OperacionMaritima, operacionMaritima);
+            const idOperacionMaritima = opMaritimaResult[0].id_operacion_maritima;
 
-            // 4. Create OperacionRutaMaritima
-            const operacionRuta = new OperacionRutaMaritima();
-            operacionRuta.id_operacion_maritima = savedOperacionMaritima.id_operacion_maritima;
-            operacionRuta.id_ruta_maritima = createDto.id_ruta_maritima;
-            operacionRuta.id_muelle_origen = createDto.id_muelle_origen;
-            operacionRuta.id_muelle_destino = createDto.id_muelle_destino;
+            // Paso 3: Asociar ruta marítima
+            await queryRunner.query(`
+                INSERT INTO gestion_maritima.OperacionRutaMaritima (
+                    id_operacion_ruta_maritima,
+                    id_operacion_maritima,
+                    id_ruta_maritima,
+                    id_muelle_origen,
+                    id_muelle_destino
+                ) VALUES (
+                    gen_random_uuid(),
+                    $1,
+                    $2,
+                    $3,
+                    $4
+                );
+            `, [
+                idOperacionMaritima,
+                createDto.id_ruta_maritima,
+                createDto.id_muelle_origen,
+                createDto.id_muelle_destino
+            ]);
 
-            await queryRunner.manager.save(OperacionRutaMaritima, operacionRuta);
-
-            // 5. Create OperacionEmpleado and BuqueTripulante
-            if (createDto.tripulacion_ids && createDto.tripulacion_ids.length > 0) {
-                for (const tripulanteId of createDto.tripulacion_ids) {
-                    const tripulante = await this.tripulanteRepository.findOne({ where: { id_tripulante: tripulanteId } });
-                    if (tripulante) {
-                        // OperacionEmpleado
-                        const opEmpleado = new OperacionEmpleado();
-                        opEmpleado.id_operacion = savedOperacion.id_operacion;
-                        opEmpleado.id_empleado = tripulante.id_empleado;
-                        opEmpleado.fecha_asignacion = new Date().toISOString().split('T')[0]; // Current date
-                        await queryRunner.manager.save(OperacionEmpleado, opEmpleado);
-
-                        // BuqueTripulante
-                        const buqueTripulante = new BuqueTripulante();
-                        buqueTripulante.id_buque = createDto.id_buque;
-                        buqueTripulante.id_tripulante = tripulanteId;
-                        // fecha and hora defaults are handled by DB or entity defaults, but we can set them explicitly if needed
-                        // The entity has defaults: CURRENT_DATE, CURRENT_TIME. But TypeORM might not send them if undefined.
-                        // Let's rely on DB defaults or set them if they are required and not generated.
-                        // The entity definitions I wrote/saw have defaults.
-                        await queryRunner.manager.save(BuqueTripulante, buqueTripulante);
-                    }
+            // Paso 4: Asignar contenedores
+            if (createDto.contenedor_ids && createDto.contenedor_ids.length > 0) {
+                for (const idContenedor of createDto.contenedor_ids) {
+                    await queryRunner.query(`
+                        INSERT INTO gestion_maritima.OperacionContenedor (
+                            id_operacion_contenedor,
+                            id_operacion,
+                            id_contenedor,
+                            fecha_asignacion
+                        ) VALUES (
+                            gen_random_uuid(),
+                            $1,
+                            $2,
+                            CURRENT_DATE
+                        );
+                    `, [idOperacion, idContenedor]);
                 }
             }
 
-            // 6. Create OperacionContenedor
-            if (createDto.contenedor_ids && createDto.contenedor_ids.length > 0) {
-                for (const contenedorId of createDto.contenedor_ids) {
-                    const opContenedor = new OperacionContenedor();
-                    opContenedor.id_operacion = savedOperacion.id_operacion;
-                    opContenedor.id_contenedor = contenedorId;
-                    opContenedor.fecha_asignacion = new Date().toISOString().split('T')[0];
-                    await queryRunner.manager.save(OperacionContenedor, opContenedor);
+            // Paso 5: Asignar tripulación
+            if (createDto.tripulacion_ids && createDto.tripulacion_ids.length > 0) {
+                for (const idTripulante of createDto.tripulacion_ids) {
+                    await queryRunner.query(`
+                        INSERT INTO gestion_maritima.OperacionEmpleado (
+                            id_operacion_empleado,
+                            id_operacion,
+                            id_empleado,
+                            fecha_asignacion
+                        ) VALUES (
+                            gen_random_uuid(),
+                            $1,
+                            (SELECT id_empleado FROM shared.Tripulante WHERE id_tripulante = $2),
+                            CURRENT_DATE
+                        );
+                    `, [idOperacion, idTripulante]);
                 }
             }
 
             await queryRunner.commitTransaction();
-            return savedOperacionMaritima;
+            return { id_operacion: idOperacion, id_operacion_maritima: idOperacionMaritima };
 
         } catch (err) {
             await queryRunner.rollbackTransaction();

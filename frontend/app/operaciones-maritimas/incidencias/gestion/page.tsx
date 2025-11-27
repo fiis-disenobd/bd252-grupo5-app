@@ -18,6 +18,7 @@ export default function GestionIncidenciasOperacionesPage() {
   const [severidadMin, setSeveridadMin] = useState<number | undefined>();
   const [selectedIncident, setSelectedIncident] = useState<any | null>(null);
   const [showModal, setShowModal] = useState(false);
+  const [selectedRowId, setSelectedRowId] = useState<string | null>(null);
   const limit = 10;
 
   useEffect(() => {
@@ -71,6 +72,10 @@ export default function GestionIncidenciasOperacionesPage() {
   const handleVerDetalles = (incident: any) => {
     setSelectedIncident(incident);
     setShowModal(true);
+  };
+
+  const handleRowClick = (codigoOperacion: string) => {
+    setSelectedRowId(codigoOperacion === selectedRowId ? null : codigoOperacion);
   };
 
   return (
@@ -190,7 +195,14 @@ export default function GestionIncidenciasOperacionesPage() {
                     operaciones.map((op) => {
                       const incidenciaMasReciente = op.incidencias[0];
                       return (
-                        <tr key={op.codigo_operacion} className="hover:bg-gray-50">
+                        <tr
+                          key={op.codigo_operacion}
+                          className={`cursor-pointer transition-colors ${selectedRowId === op.codigo_operacion
+                              ? "bg-blue-50 hover:bg-blue-100"
+                              : "hover:bg-gray-50"
+                            }`}
+                          onClick={() => handleRowClick(op.codigo_operacion)}
+                        >
                           <td className="px-4 py-3 text-sm font-medium text-gray-900">
                             {op.codigo_operacion}
                           </td>
@@ -220,7 +232,10 @@ export default function GestionIncidenciasOperacionesPage() {
                           </td>
                           <td className="px-4 py-3 text-sm">
                             <button
-                              onClick={() => handleVerDetalles(incidenciaMasReciente)}
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleVerDetalles(incidenciaMasReciente);
+                              }}
                               className="text-sm font-medium text-orange-500 hover:underline"
                             >
                               Ver Detalles
