@@ -50,7 +50,7 @@ export default function ReservasActivas() {
       {/* Header */}
       <div className="bg-white border-b border-gray-200 px-8 py-6 flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900">Reservas Activas</h1>
+          <h1 className="text-3xl font-bold text-gray-900">Lista de Reservas</h1>
         </div>
         <button
           onClick={() => router.push("/gestion-reservas/nueva-reserva")}

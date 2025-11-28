@@ -19,6 +19,11 @@ import { Contenedor } from '../shared/entities/contenedor.entity';
 import { OperacionMaritima } from '../shared/entities/operacion-maritima.entity';
 import { EstadoReserva } from '../shared/entities/estado-reserva.entity';
 import { RutaMaritima } from '../gestion_maritima/entities/ruta-maritima.entity';
+import { Usuario } from '../shared/entities/usuario.entity';
+import { RolUsuario } from '../shared/entities/rol-usuario.entity';
+
+// Modules
+import { AuthModule } from '../auth/auth.module';
 
 // Controllers
 import { ClientesController } from './controllers/clientes.controller';
@@ -27,6 +32,7 @@ import { AgentesController } from './controllers/agentes.controller';
 import { TarifasController } from './controllers/tarifas.controller';
 import { BuquesOperacionesController } from './controllers/buques-operaciones.controller';
 import { EstadosReservaController } from './controllers/estados-reserva.controller';
+import { AuthReservasController } from './controllers/auth-reservas.controller';
 
 // Services
 import { ClientesService } from './services/clientes.service';
@@ -35,9 +41,11 @@ import { AgentesService } from './services/agentes.service';
 import { TarifasService } from './services/tarifas.service';
 import { BuquesOperacionesService } from './services/buques-operaciones.service';
 import { EstadosReservaService } from './services/estados-reserva.service';
+import { AuthReservasService } from './services/auth-reservas.service';
 
 @Module({
   imports: [
+    AuthModule,
     TypeOrmModule.forFeature([
       // Entidades propias de gestion_reserva
       AgenteReservas,
@@ -56,6 +64,8 @@ import { EstadosReservaService } from './services/estados-reserva.service';
       OperacionMaritima,
       EstadoReserva,
       RutaMaritima,
+      Usuario,
+      RolUsuario,
     ]),
   ],
   controllers: [
@@ -65,6 +75,7 @@ import { EstadosReservaService } from './services/estados-reserva.service';
     TarifasController,
     BuquesOperacionesController,
     EstadosReservaController,
+    AuthReservasController,
   ],
   providers: [
     ClientesService,
@@ -73,6 +84,7 @@ import { EstadosReservaService } from './services/estados-reserva.service';
     TarifasService,
     BuquesOperacionesService,
     EstadosReservaService,
+    AuthReservasService,
   ],
   exports: [
     ClientesService,

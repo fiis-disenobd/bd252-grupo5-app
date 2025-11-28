@@ -6,7 +6,7 @@ const modules = [
     icon: "calendar_month",
     title: "Reservas",
     description: "Gestionar las reservas",
-    href: "/gestion-reservas",
+    href: "/login-gestion-reservas",
   },
   {
     icon: "groups",
