@@ -31,14 +31,14 @@ export default function GestionReservasLayout({
           {/* Navigation Tabs */}
           <nav className="flex gap-6 border-b border-gray-200">
             <Link
-              href="/gestion-reservas/dashboard"
+              href="/gestion-reservas/nueva-reserva"
               className={`px-4 py-3 transition-colors ${
-                isActive("/gestion-reservas/dashboard")
+                isActive("/gestion-reservas/nueva-reserva")
                   ? "text-[#003366] border-b-2 border-[#003366] font-medium"
                   : "text-gray-600 hover:text-gray-900"
               }`}
             >
-              Dashboard
+              Nueva Reserva
             </Link>
             <Link
               href="/gestion-reservas/reservas"
@@ -60,16 +60,7 @@ export default function GestionReservasLayout({
             >
               Clientes
             </Link>
-            <Link
-              href="/gestion-reservas/nueva-reserva"
-              className={`px-4 py-3 transition-colors ${
-                isActive("/gestion-reservas/nueva-reserva")
-                  ? "text-[#003366] border-b-2 border-[#003366] font-medium"
-                  : "text-gray-600 hover:text-gray-900"
-              }`}
-            >
-              Nueva Reserva
-            </Link>
+
             <Link
               href="/gestion-reservas/tarifas"
               className={`px-4 py-3 transition-colors ${
@@ -79,6 +70,16 @@ export default function GestionReservasLayout({
               }`}
             >
               Tarifas
+            </Link>
+                        <Link
+              href="/gestion-reservas/dashboard"
+              className={`px-4 py-3 transition-colors ${
+                isActive("/gestion-reservas/dashboard")
+                  ? "text-[#003366] border-b-2 border-[#003366] font-medium"
+                  : "text-gray-600 hover:text-gray-900"
+              }`}
+            >
+              Dashboard
             </Link>
           </nav>
         </div>

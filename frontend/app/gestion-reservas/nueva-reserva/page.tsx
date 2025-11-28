@@ -12,17 +12,10 @@ export default function NuevaReserva() {
   const [buques, setBuques] = useState<any[]>([]);
   const [agentes, setAgentes] = useState<any[]>([]);
   
-  // TODO: Reemplaza este UUID con el valor real de tu base de datos
-  // Ejecuta: SELECT id_estado_reserva FROM shared.estadoreserva WHERE nombre = 'Confirmada'
-  const ESTADO_CONFIRMADA_UUID = "ef595dba-433f-48a9-92f4-3952ad15684c";
   const [formData, setFormData] = useState({
-    codigo: "",
     ruc_cliente: "",
     id_contenedor: "",
     id_ruta_maritima: "",
-    id_buque: "",
-    id_agente_reservas: "",
-    id_estado_reserva: "",
   });
 
   useEffect(() => {
@@ -83,7 +76,7 @@ export default function NuevaReserva() {
       const rutaSeleccionada = rutas.find(r => r.id_ruta_maritima === formData.id_ruta_maritima);
       
       // Generar código automático
-      const codigo = `RES-${Date.now()}`;
+      const codigo = `RES-${Date.now().toString().slice(0, 8)}`;
       
       // Preparar datos en el formato que espera el backend
       const reservaData = {
@@ -92,7 +85,7 @@ export default function NuevaReserva() {
         id_ruta: rutaSeleccionada?.id_ruta || "",
         id_buque: buques[0].id_buque, // Primer buque disponible
         id_agente_reservas: agentes[0].id_agente_reservas, // Primer agente disponible
-        id_estado_reserva: 'ef595dba-433f-48a9-92f4-3952ad15684c', // Estado "Confirmada"
+        id_estado_reserva: '6df420ae-11c7-4fd4-ba29-8b5edfba782c', // Estado "Confirmada"
         contenedores: [
           {
             id_contenedor: formData.id_contenedor,
@@ -215,11 +208,6 @@ export default function NuevaReserva() {
                 </span>
               </div>
             </div>
-
-            {/* Campos adicionales necesarios - simplificados */}
-            <input type="hidden" value={formData.id_buque} />
-            <input type="hidden" value={formData.id_agente_reservas} />
-            <input type="hidden" value={formData.id_estado_reserva} />
 
             {/* Botón */}
             <div className="pt-6">
