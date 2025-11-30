@@ -13,33 +13,34 @@ export class BuquesOperacionesService {
     private readonly operacionMaritimaRepository: Repository<OperacionMaritima>,
   ) {}
 
-  async findBuquesConOperaciones() {
+  async findBuquesConOperaciones(): Promise<any[]> {
     try {
-      // Obtener todas las operaciones marítimas con sus buques
-      const operaciones = await this.operacionMaritimaRepository.find({
-        relations: ['buque', 'operacion', 'operacion.estado_operacion'],
-        order: { porcentaje_trayecto: 'DESC' },
-      });
+      const query = `
+        SELECT DISTINCT ON (b.id_buque)
+          b.id_buque,
+          b.nombre,
+          b.matricula,
+          b.capacidad,
+          om.porcentaje_trayecto,
+          eo.nombre AS estado_operacion
+        FROM shared.buque b
+        JOIN shared.operacionmaritima om ON b.id_buque = om.id_buque
+        JOIN shared.operacion o ON om.id_operacion = o.id_operacion
+        JOIN shared.estadooperacion eo ON o.id_estado_operacion = eo.id_estado_operacion
+        WHERE eo.nombre IN ('En Curso', 'Programada')
+        ORDER BY b.id_buque, om.porcentaje_trayecto DESC
+      `;
 
-      // Agrupar por buque y tomar la operación más reciente/activa de cada uno
-      const buquesMap = new Map();
+      const result = await this.buqueRepository.query(query);
 
-      for (const operacion of operaciones) {
-        if (operacion.buque && !buquesMap.has(operacion.buque.id_buque)) {
-          // Solo estados activos: En Curso, Programada
-          const estadoNombre = operacion.operacion?.estado_operacion?.nombre;
-          if (estadoNombre === 'En Curso' || estadoNombre === 'Programada') {
-            buquesMap.set(operacion.buque.id_buque, {
-              id_buque: operacion.buque.id_buque,
-              nombre: operacion.buque.nombre,
-              porcentaje_trayecto: Number(operacion.porcentaje_trayecto) || 0,
-              estado_operacion: estadoNombre,
-            });
-          }
-        }
-      }
-
-      return Array.from(buquesMap.values());
+      return result.map((row: any) => ({
+        id_buque: row.id_buque,
+        nombre: row.nombre,
+        matricula: row.matricula,
+        capacidad: row.capacidad,
+        porcentaje_trayecto: Number(row.porcentaje_trayecto) || 0,
+        estado_operacion: row.estado_operacion,
+      }));
     } catch (error) {
       console.error('Error al obtener buques con operaciones:', error);
       return [];
