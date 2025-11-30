@@ -3,6 +3,8 @@
 import { createContext, useContext, useState, useEffect, ReactNode } from "react";
 import { useRouter } from "next/navigation";
 
+const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001";
+
 interface Usuario {
   id_usuario: string;
   correo_electronico: string;
@@ -66,7 +68,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const login = async (correo: string, contrasena: string) => {
     try {
-      const response = await fetch("http://localhost:3001/auth/login", {
+      const response = await fetch(`${API_URL}/auth/login`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -89,7 +91,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setToken(data.access_token);
 
       // Obtener perfil completo desde /auth/profile para asegurar estructura correcta
-      const profileResponse = await fetch("http://localhost:3001/auth/profile", {
+      const profileResponse = await fetch(`${API_URL}/auth/profile`, {
         headers: {
           Authorization: `Bearer ${data.access_token}`,
         },
@@ -130,7 +132,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     if (!tokenGuardado) return;
 
     try {
-      const response = await fetch("http://localhost:3001/auth/profile", {
+      const response = await fetch(`${API_URL}/auth/profile`, {
         headers: {
           Authorization: `Bearer ${tokenGuardado}`,
         },
