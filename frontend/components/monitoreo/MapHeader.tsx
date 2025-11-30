@@ -38,6 +38,7 @@ export function MapHeader() {
     if (pathname?.includes('/mapa')) return { icon: 'map', title: 'Monitoreo GPS en Tiempo Real', subtitle: 'Seguimiento de activos' };
     if (pathname?.includes('/contenedores')) return { icon: 'inventory_2', title: 'Gestión de Contenedores', subtitle: 'Monitoreo y control' };
     if (pathname?.includes('/operaciones')) return { icon: 'list_alt', title: 'Operaciones de Transporte', subtitle: 'Gestión de operaciones' };
+    if (pathname?.includes('/vm-demo')) return { icon: 'show_chart', title: 'VM Demo', subtitle: 'Demostración de VictoriaMetrics' };
     return { icon: 'dashboard', title: 'Sistema de Monitoreo', subtitle: 'Hapag-Lloyd' };
   };
 
@@ -52,6 +53,7 @@ export function MapHeader() {
     { href: '/monitoreo/incidencias', icon: 'report', label: 'Incidencias', match: '/incidencias' },
     { href: '/monitoreo/reportes', icon: 'description', label: 'Reportes', match: '/reportes' },
     { href: '/monitoreo/entregas', icon: 'local_shipping', label: 'Entregas', match: '/entregas' },
+    { href: '/monitoreo/vm-demo', icon: 'show_chart', label: 'VM Demo', match: '/vm-demo' },
   ];
 
   // Persistir posición de scroll horizontal del nav entre páginas

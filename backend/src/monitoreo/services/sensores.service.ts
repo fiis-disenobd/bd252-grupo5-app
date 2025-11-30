@@ -4,6 +4,7 @@ import { Repository, MoreThanOrEqual } from 'typeorm';
 import { Sensor } from '../entities/sensor.entity';
 import { Notificacion } from '../entities/notificacion.entity';
 import { LecturaSensor } from '../entities/lectura-sensor.entity';
+import { VictoriaMetricsService } from './victoriametrics.service';
 
 @Injectable()
 export class SensoresService {
@@ -14,6 +15,7 @@ export class SensoresService {
     private notificacionRepository: Repository<Notificacion>,
     @InjectRepository(LecturaSensor)
     private lecturaSensorRepository: Repository<LecturaSensor>,
+    private readonly victoriaMetricsService: VictoriaMetricsService,
   ) {}
 
   async findByContenedor(id_contenedor: string) {
@@ -165,6 +167,67 @@ export class SensoresService {
       console.error('Error en findOne sensor:', error.message);
       return null;
     }
+  }
+
+  async syncLecturasToVictoriaMetrics(
+    id_sensor: string,
+    limite: number = 100,
+  ): Promise<{ sensorId: string; contenedorId: string | null; lecturasSincronizadas: number }>
+  {
+    const sensor = await this.sensorRepository.findOne({
+      where: { id_sensor },
+      relations: ['tipo_sensor', 'contenedor'],
+    });
+
+    if (!sensor) {
+      return { sensorId: id_sensor, contenedorId: null, lecturasSincronizadas: 0 };
+    }
+
+    const lecturasDb: Array<{
+      fecha_hora: Date;
+      valor: string | number;
+    }> = await this.lecturaSensorRepository.query(
+      `
+        SELECT 
+          ls.fecha_hora,
+          ls.valor
+        FROM monitoreo.lecturasensor ls
+        WHERE ls.id_sensor = $1
+        ORDER BY ls.fecha_hora DESC
+        LIMIT $2
+      `,
+      [id_sensor, limite],
+    );
+
+    if (lecturasDb.length === 0) {
+      return {
+        sensorId: id_sensor,
+        contenedorId: sensor.contenedor?.id_contenedor ?? null,
+        lecturasSincronizadas: 0,
+      };
+    }
+
+    const tipo = sensor.tipo_sensor?.nombre || 'desconocido';
+    const tipoSanitizado = tipo.toLowerCase().replace(/\s+/g, '_');
+    const contenedorId = sensor.contenedor?.id_contenedor ?? 'sin_contenedor';
+
+    const lines = lecturasDb.map((l) => {
+      const tsMillis = new Date(l.fecha_hora).getTime();
+      const tsSeconds = Math.floor(tsMillis / 1000);
+      const valor = Number(l.valor);
+
+      // Formato texto estilo Prometheus para /api/v1/import/prometheus:
+      // metric_name{label="value",...} value timestamp
+      return `contenedor_sensor_valor{contenedor_id="${contenedorId}",sensor_id="${sensor.id_sensor}",tipo="${tipoSanitizado}"} ${valor} ${tsSeconds}`;
+    });
+
+    await this.victoriaMetricsService.writeLines(lines);
+
+    return {
+      sensorId: id_sensor,
+      contenedorId: sensor.contenedor?.id_contenedor ?? null,
+      lecturasSincronizadas: lecturasDb.length,
+    };
   }
 
   // Obtener detalle extendido de un sensor (con notificaciones y lecturas simuladas)

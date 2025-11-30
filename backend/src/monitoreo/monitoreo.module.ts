@@ -57,6 +57,7 @@ import { ReportesController } from './controllers/reportes.controller';
 import { EntregasController } from './controllers/entregas.controller';
 import { ImportadoresController } from './controllers/importadores.controller';
 import { DocumentacionController } from './controllers/documentacion.controller';
+import { VmDemoController } from './controllers/vm-demo.controller';
 
 // Services
 import { OperacionesService } from './services/operaciones.service';
@@ -68,6 +69,7 @@ import { ReportesService } from './services/reportes.service';
 import { EntregasService } from './services/entregas.service';
 import { ImportadoresService } from './services/importadores.service';
 import { DocumentacionService } from './services/documentacion.service';
+import { VictoriaMetricsService } from './services/victoriametrics.service';
 
 @Module({
   imports: [
@@ -128,6 +130,7 @@ import { DocumentacionService } from './services/documentacion.service';
     EntregasController,
     ImportadoresController,
     DocumentacionController,
+    VmDemoController,
   ],
   providers: [
     OperacionesService,
@@ -139,6 +142,7 @@ import { DocumentacionService } from './services/documentacion.service';
     EntregasService,
     ImportadoresService,
     DocumentacionService,
+    VictoriaMetricsService,
   ],
   exports: [
     OperacionesService,
