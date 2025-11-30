@@ -6,8 +6,10 @@ import {
   operacionesIncidenciasAPI,
   type OperacionConIncidencias,
 } from "@/lib/api/operaciones-incidencias";
+import { useAuth } from "@/context/AuthContext";
 
 export default function GestionIncidenciasOperacionesPage() {
+  const { usuario } = useAuth();
   const [operaciones, setOperaciones] = useState<OperacionConIncidencias[]>([]);
   const [todasOperaciones, setTodasOperaciones] = useState<OperacionConIncidencias[]>([]);
   const [loading, setLoading] = useState(true);
@@ -129,6 +131,7 @@ export default function GestionIncidenciasOperacionesPage() {
             prioridad,
             fecha: fechaCreacion,
             hora: horaCreacion,
+            idUsuario: usuario?.id_usuario,
           }),
         }
       );

@@ -10,6 +10,8 @@ import { OperacionEmpleado } from './entities/operacion-empleado.entity';
 import { OperacionContenedor } from './entities/operacion-contenedor.entity';
 import { BuqueTripulante } from './entities/buque-tripulante.entity';
 import { OperacionRutaMaritima } from './entities/operacion-ruta-maritima.entity';
+import { Hallazgo } from './entities/hallazgo.entity';
+import { Inspeccion } from './entities/inspeccion.entity';
 
 // Entidades compartidas usadas por los servicios
 import { EstadoOperacion } from '../shared/entities/estado-operacion.entity';
@@ -36,6 +38,10 @@ import { Incidencia } from '../monitoreo/entities/incidencia.entity';
 import { EstadoIncidencia } from '../monitoreo/entities/estado-incidencia.entity';
 import { Usuario } from '../shared/entities/usuario.entity';
 import { RolUsuario } from '../shared/entities/rol-usuario.entity';
+import { TipoHallazgo } from '../shared/entities/tipo-hallazgo.entity';
+import { TipoInspeccion } from '../shared/entities/tipo-inspeccion.entity';
+import { EstadoInspeccion } from '../shared/entities/estado-inspeccion.entity';
+import { Prioridad } from '../shared/entities/prioridad.entity';
 
 // Modules
 import { AuthModule } from '../auth/auth.module';
@@ -55,6 +61,7 @@ import { TipoIncidenciaController } from './controllers/tipo-incidencia.controll
 import { IncidenciasController } from './controllers/incidencias.controller';
 import { AuthMaritimoController } from './controllers/auth-maritimo.controller';
 import { OperacionesIncidenciasController } from './controllers/operaciones-incidencias.controller';
+import { HallazgosController } from './controllers/hallazgos.controller';
 
 // Services de gestión marítima
 import { EstadosService } from './services/estados.service';
@@ -71,6 +78,7 @@ import { TipoIncidenciaService } from './services/tipo-incidencia.service';
 import { IncidenciasService } from './services/incidencias.service';
 import { AuthMaritimoService } from './services/auth-maritimo.service';
 import { OperacionesIncidenciasService } from './services/operaciones-incidencias.service';
+import { HallazgosService } from './services/hallazgos.service';
 
 @Module({
   imports: [
@@ -85,6 +93,8 @@ import { OperacionesIncidenciasService } from './services/operaciones-incidencia
       OperacionContenedor,
       BuqueTripulante,
       OperacionRutaMaritima,
+      Hallazgo,
+      Inspeccion,
       // Entidades compartidas necesarias para los servicios
       EstadoOperacion,
       EstadoEmbarcacion,
@@ -108,6 +118,10 @@ import { OperacionesIncidenciasService } from './services/operaciones-incidencia
       EstadoIncidencia,
       Usuario,
       RolUsuario,
+      TipoHallazgo,
+      TipoInspeccion,
+      EstadoInspeccion,
+      Prioridad,
     ]),
   ],
   controllers: [
@@ -126,6 +140,7 @@ import { OperacionesIncidenciasService } from './services/operaciones-incidencia
     IncidenciasController,
     AuthMaritimoController,
     OperacionesIncidenciasController,
+    HallazgosController,
   ],
   providers: [
     EstadosService,
@@ -143,6 +158,7 @@ import { OperacionesIncidenciasService } from './services/operaciones-incidencia
     IncidenciasService,
     AuthMaritimoService,
     OperacionesIncidenciasService,
+    HallazgosService,
   ],
 })
 export class GestionMaritimaModule { }

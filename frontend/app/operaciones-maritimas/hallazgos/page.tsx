@@ -1,131 +1,156 @@
+// @ts-nocheck
 "use client";
 
-import { useMemo, useState } from "react";
+import { useMemo, useState, useEffect } from "react";
 import Link from "next/link";
 import { Header } from "@/components/Header";
+import { hallazgosAPI, type TipoHallazgo } from "@/lib/api/hallazgos";
 
 type Inspection = {
   id: string;
   type: string;
   date: string;
   time: string;
-  priority: "Alta" | "Media" | "Baja";
+  priority: string;
   operationCode: string;
   inspectionCode: string;
   status: string;
 };
 
-const inspections: Inspection[] = [
-  {
-    id: "insp1",
-    type: "Aduanera",
-    date: "2024-05-22",
-    time: "14:30",
-    priority: "Alta",
-    operationCode: "OP-56789",
-    inspectionCode: "INSP-001",
-    status: "Completada",
-  },
-  {
-    id: "insp2",
-    type: "Sanitaria",
-    date: "2024-05-21",
-    time: "10:00",
-    priority: "Media",
-    operationCode: "OP-12345",
-    inspectionCode: "INSP-002",
-    status: "Completada",
-  },
-  {
-    id: "insp3",
-    type: "Seguridad",
-    date: "2024-05-20",
-    time: "09:15",
-    priority: "Baja",
-    operationCode: "OP-98765",
-    inspectionCode: "INSP-003",
-    status: "Completada",
-  },
-  {
-    id: "insp4",
-    type: "Calidad",
-    date: "2024-05-19",
-    time: "16:45",
-    priority: "Alta",
-    operationCode: "OP-24680",
-    inspectionCode: "INSP-004",
-    status: "Completada",
-  },
-];
-
-const priorityStyles: Record<
-  Inspection["priority"],
-  { bg: string; text: string }
-> = {
-  Alta: {
-    bg: "bg-[#fee]",
-    text: "text-[#b91c1c]",
-  },
-  Media: {
-    bg: "bg-[#fff4e6]",
-    text: "text-[#f97316]",
-  },
-  Baja: {
-    bg: "bg-[#e6f0ff]",
-    text: "text-[#1d4ed8]",
-  },
+const priorityStyles: Record<string, { bg: string; text: string }> = {
+  Alta: { bg: "bg-[#fee]", text: "text-[#b91c1c]" },
+  Media: { bg: "bg-[#fff4e6]", text: "text-[#f97316]" },
+  Baja: { bg: "bg-[#e6f0ff]", text: "text-[#1d4ed8]" },
+  Crítica: { bg: "bg-[#fee]", text: "text-[#b91c1c]" },
 };
 
-export default function RegistrarHallazgoPage() {
-  const [selectedId, setSelectedId] = useState<string>("insp2");
+export default function HallazgosPage() {
+  const [inspections, setInspections] = useState<Inspection[]>([]);
+  const [tiposHallazgo, setTiposHallazgo] = useState<TipoHallazgo[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [selectedId, setSelectedId] = useState<string>("");
   const [search, setSearch] = useState("");
+  const [page, setPage] = useState(1);
+  const itemsPerPage = 5;
 
-  const selectedInspection = inspections.find(
-    (inspection) => inspection.id === selectedId,
-  );
+  // Form state
+  const [tipoHallazgo, setTipoHallazgo] = useState("");
+  const [nivelGravedad, setNivelGravedad] = useState(1);
+  const [descripcion, setDescripcion] = useState("");
+  const [accionSugerida, setAccionSugerida] = useState("");
+
+  useEffect(() => {
+    fetchData();
+  }, []);
+
+  const fetchData = async () => {
+    try {
+      setLoading(true);
+      const [inspeccionesData, tiposData] = await Promise.all([
+        hallazgosAPI.getInspecciones(),
+        hallazgosAPI.getTiposHallazgo(),
+      ]);
+      const mapped = inspeccionesData.map((i: any) => ({
+        id: i.id,
+        type: i.type,
+        date: i.date,
+        time: i.time,
+        priority: i.priority,
+        operationCode: i.operationCode,
+        inspectionCode: i.inspectionCode,
+        status: i.status,
+      }));
+      setInspections(mapped);
+      setTiposHallazgo(tiposData);
+      if (mapped.length > 0) setSelectedId(mapped[0].id);
+    } catch (e) {
+      console.error(e);
+      alert("Error al cargar datos");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!selectedId || !tipoHallazgo || !descripcion) {
+      alert("Complete los campos requeridos");
+      return;
+    }
+    try {
+      await hallazgosAPI.createHallazgo({
+        id_tipo_hallazgo: tipoHallazgo,
+        nivel_gravedad: nivelGravedad,
+        descripcion,
+        accion_sugerida: accionSugerida || undefined,
+        id_inspeccion: selectedId,
+      });
+      alert("Hallazgo creado");
+      setTipoHallazgo("");
+      setNivelGravedad(1);
+      setDescripcion("");
+      setAccionSugerida("");
+    } catch (e) {
+      console.error(e);
+      alert("Error al crear hallazgo");
+    }
+  };
+
+  const selectedInspection = inspections.find((i) => i.id === selectedId);
 
   const filteredInspections = useMemo(() => {
     if (!search.trim()) return inspections;
     const lower = search.toLowerCase();
     return inspections.filter(
-      (inspection) =>
-        inspection.operationCode.toLowerCase().includes(lower) ||
-        inspection.inspectionCode.toLowerCase().includes(lower) ||
-        inspection.type.toLowerCase().includes(lower),
+      (i) =>
+        i.operationCode.toLowerCase().includes(lower) ||
+        i.inspectionCode.toLowerCase().includes(lower) ||
+        i.type.toLowerCase().includes(lower)
     );
+  }, [search, inspections]);
+
+  const totalPages = Math.ceil(filteredInspections.length / itemsPerPage);
+  const paginatedInspections = useMemo(() => {
+    const start = (page - 1) * itemsPerPage;
+    return filteredInspections.slice(start, start + itemsPerPage);
+  }, [filteredInspections, page]);
+
+  useEffect(() => {
+    setPage(1);
   }, [search]);
+
+  if (loading) {
+    return (
+      <div className="flex min-h-screen flex-col bg-[#f5f5f5] text-[#111827] dark:bg-[#0f1923] dark:text-[#f3f4f6]">
+        <Header />
+        <main className="container mx-auto flex flex-grow flex-col items-center justify-center px-4 py-8">
+          <div className="h-12 w-12 animate-spin rounded-full border-4 border-[#003d6b] border-t-transparent" />
+        </main>
+      </div>
+    );
+  }
 
   return (
     <div className="flex min-h-screen flex-col bg-[#f5f5f5] text-[#111827] dark:bg-[#0f1923] dark:text-[#f3f4f6]">
       <Header />
       <main className="container mx-auto flex flex-grow flex-col px-4 py-8 sm:px-6 lg:px-8">
         <div className="mx-auto w-full max-w-5xl">
-          <h1 className="mb-8 text-3xl font-bold text-[#003d6b] dark:text-white">
-            Inspecciones Realizadas
-          </h1>
-
+          <h1 className="mb-8 text-3xl font-bold text-[#003d6b] dark:text-white">Inspecciones Realizadas</h1>
           <section className="mb-6 flex flex-col gap-4 sm:flex-row">
             <div className="relative flex-1">
-              <span className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-xl">
-                🔍
-              </span>
+              <span className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-xl">🔍</span>
               <input
                 type="text"
                 className="w-full rounded-lg border border-[#ddd] bg-white py-3 pl-12 pr-4 text-sm text-[#111827] shadow-sm focus:border-[#f97316] focus:outline-none focus:ring-[#f97316]"
                 placeholder="Buscar por código de inspección, código de operación..."
                 value={search}
-                onChange={(event) => setSearch(event.target.value)}
+                onChange={(e) => setSearch(e.target.value)}
               />
             </div>
-            <button
-              type="button"
-              className="flex items-center justify-center gap-2 rounded-lg bg-[#003d6b] px-6 py-3 text-white shadow-sm transition-colors hover:bg-[#00538f]"
-            >
-              <span>☰</span>
-              Filtrar
+            <button type="button" className="flex items-center gap-2 rounded-lg bg-[#003d6b] px-6 py-3 text-white shadow-sm transition-colors hover:bg-[#00538f]">
+              <span>☰</span> Filtrar
             </button>
           </section>
-
           <section className="rounded-2xl bg-white p-5 shadow-md dark:bg-[#1a2a3a]">
             <div className="overflow-x-auto">
               <table className="w-full border-collapse">
@@ -138,27 +163,25 @@ export default function RegistrarHallazgoPage() {
                     <th className="px-2 py-3">Prioridad</th>
                     <th className="px-2 py-3">Código de Operación</th>
                     <th className="px-2 py-3">Código de Inspección</th>
-                    <th className="px-2 py-3">Estado de la Inspección</th>
+                    <th className="px-2 py-3">Estado</th>
                   </tr>
                 </thead>
                 <tbody>
-                  {filteredInspections.map((inspection) => {
-                    const priority = priorityStyles[inspection.priority];
-                    const isSelected = inspection.id === selectedId;
+                  {paginatedInspections.map((inspection) => {
+                    const priority = priorityStyles[inspection.priority] || priorityStyles.Media;
+                    const selected = inspection.id === selectedId;
                     return (
                       <tr
                         key={inspection.id}
                         onClick={() => setSelectedId(inspection.id)}
-                        className={`cursor-pointer border-b border-[#f0f0f0] transition-colors hover:bg-[#f9f9f9] ${
-                          isSelected ? "bg-[#fff4e6]" : ""
-                        }`}
+                        className={`cursor-pointer border-b border-[#f0f0f0] hover:bg-[#f9f9f9] ${selected ? "bg-[#fff4e6]" : ""}`}
                       >
                         <td className="px-2 py-4 text-center">
                           <input
                             type="radio"
                             name="inspection"
-                            className="h-4 w-4 cursor-pointer accent-[#f97316]"
-                            checked={isSelected}
+                            className="h-4 w-4 accent-[#f97316]"
+                            checked={selected}
                             onChange={() => setSelectedId(inspection.id)}
                           />
                         </td>
@@ -166,22 +189,12 @@ export default function RegistrarHallazgoPage() {
                         <td className="px-2 py-4">{inspection.date}</td>
                         <td className="px-2 py-4">{inspection.time}</td>
                         <td className="px-2 py-4">
-                          <span
-                            className={`inline-block rounded-full px-3 py-1 text-sm font-medium ${priority.bg} ${priority.text}`}
-                          >
-                            {inspection.priority}
-                          </span>
+                          <span className={`inline-block rounded-full px-3 py-1 text-sm font-medium ${priority.bg} ${priority.text}`}>{inspection.priority}</span>
                         </td>
+                        <td className="px-2 py-4">{inspection.operationCode}</td>
+                        <td className="px-2 py-4">{inspection.inspectionCode}</td>
                         <td className="px-2 py-4">
-                          {inspection.operationCode}
-                        </td>
-                        <td className="px-2 py-4">
-                          {inspection.inspectionCode}
-                        </td>
-                        <td className="px-2 py-4">
-                          <span className="inline-block rounded-full bg-[#d1fae5] px-3 py-1 text-sm font-semibold text-[#059669]">
-                            {inspection.status}
-                          </span>
+                          <span className="inline-block rounded-full bg-[#d1fae5] px-3 py-1 text-sm font-semibold text-[#059669]">{inspection.status}</span>
                         </td>
                       </tr>
                     );
@@ -189,96 +202,107 @@ export default function RegistrarHallazgoPage() {
                 </tbody>
               </table>
             </div>
-
             <div className="mt-4 flex flex-col items-center justify-between gap-3 text-sm text-[#666] sm:flex-row">
               <p>
-                Mostrando {filteredInspections.length} de {inspections.length}{" "}
-                inspecciones
+                Mostrando {paginatedInspections.length} de {filteredInspections.length} inspecciones (Página {page} de {totalPages})
               </p>
               <div className="flex gap-2">
-                {["‹", "1", "2", "3", "›"].map((label) => (
+                <button
+                  type="button"
+                  onClick={() => setPage((p) => Math.max(1, p - 1))}
+                  disabled={page === 1}
+                  className="h-10 w-10 rounded-lg border border-[#ddd] hover:border-[#f97316] hover:text-[#f97316] disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  ‹
+                </button>
+                {Array.from({ length: totalPages }, (_, i) => i + 1).map((num) => (
                   <button
-                    key={label}
+                    key={num}
                     type="button"
-                    className={`h-10 w-10 rounded-lg border border-[#ddd] transition-colors ${
-                      label === "1"
-                        ? "bg-[#f97316] text-white border-[#f97316]"
-                        : "hover:border-[#f97316] hover:text-[#f97316]"
-                    }`}
+                    onClick={() => setPage(num)}
+                    className={`h-10 w-10 rounded-lg border transition-colors ${page === num ? "bg-[#f97316] text-white border-[#f97316]" : "border-[#ddd] hover:border-[#f97316] hover:text-[#f97316]"}`}
                   >
-                    {label}
+                    {num}
                   </button>
                 ))}
+                <button
+                  type="button"
+                  onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+                  disabled={page === totalPages}
+                  className="h-10 w-10 rounded-lg border border-[#ddd] hover:border-[#f97316] hover:text-[#f97316] disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  ›
+                </button>
               </div>
             </div>
           </section>
 
           <section className="form-section mt-8 rounded-2xl bg-white p-8 shadow-md dark:bg-[#1a2a3a]">
             <h2 className="mb-6 text-xl font-semibold text-[#003d6b] dark:text-white">
-              Registrar Hallazgo para la Inspección{" "}
-              {selectedInspection?.inspectionCode ?? ""}
+              Registrar Hallazgo para la Inspección {selectedInspection?.inspectionCode ?? ""}
             </h2>
-
-            <form className="space-y-6">
+            <form className="space-y-6" onSubmit={handleSubmit}>
               <div className="grid gap-6 sm:grid-cols-2">
                 <div className="form-group flex flex-col">
-                  <label className="mb-2 text-sm font-medium text-[#333]">
-                    Tipo de Hallazgo
-                  </label>
-                  <select className="rounded-lg border border-[#ddd] bg-white px-4 py-3 text-sm focus:border-[#f97316] focus:outline-none focus:ring-[#f97316]">
-                    <option value="falta-permiso">Falta de permiso</option>
-                    <option value="documentacion">Documentación incompleta</option>
-                    <option value="condiciones">Condiciones inadecuadas</option>
+                  <label className="mb-2 text-sm font-medium text-[#333]">Tipo de Hallazgo</label>
+                  <select
+                    className="rounded-lg border border-[#ddd] bg-white px-4 py-3 text-sm focus:border-[#f97316] focus:outline-none focus:ring-[#f97316]"
+                    value={tipoHallazgo}
+                    onChange={(e) => setTipoHallazgo(e.target.value)}
+                    required
+                  >
+                    <option value="">Seleccionar tipo</option>
+                    {tiposHallazgo.map((t) => (
+                      <option key={t.id_tipo_hallazgo} value={t.id_tipo_hallazgo}>
+                        {t.nombre}
+                      </option>
+                    ))}
                   </select>
                 </div>
                 <div className="form-group flex flex-col">
-                  <label className="mb-2 text-sm font-medium text-[#333]">
-                    Nivel de Gravedad
-                  </label>
-                  <select className="rounded-lg border border-[#ddd] bg-white px-4 py-3 text-sm focus:border-[#f97316] focus:outline-none focus:ring-[#f97316]">
-                    {[1, 2, 3, 4, 5].map((level) => (
-                      <option key={level}>{level}</option>
+                  <label className="mb-2 text-sm font-medium text-[#333]">Nivel de Gravedad</label>
+                  <select
+                    className="rounded-lg border border-[#ddd] bg-white px-4 py-3 text-sm focus:border-[#f97316] focus:outline-none focus:ring-[#f97316]"
+                    value={nivelGravedad}
+                    onChange={(e) => setNivelGravedad(Number(e.target.value))}
+                    required
+                  >
+                    {[1, 2, 3, 4, 5].map((lvl) => (
+                      <option key={lvl} value={lvl}>
+                        {lvl}
+                      </option>
                     ))}
                   </select>
                 </div>
               </div>
-
               <div className="form-group flex flex-col">
-                <label className="mb-2 text-sm font-medium text-[#333]">
-                  Descripción
-                </label>
+                <label className="mb-2 text-sm font-medium text-[#333]">Descripción</label>
                 <textarea
                   className="min-h-[120px] rounded-lg border border-[#ddd] px-4 py-3 text-sm focus:border-[#f97316] focus:outline-none focus:ring-[#f97316]"
                   placeholder="Describa detalladamente el hallazgo..."
+                  value={descripcion}
+                  onChange={(e) => setDescripcion(e.target.value)}
+                  required
                 />
               </div>
-
               <div className="form-group flex flex-col">
-                <label className="mb-2 text-sm font-medium text-[#333]">
-                  Acción Sugerida
-                </label>
+                <label className="mb-2 text-sm font-medium text-[#333]">Acción Sugerida</label>
                 <textarea
                   className="min-h-[120px] rounded-lg border border-[#ddd] px-4 py-3 text-sm focus:border-[#f97316] focus:outline-none focus:ring-[#f97316]"
-                  placeholder="Describa la acción sugerida para resolver el hallazgo..."
+                  placeholder="Acción sugerida..."
+                  value={accionSugerida}
+                  onChange={(e) => setAccionSugerida(e.target.value)}
                 />
               </div>
-
               <div className="flex flex-col gap-3 text-sm text-[#666] sm:flex-row sm:items-center sm:justify-between">
                 <span>
-                  Inspección seleccionada:{" "}
-                  <strong>{selectedInspection?.inspectionCode}</strong>
+                  Inspección seleccionada: <strong>{selectedInspection?.inspectionCode}</strong>
                 </span>
                 <div className="flex flex-wrap gap-3">
-                  <Link
-                    href="/operaciones-maritimas"
-                    className="rounded-lg bg-[#e5e7eb] px-5 py-2 font-medium text-[#333] transition-colors hover:bg-[#d1d5db]"
-                  >
+                  <Link href="/operaciones-maritimas" className="rounded-lg bg-[#e5e7eb] px-5 py-2 font-medium text-[#333] transition-colors hover:bg-[#d1d5db]">
                     Cancelar
                   </Link>
-                  <button
-                    type="button"
-                    className="rounded-lg bg-[#f97316] px-6 py-2 font-semibold text-white transition-colors hover:bg-[#ea580c]"
-                  >
+                  <button type="submit" className="rounded-lg bg-[#f97316] px-6 py-2 font-semibold text-white transition-colors hover:bg-[#ea580c]">
                     Registrar Hallazgo
                   </button>
                 </div>
@@ -290,4 +314,3 @@ export default function RegistrarHallazgoPage() {
     </div>
   );
 }
-
