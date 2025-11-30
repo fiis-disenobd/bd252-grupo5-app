@@ -10,15 +10,22 @@ export class EstadosReservaService {
     private readonly estadoReservaRepository: Repository<EstadoReserva>,
   ) {}
 
-  async findAll(): Promise<EstadoReserva[]> {
-    return await this.estadoReservaRepository.find({
-      order: { nombre: 'ASC' },
-    });
+  async findAll(): Promise<any[]> {
+    const query = `
+      SELECT id_estado_reserva, nombre
+      FROM shared.estadoreserva
+      ORDER BY nombre ASC
+    `;
+    return await this.estadoReservaRepository.query(query);
   }
 
-  async findByNombre(nombre: string): Promise<EstadoReserva | null> {
-    return await this.estadoReservaRepository.findOne({
-      where: { nombre },
-    });
+  async findByNombre(nombre: string): Promise<any | null> {
+    const query = `
+      SELECT id_estado_reserva, nombre
+      FROM shared.estadoreserva
+      WHERE nombre = $1
+    `;
+    const result = await this.estadoReservaRepository.query(query, [nombre]);
+    return result.length > 0 ? result[0] : null;
   }
 }

@@ -64,28 +64,36 @@ export default function NuevaReserva() {
       // Validar que tengamos los datos necesarios
       if (buques.length === 0) {
         alert("No hay buques disponibles");
+        setLoading(false);
         return;
       }
 
       if (agentes.length === 0) {
         alert("No hay agentes de reserva disponibles");
+        setLoading(false);
         return;
       }
 
       // Encontrar la ruta seleccionada para obtener el id_ruta
       const rutaSeleccionada = rutas.find(r => r.id_ruta_maritima === formData.id_ruta_maritima);
       
-      // Generar código automático
-      const codigo = `RES-${Date.now().toString().slice(0, 8)}`;
+      if (!rutaSeleccionada || !rutaSeleccionada.id_ruta) {
+        alert("Por favor selecciona una ruta válida");
+        setLoading(false);
+        return;
+      }
+
+      // Generar código automático único
+      const codigo = `RES-${Date.now().toString().slice(-8)}`;
       
       // Preparar datos en el formato que espera el backend
       const reservaData = {
         codigo: codigo,
         ruc_cliente: formData.ruc_cliente,
-        id_ruta: rutaSeleccionada?.id_ruta || "",
-        id_buque: buques[0].id_buque, // Primer buque disponible
-        id_agente_reservas: agentes[0].id_agente_reservas, // Primer agente disponible
-        id_estado_reserva: '6df420ae-11c7-4fd4-ba29-8b5edfba782c', // Estado "Confirmada"
+        id_ruta: rutaSeleccionada.id_ruta,
+        id_buque: buques[0].id_buque,
+        id_agente_reservas: agentes[0].id_agente_reservas,
+        id_estado_reserva: '6df420ae-11c7-4fd4-ba29-8b5edfba782c',
         contenedores: [
           {
             id_contenedor: formData.id_contenedor,
@@ -93,6 +101,8 @@ export default function NuevaReserva() {
           }
         ]
       };
+
+      console.log('Enviando reserva:', reservaData);
 
       const res = await fetch("http://localhost:3001/gestion-reserva/reservas", {
         method: "POST",
@@ -105,6 +115,7 @@ export default function NuevaReserva() {
         router.push("/gestion-reservas/reservas");
       } else {
         const error = await res.json();
+        console.error('Error response:', error);
         alert("Error al crear reserva: " + (error.message || "Error desconocido"));
       }
     } catch (error) {
