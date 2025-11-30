@@ -1,4 +1,5 @@
-const API_URL = 'http://localhost:3001/gestion-maritima/hallazgos';
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
+const API_URL = `${API_BASE_URL}/gestion-maritima/hallazgos`;
 
 export interface Inspeccion {
     id: string;
