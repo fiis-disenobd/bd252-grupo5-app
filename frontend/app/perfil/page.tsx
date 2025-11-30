@@ -5,6 +5,8 @@ import { useRouter } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
 import { MapHeader } from "@/components/monitoreo/MapHeader";
 
+const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001"; 
+
 export default function PerfilPage() {
   const { usuario, isAuthenticated, loading, reloadUser } = useAuth();
   const router = useRouter();
@@ -40,7 +42,7 @@ export default function PerfilPage() {
   const handleSaveProfile = async () => {
     try {
       const token = localStorage.getItem("token");
-      const response = await fetch("http://localhost:3001/auth/profile", {
+      const response = await fetch(`${API_URL}/auth/profile`, {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",
@@ -78,7 +80,7 @@ export default function PerfilPage() {
 
     try {
       const token = localStorage.getItem("token");
-      const response = await fetch("http://localhost:3001/auth/change-password", {
+      const response = await fetch(`${API_URL}/auth/change-password`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

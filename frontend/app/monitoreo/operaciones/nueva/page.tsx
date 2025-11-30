@@ -5,6 +5,8 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { MapHeader } from "@/components/monitoreo/MapHeader";
 
+const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001"; 
+
 interface FormData {
   codigo: string;
   fecha_inicio: string;
@@ -44,7 +46,7 @@ export default function NuevaOperacionPage() {
     const cargarDatos = async () => {
       try {
         // Estados
-        const resEstados = await fetch("http://localhost:3001/monitoreo/estados");
+        const resEstados = await fetch(`${API_URL}/monitoreo/estados`);
         if (resEstados.ok) {
           const dataEstados = await resEstados.json();
           setEstados(Array.isArray(dataEstados) ? dataEstados : []);
@@ -56,28 +58,28 @@ export default function NuevaOperacionPage() {
         }
 
         // Operadores
-        const resOperadores = await fetch("http://localhost:3001/monitoreo/operadores");
+        const resOperadores = await fetch(`${API_URL}/monitoreo/operadores`);
         if (resOperadores.ok) {
           const dataOperadores = await resOperadores.json();
           setOperadores(Array.isArray(dataOperadores) ? dataOperadores : []);
         }
 
         // Vehículos
-        const resVehiculos = await fetch("http://localhost:3001/monitoreo/vehiculos");
+        const resVehiculos = await fetch(`${API_URL}/monitoreo/vehiculos`);
         if (resVehiculos.ok) {
           const dataVehiculos = await resVehiculos.json();
           setVehiculos(Array.isArray(dataVehiculos) ? dataVehiculos : []);
         }
 
         // Buques
-        const resBuques = await fetch("http://localhost:3001/monitoreo/buques");
+        const resBuques = await fetch(`${API_URL}/monitoreo/buques`);
         if (resBuques.ok) {
           const dataBuques = await resBuques.json();
           setBuques(Array.isArray(dataBuques) ? dataBuques : []);
         }
 
         // Contenedores disponibles (por ahora filtramos por estado Disponible desde el backend)
-        const resContenedores = await fetch("http://localhost:3001/monitoreo/contenedores?estado=Disponible");
+        const resContenedores = await fetch(`${API_URL}/monitoreo/contenedores?estado=Disponible`);
         if (resContenedores.ok) {
           const dataContenedores = await resContenedores.json();
           setContenedoresDisponibles(Array.isArray(dataContenedores) ? dataContenedores : []);
@@ -131,7 +133,7 @@ export default function NuevaOperacionPage() {
         payload.buque_id = formData.buque_id;
       }
 
-      const response = await fetch("http://localhost:3001/monitoreo/operaciones", {
+      const response = await fetch(`${API_URL}/monitoreo/operaciones`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),

@@ -5,6 +5,8 @@ import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import { MapHeader } from "@/components/monitoreo/MapHeader";
 
+const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001";
+
 interface Entrega {
   id_entrega: string;
   codigo: string;
@@ -39,13 +41,13 @@ export default function EditarEntregaPage() {
 
   useEffect(() => {
     // Cargar estados
-    fetch("http://localhost:3001/monitoreo/entregas/estados")
+    fetch(`${API_URL}/monitoreo/entregas/estados`)
       .then((res) => res.json())
       .then((data) => setEstados(data))
       .catch((err) => console.error("Error cargando estados:", err));
 
     // Cargar entrega
-    fetch(`http://localhost:3001/monitoreo/entregas/${params.id}`)
+    fetch(`${API_URL}/monitoreo/entregas/${params.id}`)
       .then((res) => {
         if (!res.ok) throw new Error("Entrega no encontrada");
         return res.json();
@@ -71,7 +73,7 @@ export default function EditarEntregaPage() {
     e.preventDefault();
     setSaving(true);
 
-    fetch(`http://localhost:3001/monitoreo/entregas/${params.id}`, {
+    fetch(`${API_URL}/monitoreo/entregas/${params.id}`, {
       method: "PUT",
       headers: {
         "Content-Type": "application/json",

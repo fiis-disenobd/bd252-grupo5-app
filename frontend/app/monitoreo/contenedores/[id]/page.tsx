@@ -6,6 +6,8 @@ import Link from "next/link";
 import { MapHeader } from "@/components/monitoreo/MapHeader";
 import { SensorCard } from "@/components/monitoreo/SensorCard";
 
+const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001";
+
 interface Contenedor {
   id_contenedor: string;
   codigo: string;
@@ -71,7 +73,7 @@ export default function ContenedorDetallePage() {
   const [mensajeReporte, setMensajeReporte] = useState<string | null>(null);
 
   useEffect(() => {
-    fetch(`http://localhost:3001/monitoreo/contenedores/${params.id}/detalle`)
+    fetch(`${API_URL}/monitoreo/contenedores/${params.id}/detalle`)
       .then(async (res) => {
         if (!res.ok) {
           throw new Error(`Error al cargar contenedor: ${res.status}`);
@@ -95,7 +97,7 @@ export default function ContenedorDetallePage() {
     setErrorNotificaciones(null);
 
     fetch(
-      `http://localhost:3001/monitoreo/sensores/notificaciones?contenedor=${contenedor.id_contenedor}&limite=100`
+      `${API_URL}/monitoreo/sensores/notificaciones?contenedor=${contenedor.id_contenedor}&limite=100`
     )
       .then((res) => res.json())
       .then((data) => {
@@ -133,7 +135,7 @@ export default function ContenedorDetallePage() {
 
     try {
       const resp = await fetch(
-        `http://localhost:3001/monitoreo/reportes/contenedor/${contenedor.id_contenedor}`,
+        `${API_URL}/monitoreo/reportes/contenedor/${contenedor.id_contenedor}`,
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },

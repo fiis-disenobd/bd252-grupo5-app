@@ -4,6 +4,8 @@ import { useState, useEffect } from "react";
 import Link from "next/link";
 import { MapHeader } from "@/components/monitoreo/MapHeader";
 
+const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001";
+
 interface Entrega {
   id_entrega: string;
   codigo: string;
@@ -62,13 +64,13 @@ export default function EntregasPage() {
 
   useEffect(() => {
     // Cargar estadísticas
-    fetch("http://localhost:3001/monitoreo/entregas/estadisticas")
+    fetch(`${API_URL}/monitoreo/entregas/estadisticas`)
       .then((res) => res.json())
       .then((data) => setEstadisticas(data))
       .catch((err) => console.error("Error cargando estadísticas:", err));
 
     // Cargar estados de entrega
-    fetch("http://localhost:3001/monitoreo/entregas/estados")
+    fetch(`${API_URL}/monitoreo/entregas/estados`)
       .then((res) => res.json())
       .then((data) => {
         if (Array.isArray(data)) {
@@ -94,7 +96,7 @@ export default function EntregasPage() {
       ...(filtros.hasta && { hasta: filtros.hasta }),
     });
 
-    fetch(`http://localhost:3001/monitoreo/entregas?${params}`)
+    fetch(`${API_URL}/monitoreo/entregas?${params}`)
       .then((res) => res.json())
       .then((data) => {
         setData(data);
@@ -114,7 +116,7 @@ export default function EntregasPage() {
   const confirmarEliminar = () => {
     if (!entregaAEliminar) return;
 
-    fetch(`http://localhost:3001/monitoreo/entregas/${entregaAEliminar}`, {
+    fetch(`${API_URL}/monitoreo/entregas/${entregaAEliminar}`, {
       method: "DELETE",
     })
       .then(() => {

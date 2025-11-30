@@ -4,6 +4,8 @@ import { useState, useEffect } from "react";
 import Link from "next/link";
 import { MapHeader } from "@/components/monitoreo/MapHeader";
 
+const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001";
+
 interface Incidencia {
   id_incidencia: string;
   codigo: string;
@@ -86,7 +88,7 @@ export default function IncidenciasPage() {
     if (estadoFiltro) params.append("estado", estadoFiltro);
     if (codigoFiltro) params.append("codigo", codigoFiltro);
 
-    fetch(`http://localhost:3001/monitoreo/incidencias?${params}`)
+    fetch(`${API_URL}/monitoreo/incidencias?${params}`)
       .then((res) => res.json())
       .then((data) => {
         setData(data);
@@ -100,12 +102,12 @@ export default function IncidenciasPage() {
 
   useEffect(() => {
     // Cargar datos auxiliares
-    fetch("http://localhost:3001/monitoreo/incidencias/estadisticas")
+    fetch(`${API_URL}/monitoreo/incidencias/estadisticas`)
       .then((res) => res.json())
       .then((data) => setEstadisticas(data))
       .catch((err) => console.error("Error cargando estadísticas:", err));
 
-    fetch("http://localhost:3001/monitoreo/incidencias/tipos")
+    fetch(`${API_URL}/monitoreo/incidencias/tipos`)
       .then((res) => res.json())
       .then((data) => {
         if (Array.isArray(data)) {
@@ -120,7 +122,7 @@ export default function IncidenciasPage() {
         setTipos([]);
       });
 
-    fetch("http://localhost:3001/monitoreo/incidencias/estados")
+    fetch(`${API_URL}/monitoreo/incidencias/estados`)
       .then((res) => res.json())
       .then((data) => {
         if (Array.isArray(data)) {
@@ -165,7 +167,7 @@ export default function IncidenciasPage() {
 
     const token = typeof window !== "undefined" ? localStorage.getItem("token") : null;
 
-    fetch(`http://localhost:3001/monitoreo/incidencias/${incidenciaEliminar}`, {
+    fetch(`${API_URL}/monitoreo/incidencias/${incidenciaEliminar}`, {
       method: "DELETE",
       headers: {
         ...(token ? { Authorization: `Bearer ${token}` } : {}),
@@ -692,7 +694,7 @@ function ModalIncidencia({ show, modoEdicion, incidencia, tipos, estados, onClos
 
   useEffect(() => {
     // Cargar operaciones disponibles
-    fetch("http://localhost:3001/monitoreo/operaciones")
+    fetch(`${API_URL}/monitoreo/operaciones`)
       .then((res) => res.json())
       .then((data) => setOperaciones(data))
       .catch((err) => console.error("Error cargando operaciones:", err));
@@ -703,8 +705,8 @@ function ModalIncidencia({ show, modoEdicion, incidencia, tipos, estados, onClos
     setLoading(true);
 
     const url = modoEdicion
-      ? `http://localhost:3001/monitoreo/incidencias/${incidencia.id_incidencia}`
-      : "http://localhost:3001/monitoreo/incidencias";
+      ? `${API_URL}/monitoreo/incidencias/${incidencia.id_incidencia}`
+      : `${API_URL}/monitoreo/incidencias`;
 
     const method = modoEdicion ? "PUT" : "POST";
 

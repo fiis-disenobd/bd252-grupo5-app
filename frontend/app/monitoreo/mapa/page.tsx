@@ -6,6 +6,8 @@ import Link from "next/link";
 import { MapHeader } from "@/components/monitoreo/MapHeader";
 import "@/app/leaflet.css";
 
+const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001"; 
+
 interface Asset {
   id: string;
   code: string;
@@ -46,7 +48,7 @@ export default function MapaPage() {
     const fetchAssets = async () => {
       try {
         setLoading(true);
-        const response = await fetch('http://localhost:3001/monitoreo/gps/posiciones');
+        const response = await fetch(`${API_URL}/monitoreo/gps/posiciones`);
         if (response.ok) {
           const data = await response.json();
           setAssets(Array.isArray(data) ? data : []);

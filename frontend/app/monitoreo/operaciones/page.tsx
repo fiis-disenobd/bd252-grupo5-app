@@ -4,6 +4,8 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { MapHeader } from "@/components/monitoreo/MapHeader";
 
+const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001"; 
+
 interface Operacion {
   id_operacion: string;
   codigo: string;
@@ -39,7 +41,7 @@ export default function OperacionesPage() {
 
   // Cargar estados disponibles desde el backend
   useEffect(() => {
-    fetch("http://localhost:3001/monitoreo/estados")
+    fetch(`${API_URL}/monitoreo/estados`)
       .then((res) => res.json())
       .then((data) => {
         if (Array.isArray(data)) {
@@ -52,8 +54,8 @@ export default function OperacionesPage() {
 
   useEffect(() => {
     const url = filtroEstado && filtroEstado !== "Todos"
-      ? `http://localhost:3001/monitoreo/operaciones?estado=${filtroEstado}`
-      : "http://localhost:3001/monitoreo/operaciones";
+      ? `${API_URL}/monitoreo/operaciones?estado=${filtroEstado}`
+      : `${API_URL}/monitoreo/operaciones`;
 
     fetch(url)
       .then((res) => res.json())
@@ -90,14 +92,14 @@ export default function OperacionesPage() {
 
   const finalizarOperacion = async (id: string) => {
     try {
-      const response = await fetch(`http://localhost:3001/monitoreo/operaciones/${id}/finalizar`, {
+      const response = await fetch(`${API_URL}/monitoreo/operaciones/${id}/finalizar`, {
         method: 'PATCH',
       });
       if (response.ok) {
         // Recargar operaciones
         const url = filtroEstado && filtroEstado !== "Todos"
-          ? `http://localhost:3001/monitoreo/operaciones?estado=${filtroEstado}`
-          : "http://localhost:3001/monitoreo/operaciones";
+          ? `${API_URL}/monitoreo/operaciones?estado=${filtroEstado}`
+          : `${API_URL}/monitoreo/operaciones`;
         const data = await fetch(url).then(res => res.json());
         setOperaciones(Array.isArray(data) ? data : []);
         setOperacionAFinalizar(null);
@@ -112,14 +114,14 @@ export default function OperacionesPage() {
 
   const eliminarOperacion = async (id: string) => {
     try {
-      const response = await fetch(`http://localhost:3001/monitoreo/operaciones/${id}`, {
+      const response = await fetch(`${API_URL}/monitoreo/operaciones/${id}`, {
         method: 'DELETE',
       });
       if (response.ok) {
         // Recargar operaciones
         const url = filtroEstado && filtroEstado !== "Todos"
-          ? `http://localhost:3001/monitoreo/operaciones?estado=${filtroEstado}`
-          : "http://localhost:3001/monitoreo/operaciones";
+          ? `${API_URL}/monitoreo/operaciones?estado=${filtroEstado}`
+          : `${API_URL}/monitoreo/operaciones`;
         const data = await fetch(url).then(res => res.json());
         setOperaciones(Array.isArray(data) ? data : []);
         setOperacionAEliminar(null);

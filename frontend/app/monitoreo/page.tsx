@@ -18,6 +18,8 @@ import {
 } from 'chart.js';
 import { Bar, Line } from 'react-chartjs-2';
 
+const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001"; 
+
 // Registrar componentes de Chart.js
 ChartJS.register(
   CategoryScale,
@@ -76,28 +78,28 @@ export default function MonitoreoDashboard() {
     const fetchDatos = async () => {
       try {
         // Fetch KPIs
-        const kpisRes = await fetch("http://localhost:3001/monitoreo/operaciones/kpis");
+        const kpisRes = await fetch(`${API_URL}/monitoreo/operaciones/kpis`);
         if (kpisRes.ok) {
           const kpisData = await kpisRes.json();
           setKpis(kpisData);
         }
 
         // Fetch operaciones por estado para gráfico de barras
-        const opEstadoRes = await fetch("http://localhost:3001/monitoreo/operaciones/por-estado");
+        const opEstadoRes = await fetch(`${API_URL}/monitoreo/operaciones/por-estado`);
         if (opEstadoRes.ok) {
           const opEstadoData = await opEstadoRes.json();
           setOperacionesPorEstado(opEstadoData);
         }
 
         // Fetch notificaciones por día para gráfico de líneas
-        const notifPorDiaRes = await fetch("http://localhost:3001/monitoreo/sensores/notificaciones/por-dia?dias=7");
+        const notifPorDiaRes = await fetch(`${API_URL}/monitoreo/sensores/notificaciones/por-dia?dias=7`);
         if (notifPorDiaRes.ok) {
           const notifPorDiaData = await notifPorDiaRes.json();
           setNotificacionesPorDia(notifPorDiaData);
         }
 
         // Fetch alertas recientes
-        const alertasRes = await fetch("http://localhost:3001/monitoreo/sensores/notificaciones?limite=10");
+        const alertasRes = await fetch(`${API_URL}/monitoreo/sensores/notificaciones?limite=10`);
         if (alertasRes.ok) {
           const alertasData = await alertasRes.json();
           // Mapear notificaciones a alertas

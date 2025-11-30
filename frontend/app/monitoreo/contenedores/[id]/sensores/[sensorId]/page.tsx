@@ -6,6 +6,8 @@ import Link from "next/link";
 import { MapHeader } from "@/components/monitoreo/MapHeader";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
 
+const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001";
+
 interface Sensor {
   id_sensor: string;
   tipo_sensor?: {
@@ -41,7 +43,7 @@ export default function SensorDetallePage() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    fetch(`http://localhost:3001/monitoreo/sensores/${params.sensorId}/detalle`)
+    fetch(`${API_URL}/monitoreo/sensores/${params.sensorId}/detalle`)
       .then((res) => res.json())
       .then((data) => {
         setSensor(data);

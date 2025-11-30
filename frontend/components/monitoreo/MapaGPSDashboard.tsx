@@ -5,6 +5,8 @@ import L from "leaflet";
 import "leaflet/dist/leaflet.css";
 import "@/app/leaflet.css";
 
+const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001"; 
+
 // Arreglar iconos por defecto de Leaflet en Next.js
 if (typeof window !== 'undefined') {
   delete (L.Icon.Default.prototype as any)._getIconUrl;
@@ -71,7 +73,7 @@ export default function MapaGPSDashboard({ height = "400px" }: MapaGPSDashboardP
   useEffect(() => {
     const fetchPosiciones = async () => {
         try {
-        const response = await fetch("http://localhost:3001/monitoreo/gps/posiciones");
+        const response = await fetch(`${API_URL}/monitoreo/gps/posiciones`);
         console.log("GPS status", response.status);
         if (response.ok) {
             const data = await response.json();

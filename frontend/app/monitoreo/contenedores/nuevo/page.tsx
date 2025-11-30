@@ -5,6 +5,8 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { MapHeader } from "@/components/monitoreo/MapHeader";
 
+const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001";
+
 interface EstadoContenedor {
   id_estado_contenedor: string;
   nombre: string;
@@ -31,14 +33,14 @@ export default function NuevoContenedorPage() {
 
   useEffect(() => {
     // Cargar estados y tipos de contenedor
-    fetch("http://localhost:3001/monitoreo/contenedores/estados")
+    fetch(`${API_URL}/monitoreo/contenedores/estados`)
       .then((res) => res.json())
       .then((data) => {
         if (Array.isArray(data)) setEstados(data);
       })
       .catch((err) => console.error("Error cargando estados de contenedor:", err));
 
-    fetch("http://localhost:3001/monitoreo/contenedores/tipos")
+    fetch(`${API_URL}/monitoreo/contenedores/tipos`)
       .then((res) => res.json())
       .then((data) => {
         if (Array.isArray(data)) setTipos(data);
@@ -59,7 +61,7 @@ export default function NuevoContenedorPage() {
       id_tipo_contenedor: formData.id_tipo_contenedor,
     };
 
-    fetch("http://localhost:3001/monitoreo/contenedores", {
+    fetch(`${API_URL}/monitoreo/contenedores`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",

@@ -5,6 +5,8 @@ import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import { MapHeader } from "@/components/monitoreo/MapHeader";
 
+const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001"; 
+
 interface FormData {
   codigo: string;
   fecha_inicio: string;
@@ -29,14 +31,14 @@ export default function EditarOperacionPage() {
 
   useEffect(() => {
     // Cargar estados
-    fetch("http://localhost:3001/monitoreo/estados")
+    fetch(`${API_URL}/monitoreo/estados`)
       .then((res) => res.json())
       .then((data) => setEstados(Array.isArray(data) ? data : []))
       .catch((err) => console.error("Error cargando estados:", err));
 
     // Cargar operación
     if (params.id) {
-      fetch(`http://localhost:3001/monitoreo/operaciones/${params.id}`)
+      fetch(`${API_URL}/monitoreo/operaciones/${params.id}`)
         .then((res) => {
           if (!res.ok) throw new Error("Operación no encontrada");
           return res.json();
@@ -63,7 +65,7 @@ export default function EditarOperacionPage() {
     setSaving(true);
 
     try {
-      const response = await fetch(`http://localhost:3001/monitoreo/operaciones/${params.id}`, {
+      const response = await fetch(`${API_URL}/monitoreo/operaciones/${params.id}`, {
         method: "PATCH",
         headers: {
           "Content-Type": "application/json",

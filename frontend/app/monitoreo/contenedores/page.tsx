@@ -4,6 +4,8 @@ import { useState, useEffect } from "react";
 import { MapHeader } from "@/components/monitoreo/MapHeader";
 import Link from "next/link";
 
+const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001";
+
 interface Contenedor {
   id_contenedor: string;
   codigo: string;
@@ -43,7 +45,7 @@ export default function ContenedoresPage() {
     const fetchContenedores = async () => {
       try {
         setLoading(true);
-        let url = "http://localhost:3001/monitoreo/contenedores";
+        let url = `${API_URL}/monitoreo/contenedores`;
         const params = new URLSearchParams();
         
         if (filtroEstado) params.append("estado", filtroEstado);
@@ -71,7 +73,7 @@ export default function ContenedoresPage() {
 
   // Cargar estadísticas
   useEffect(() => {
-    fetch("http://localhost:3001/monitoreo/contenedores/estadisticas")
+    fetch(`${API_URL}/monitoreo/contenedores/estadisticas`)
       .then((res) => res.json())
       .then((data) => setEstadisticas(data))
       .catch((err) => console.error("Error estadísticas:", err));

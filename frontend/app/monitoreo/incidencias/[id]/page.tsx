@@ -5,6 +5,8 @@ import { useParams } from "next/navigation";
 import Link from "next/link";
 import { MapHeader } from "@/components/monitoreo/MapHeader";
 
+const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001"; 
+
 interface IncidenciaDetalle {
   id_incidencia: string;
   codigo: string;
@@ -32,7 +34,7 @@ export default function DetalleIncidenciaPage() {
   useEffect(() => {
     if (!params.id) return;
 
-    fetch(`http://localhost:3001/monitoreo/incidencias/${params.id}`)
+    fetch(`${API_URL}/monitoreo/incidencias/${params.id}`)
       .then((res) => {
         if (!res.ok) throw new Error("Incidencia no encontrada");
         return res.json();

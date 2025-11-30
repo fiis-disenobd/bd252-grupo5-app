@@ -5,6 +5,8 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { MapHeader } from "@/components/monitoreo/MapHeader";
 
+const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001"; 
+
 export default function NuevoReportePage() {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
@@ -17,7 +19,7 @@ export default function NuevoReportePage() {
     e.preventDefault();
     setLoading(true);
 
-    fetch("http://localhost:3001/monitoreo/reportes", {
+    fetch(`${API_URL}/monitoreo/reportes`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",

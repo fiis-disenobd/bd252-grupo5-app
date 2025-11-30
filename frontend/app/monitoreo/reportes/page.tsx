@@ -4,6 +4,8 @@ import { useState, useEffect } from "react";
 import Link from "next/link";
 import { MapHeader } from "@/components/monitoreo/MapHeader";
 
+const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001"; 
+
 interface Reporte {
   id_reporte: string;
   codigo: string;
@@ -34,7 +36,7 @@ export default function ReportesPage() {
 
   useEffect(() => {
     // Cargar estadísticas
-    fetch("http://localhost:3001/monitoreo/reportes/estadisticas")
+    fetch(`${API_URL}/monitoreo/reportes/estadisticas`)
       .then((res) => res.json())
       .then((data) => setEstadisticas(data))
       .catch((err) => console.error("Error cargando estadísticas:", err));
@@ -49,7 +51,7 @@ export default function ReportesPage() {
       ...(filtros.hasta && { hasta: filtros.hasta }),
     });
 
-    fetch(`http://localhost:3001/monitoreo/reportes?${params}`)
+    fetch(`${API_URL}/monitoreo/reportes?${params}`)
       .then((res) => res.json())
       .then((data) => {
         setData(data);
@@ -67,7 +69,7 @@ export default function ReportesPage() {
       setBatchMessage(null);
 
       const res = await fetch(
-        "http://localhost:3001/monitoreo/reportes/cierre-diario",
+        `${API_URL}/monitoreo/reportes/cierre-diario`,
         {
           method: "POST",
           headers: {
@@ -102,7 +104,7 @@ export default function ReportesPage() {
       setBatchMessage(null);
 
       const res = await fetch(
-        "http://localhost:3001/monitoreo/reportes/cierre-rango-120",
+        `${API_URL}/monitoreo/reportes/cierre-rango-120`,
         {
           method: "POST",
           headers: {
@@ -141,7 +143,7 @@ export default function ReportesPage() {
   const confirmarEliminar = () => {
     if (!reporteAEliminar) return;
 
-    fetch(`http://localhost:3001/monitoreo/reportes/${reporteAEliminar}`, {
+    fetch(`${API_URL}/monitoreo/reportes/${reporteAEliminar}`, {
       method: "DELETE",
     })
       .then(() => {

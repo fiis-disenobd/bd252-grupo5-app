@@ -5,6 +5,8 @@ import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import { MapHeader } from "@/components/monitoreo/MapHeader";
 
+const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001"; 
+
 interface Operacion {
   id_operacion: string;
   codigo: string;
@@ -56,7 +58,7 @@ export default function DetalleOperacionPage() {
 
   useEffect(() => {
     if (params.id) {
-      fetch(`http://localhost:3001/monitoreo/operaciones/${params.id}`)
+      fetch(`${API_URL}/monitoreo/operaciones/${params.id}`)
         .then((res) => {
           if (!res.ok) throw new Error("Operación no encontrada");
           return res.json();
@@ -89,7 +91,7 @@ export default function DetalleOperacionPage() {
     setIncidenciasLoading(true);
 
     try {
-      const url = new URL("http://localhost:3001/monitoreo/incidencias");
+      const url = new URL(`${API_URL}/monitoreo/incidencias`);
       url.searchParams.set("operacion", operacion.id_operacion);
       url.searchParams.set("pagina", "1");
       url.searchParams.set("limite", "50");

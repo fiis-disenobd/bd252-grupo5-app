@@ -5,6 +5,8 @@ import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import { MapHeader } from "@/components/monitoreo/MapHeader";
 
+const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001"; 
+
 interface Incidencia {
   id_incidencia: string;
   codigo: string;
@@ -31,7 +33,7 @@ export default function NuevoReporteOperacionPage() {
   useEffect(() => {
     if (!params.id) return;
 
-    const url = new URL("http://localhost:3001/monitoreo/incidencias");
+    const url = new URL(`${API_URL}/monitoreo/incidencias`);
     url.searchParams.set("operacion", String(params.id));
 
     fetch(url.toString())
@@ -57,7 +59,7 @@ export default function NuevoReporteOperacionPage() {
     try {
       setSaving(true);
       const res = await fetch(
-        `http://localhost:3001/monitoreo/reportes/operacion/${params.id}`,
+        `${API_URL}/monitoreo/reportes/operacion/${params.id}`,
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },

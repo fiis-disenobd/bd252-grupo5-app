@@ -4,6 +4,8 @@ import { useState, useEffect } from "react";
 import Link from "next/link";
 import { MapHeader } from "@/components/monitoreo/MapHeader";
 
+const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001"; 
+
 interface Notificacion {
   id_notificacion: string;
   fecha_hora: string;
@@ -78,7 +80,7 @@ export default function NotificacionesPage() {
     if (fechaDesde) params.append("fecha_desde", fechaDesde);
     if (fechaHasta) params.append("fecha_hasta", fechaHasta);
 
-    fetch(`http://localhost:3001/monitoreo/sensores/notificaciones?${params}`)
+    fetch(`${API_URL}/monitoreo/sensores/notificaciones?${params}`)
       .then((res) => res.json())
       .then((data) => {
         setData(data);
@@ -91,7 +93,7 @@ export default function NotificacionesPage() {
   };
 
   const cargarEstadisticas = () => {
-    fetch(`http://localhost:3001/monitoreo/sensores/notificaciones/estadisticas`)
+    fetch(`${API_URL}/monitoreo/sensores/notificaciones/estadisticas`)
       .then((res) => res.json())
       .then((data) => setEstadisticas(data))
       .catch((err) => console.error("Error:", err));

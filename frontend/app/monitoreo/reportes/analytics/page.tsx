@@ -17,6 +17,8 @@ import {
 } from "chart.js";
 import { Bar, Line, Doughnut } from "react-chartjs-2";
 
+const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001"; 
+
 ChartJS.register(
   CategoryScale,
   LinearScale,
@@ -68,7 +70,7 @@ export default function ReportesAnalyticsPage() {
     const fetchData = async () => {
       try {
         const res = await fetch(
-          "http://localhost:3001/monitoreo/reportes/analytics/resumen",
+          `${API_URL}/monitoreo/reportes/analytics/resumen`,
         );
         const data = await res.json();
         setKpis(data.kpis || null);

@@ -18,6 +18,8 @@ import {
   ResponsiveContainer,
 } from "recharts";
 
+const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001";
+
 interface Analiticas {
   sensor: {
     id_sensor: string;
@@ -50,7 +52,7 @@ export default function SensorAnaliticasPage() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    fetch(`http://localhost:3001/monitoreo/sensores/${params.sensorId}/analiticas`)
+    fetch(`${API_URL}/monitoreo/sensores/${params.sensorId}/analiticas`)
       .then((res) => res.json())
       .then((data) => {
         setAnaliticas(data);

@@ -5,6 +5,8 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { MapHeader } from "@/components/monitoreo/MapHeader";
 
+const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001";
+
 interface Contenedor {
   id_contenedor: string;
   codigo: string;
@@ -33,13 +35,13 @@ export default function NuevaEntregaPage() {
 
   useEffect(() => {
     // Cargar contenedores disponibles
-    fetch("http://localhost:3001/monitoreo/entregas/contenedores-disponibles")
+    fetch(`${API_URL}/monitoreo/entregas/contenedores-disponibles`)
       .then((res) => res.json())
       .then((data) => setContenedores(data))
       .catch((err) => console.error("Error cargando contenedores:", err));
 
     // Cargar importadores
-    fetch("http://localhost:3001/monitoreo/entregas/importadores")
+    fetch(`${API_URL}/monitoreo/entregas/importadores`)
       .then((res) => res.json())
       .then((data) => setImportadores(data))
       .catch((err) => console.error("Error cargando importadores:", err));
@@ -49,7 +51,7 @@ export default function NuevaEntregaPage() {
     e.preventDefault();
     setLoading(true);
 
-    fetch("http://localhost:3001/monitoreo/entregas", {
+    fetch(`${API_URL}/monitoreo/entregas`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",

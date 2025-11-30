@@ -5,6 +5,8 @@ import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import { MapHeader } from "@/components/monitoreo/MapHeader";
 
+const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001";
+
 interface Entrega {
   id_entrega: string;
   codigo: string;
@@ -37,7 +39,7 @@ export default function VerEntregaPage() {
   const [finalizando, setFinalizando] = useState(false);
 
   useEffect(() => {
-    fetch(`http://localhost:3001/monitoreo/entregas/${params.id}`)
+    fetch(`${API_URL}/monitoreo/entregas/${params.id}`)
       .then((res) => {
         if (!res.ok) throw new Error("Entrega no encontrada");
         return res.json();
@@ -89,7 +91,7 @@ export default function VerEntregaPage() {
 
     setFinalizando(true);
 
-    fetch(`http://localhost:3001/monitoreo/entregas/${entrega.id_entrega}/finalizar`, {
+    fetch(`${API_URL}/monitoreo/entregas/${entrega.id_entrega}/finalizar`, {
       method: "PATCH",
       headers: {
         "Content-Type": "application/json",

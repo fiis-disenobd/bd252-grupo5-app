@@ -5,6 +5,8 @@ import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import { MapHeader } from "@/components/monitoreo/MapHeader";
 
+const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001"; 
+
 interface Reporte {
   id_reporte: string;
   codigo: string;
@@ -24,7 +26,7 @@ export default function EditarReportePage() {
   });
 
   useEffect(() => {
-    fetch(`http://localhost:3001/monitoreo/reportes/${params.id}`)
+    fetch(`${API_URL}/monitoreo/reportes/${params.id}`)
       .then((res) => {
         if (!res.ok) throw new Error("Reporte no encontrado");
         return res.json();
@@ -49,7 +51,7 @@ export default function EditarReportePage() {
     e.preventDefault();
     setSaving(true);
 
-    fetch(`http://localhost:3001/monitoreo/reportes/${params.id}`, {
+    fetch(`${API_URL}/monitoreo/reportes/${params.id}`, {
       method: "PUT",
       headers: {
         "Content-Type": "application/json",

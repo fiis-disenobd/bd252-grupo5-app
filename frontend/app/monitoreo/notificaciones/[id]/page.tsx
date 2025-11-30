@@ -5,6 +5,8 @@ import { useParams } from "next/navigation";
 import Link from "next/link";
 import { MapHeader } from "@/components/monitoreo/MapHeader";
 
+const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001"; 
+
 interface NotificacionDetalle {
   id_notificacion: string;
   codigo: string;
@@ -30,7 +32,7 @@ export default function NotificacionDetallePage() {
 
   useEffect(() => {
     const id = params.id as string;
-    fetch(`http://localhost:3001/monitoreo/sensores/notificaciones/${id}`)
+    fetch(`${API_URL}/monitoreo/sensores/notificaciones/${id}`)
       .then(async (res) => {
         if (!res.ok) {
           throw new Error(`Error al cargar notificación: ${res.status}`);

@@ -5,6 +5,8 @@ import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import { MapHeader } from "@/components/monitoreo/MapHeader";
 
+const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001";
+
 interface DireccionImportador {
   id_direccion: string;
   direccion: string;
@@ -35,7 +37,7 @@ export default function ImportadorDetallePage() {
   useEffect(() => {
     const id = params.id as string;
 
-    fetch(`http://localhost:3001/monitoreo/importadores/${id}`)
+    fetch(`${API_URL}/monitoreo/importadores/${id}`)
       .then(async (res) => {
         if (!res.ok) {
           const text = await res.text();
@@ -121,7 +123,7 @@ export default function ImportadorDetallePage() {
     try {
       setSaving(true);
       const res = await fetch(
-        `http://localhost:3001/monitoreo/importadores/${importador.id_importador}/direcciones`,
+        `${API_URL}/monitoreo/importadores/${importador.id_importador}/direcciones`,
         {
           method: "POST",
           headers: {
