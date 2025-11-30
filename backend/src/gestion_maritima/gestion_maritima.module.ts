@@ -62,6 +62,7 @@ import { IncidenciasController } from './controllers/incidencias.controller';
 import { AuthMaritimoController } from './controllers/auth-maritimo.controller';
 import { OperacionesIncidenciasController } from './controllers/operaciones-incidencias.controller';
 import { HallazgosController } from './controllers/hallazgos.controller';
+import { ConciliacionController } from './controllers/conciliacion.controller';
 
 // Services de gestión marítima
 import { EstadosService } from './services/estados.service';
@@ -79,6 +80,7 @@ import { IncidenciasService } from './services/incidencias.service';
 import { AuthMaritimoService } from './services/auth-maritimo.service';
 import { OperacionesIncidenciasService } from './services/operaciones-incidencias.service';
 import { HallazgosService } from './services/hallazgos.service';
+import { ConciliacionService } from './services/conciliacion.service';
 
 @Module({
   imports: [
@@ -141,6 +143,7 @@ import { HallazgosService } from './services/hallazgos.service';
     AuthMaritimoController,
     OperacionesIncidenciasController,
     HallazgosController,
+    ConciliacionController,
   ],
   providers: [
     EstadosService,
@@ -159,6 +162,7 @@ import { HallazgosService } from './services/hallazgos.service';
     AuthMaritimoService,
     OperacionesIncidenciasService,
     HallazgosService,
+    ConciliacionService,
   ],
 })
 export class GestionMaritimaModule { }

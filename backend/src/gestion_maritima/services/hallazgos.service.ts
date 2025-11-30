@@ -1,4 +1,4 @@
-import { Injectable, OnModuleInit } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Hallazgo } from '../entities/hallazgo.entity';
@@ -6,7 +6,7 @@ import { Inspeccion } from '../entities/inspeccion.entity';
 import { TipoHallazgo } from '../../shared/entities/tipo-hallazgo.entity';
 
 @Injectable()
-export class HallazgosService implements OnModuleInit {
+export class HallazgosService {
     constructor(
         @InjectRepository(Hallazgo)
         private hallazgoRepository: Repository<Hallazgo>,
@@ -15,26 +15,6 @@ export class HallazgosService implements OnModuleInit {
         @InjectRepository(TipoHallazgo)
         private tipoHallazgoRepository: Repository<TipoHallazgo>,
     ) { }
-
-    async onModuleInit() {
-        await this.seedData();
-    }
-
-    private async seedData() {
-        const tipos = [
-            'Falta de permiso',
-            'Documentación incompleta',
-            'Condiciones inadecuadas'
-        ];
-
-        for (const nombre of tipos) {
-            const exists = await this.tipoHallazgoRepository.findOne({ where: { nombre } });
-            if (!exists) {
-                await this.tipoHallazgoRepository.save(this.tipoHallazgoRepository.create({ nombre }));
-                console.log(`Seeded TipoHallazgo: ${nombre}`);
-            }
-        }
-    }
 
     async getInspecciones() {
         const inspecciones = await this.inspeccionRepository.find({

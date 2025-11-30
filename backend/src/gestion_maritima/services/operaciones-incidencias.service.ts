@@ -1,4 +1,4 @@
-import { Injectable, OnModuleInit } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { OperacionMaritima } from '../../shared/entities/operacion-maritima.entity';
@@ -21,78 +21,13 @@ export interface OperacionConIncidenciasDto {
 }
 
 @Injectable()
-export class OperacionesIncidenciasService implements OnModuleInit {
+export class OperacionesIncidenciasService {
     constructor(
         @InjectRepository(OperacionMaritima)
         private operacionMaritimaRepository: Repository<OperacionMaritima>,
         @InjectRepository(Incidencia)
         private incidenciaRepository: Repository<Incidencia>,
     ) { }
-
-    async onModuleInit() {
-        await this.seedData();
-    }
-
-    private async seedData() {
-        try {
-            // Seed TipoInspeccion
-            const tiposInspeccion = [
-                'Inspección de Seguridad',
-                'Inspección de Carga',
-                'Inspección Ambiental',
-                'Inspección Técnica'
-            ];
-
-            for (const tipo of tiposInspeccion) {
-                const tipoExists = await this.operacionMaritimaRepository.query(
-                    `SELECT 1 FROM shared.TipoInspeccion WHERE nombre = $1`,
-                    [tipo]
-                );
-
-                if (tipoExists.length === 0) {
-                    await this.operacionMaritimaRepository.query(
-                        `INSERT INTO shared.TipoInspeccion (nombre) VALUES ($1)`,
-                        [tipo]
-                    );
-                    console.log(`Seeded TipoInspeccion: ${tipo}`);
-                }
-            }
-
-            // Seed EstadoInspeccion
-            const estadoInspeccion = 'Programada';
-            const estadoExists = await this.operacionMaritimaRepository.query(
-                `SELECT 1 FROM shared.EstadoInspeccion WHERE nombre = $1`,
-                [estadoInspeccion]
-            );
-
-            if (estadoExists.length === 0) {
-                await this.operacionMaritimaRepository.query(
-                    `INSERT INTO shared.EstadoInspeccion (nombre) VALUES ($1)`,
-                    [estadoInspeccion]
-                );
-                console.log(`Seeded EstadoInspeccion: ${estadoInspeccion}`);
-            }
-
-            // Seed Prioridad
-            const prioridades = ['Alta', 'Media', 'Baja', 'Crítica'];
-            for (const prioridad of prioridades) {
-                const prioridadExists = await this.operacionMaritimaRepository.query(
-                    `SELECT 1 FROM shared.Prioridad WHERE nombre = $1`,
-                    [prioridad]
-                );
-
-                if (prioridadExists.length === 0) {
-                    await this.operacionMaritimaRepository.query(
-                        `INSERT INTO shared.Prioridad (nombre) VALUES ($1)`,
-                        [prioridad]
-                    );
-                    console.log(`Seeded Prioridad: ${prioridad}`);
-                }
-            }
-        } catch (error) {
-            console.error('Error seeding data:', error);
-        }
-    }
 
     async getOperacionesConIncidencias(
         page: number = 1,
