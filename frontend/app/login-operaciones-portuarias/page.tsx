@@ -5,7 +5,7 @@ import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
 
-export default function LoginGestionReservasPage() {
+export default function LoginOperacionesPortuariasPage() {
     const router = useRouter();
     const { setAuthData } = useAuth();
 
@@ -22,7 +22,7 @@ export default function LoginGestionReservasPage() {
         setLoading(true);
 
         try {
-            const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001'}/gestion-reservas/auth/login`, {
+            const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001'}/operaciones-portuarias/auth/login`, {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",
@@ -43,8 +43,8 @@ export default function LoginGestionReservasPage() {
             // Actualizar el contexto de autenticación
             setAuthData(data.access_token, data.usuario);
 
-            // Redirigir a gestión de reservas
-            router.push("/gestion-reservas");
+            // Redirigir a operaciones portuarias
+            router.push("/operaciones-portuarias");
 
         } catch (err: any) {
             setError(err.message);
@@ -54,51 +54,51 @@ export default function LoginGestionReservasPage() {
 
     return (
         <div className="flex min-h-screen bg-white">
-            {/* Panel Izquierdo - Branding Gestión de Reservas */}
-            <div className="hidden lg:flex lg:w-1/2 flex-col justify-between p-12 text-white bg-gradient-to-br from-green-600 to-green-400">
+            {/* Panel Izquierdo - Branding Operaciones Portuarias */}
+            <div className="hidden lg:flex lg:w-1/2 flex-col justify-between p-12 text-white bg-gradient-to-br from-purple-600 to-purple-400">
                 <div>
                     <div className="flex items-center space-x-4 mb-16">
                         <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-white/15 backdrop-blur">
-                            <span className="material-symbols-outlined text-2xl">calendar_month</span>
+                            <span className="material-symbols-outlined text-2xl">warehouse</span>
                         </div>
                         <div>
                             <p className="text-sm uppercase tracking-wide text-white/80">Hapag-Lloyd</p>
-                            <p className="text-xs text-white/70">Gestión de Ganpis</p>
+                            <p className="text-xs text-white/70">Operaciones Portuarias</p>
                         </div>
                     </div>
 
                     <h2 className="text-5xl font-bold leading-tight mb-6">
-                        Gestión de Reservas
+                        Gestión de Operaciones Portuarias
                     </h2>
                     <p className="text-lg opacity-90 max-w-xl">
-                        Plataforma especializada para la administración y control de reservas de contenedores y servicios de transporte marítimo.
+                        Plataforma especializada para el control y supervisión de actividades portuarias y logística de contenedores.
                     </p>
 
                     <div className="mt-16 space-y-8 max-w-xl">
                         <div className="flex items-start space-x-4">
-                            <span className="material-symbols-outlined text-3xl opacity-90 mt-1">event_available</span>
+                            <span className="material-symbols-outlined text-3xl opacity-90 mt-1">inventory</span>
                             <div>
-                                <h3 className="font-bold text-lg">Control de Reservas</h3>
+                                <h3 className="font-bold text-lg">Control de Contenedores</h3>
                                 <p className="opacity-85 text-sm">
-                                    Gestión completa del ciclo de vida de las reservas de clientes.
+                                    Seguimiento detallado de contenedores en terminal y su estado actual.
                                 </p>
                             </div>
                         </div>
                         <div className="flex items-start space-x-4">
-                            <span className="material-symbols-outlined text-3xl opacity-90 mt-1">inventory_2</span>
+                            <span className="material-symbols-outlined text-3xl opacity-90 mt-1">local_shipping</span>
                             <div>
-                                <h3 className="font-bold text-lg">Asignación de Contenedores</h3>
+                                <h3 className="font-bold text-lg">Gestión Logística</h3>
                                 <p className="opacity-85 text-sm">
-                                    Optimización de espacios y recursos para cada reserva.
+                                    Coordinación de movimientos y asignación de recursos portuarios.
                                 </p>
                             </div>
                         </div>
                         <div className="flex items-start space-x-4">
-                            <span className="material-symbols-outlined text-3xl opacity-90 mt-1">support_agent</span>
+                            <span className="material-symbols-outlined text-3xl opacity-90 mt-1">assignment</span>
                             <div>
-                                <h3 className="font-bold text-lg">Atención al Cliente</h3>
+                                <h3 className="font-bold text-lg">Monitoreo de Actividades</h3>
                                 <p className="opacity-85 text-sm">
-                                    Seguimiento y soporte para clientes durante todo el proceso.
+                                    Registro y seguimiento de todas las operaciones portuarias en tiempo real.
                                 </p>
                             </div>
                         </div>
@@ -106,7 +106,7 @@ export default function LoginGestionReservasPage() {
                 </div>
 
                 <div className="flex justify-between items-center text-sm opacity-80">
-                    <p>© 2025 Hapag-Lloyd. Gestión de Reservas.</p>
+                    <p>© 2025 Hapag-Lloyd. Operaciones Portuarias.</p>
                 </div>
             </div>
 
@@ -117,7 +117,7 @@ export default function LoginGestionReservasPage() {
                     <div className="text-center lg:text-left mb-10">
                         <h2 className="text-3xl font-bold text-gray-900">Bienvenido</h2>
                         <p className="text-gray-600 mt-2">
-                            Ingresa tus credenciales para acceder al módulo de Gestión de Reservas.
+                            Ingresa tus credenciales para acceder al módulo de Operaciones Portuarias.
                         </p>
                     </div>
 
@@ -136,7 +136,7 @@ export default function LoginGestionReservasPage() {
                                     value={formData.correo}
                                     onChange={(e) => setFormData({ ...formData, correo: e.target.value })}
                                     placeholder="usuario@hapag-lloyd.com"
-                                    className="block w-full px-4 py-3 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-green-500 focus:border-green-500 bg-white text-gray-900"
+                                    className="block w-full px-4 py-3 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-purple-500 focus:border-purple-500 bg-white text-gray-900"
                                 />
                             </div>
                         </div>
@@ -155,7 +155,7 @@ export default function LoginGestionReservasPage() {
                                     value={formData.contrasena}
                                     onChange={(e) => setFormData({ ...formData, contrasena: e.target.value })}
                                     placeholder="••••••••"
-                                    className="block w-full px-4 py-3 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-green-500 focus:border-green-500 bg-white text-gray-900"
+                                    className="block w-full px-4 py-3 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-purple-500 focus:border-purple-500 bg-white text-gray-900"
                                 />
                             </div>
                         </div>
@@ -173,7 +173,7 @@ export default function LoginGestionReservasPage() {
                             <button
                                 type="submit"
                                 disabled={loading}
-                                className="w-full flex justify-center py-3 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 disabled:cursor-not-allowed disabled:opacity-60"
+                                className="w-full flex justify-center py-3 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-purple-600 hover:bg-purple-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500 disabled:cursor-not-allowed disabled:opacity-60"
                             >
                                 {loading ? (
                                     <span className="flex items-center gap-2">
@@ -189,11 +189,11 @@ export default function LoginGestionReservasPage() {
 
                     {/* Nota informativa */}
                     <div className="mt-8">
-                        <div className="flex items-start p-4 rounded-md bg-green-50 border border-green-200">
-                            <span className="material-symbols-outlined text-green-500 mr-3 mt-1">info</span>
+                        <div className="flex items-start p-4 rounded-md bg-purple-50 border border-purple-200">
+                            <span className="material-symbols-outlined text-purple-500 mr-3 mt-1">info</span>
                             <div>
-                                <p className="text-sm text-green-700">
-                                    Acceso exclusivo para agentes de reservas.
+                                <p className="text-sm text-purple-700">
+                                    Acceso restringido. Los roles de Agente de Reservas, Cliente y Operador Marítimo no tienen acceso a este módulo.
                                 </p>
                             </div>
                         </div>
@@ -206,7 +206,7 @@ export default function LoginGestionReservasPage() {
                             <div>
                                 <p className="text-sm font-semibold text-amber-900">Nota para el equipo de desarrollo</p>
                                 <p className="mt-1 text-xs text-amber-800">
-                                    Recuerden configurar el endpoint de autenticación en el backend y registrar usuarios de prueba con los roles apropiados (Agente de Reservas, Cliente).
+                                    Recuerden configurar el endpoint de autenticación en el backend y registrar usuarios de prueba con los roles apropiados (Trabajador Portuario, Supervisor Portuario).
                                 </p>
                             </div>
                         </div>
