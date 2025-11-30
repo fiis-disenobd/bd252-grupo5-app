@@ -63,7 +63,7 @@ export default function LoginGestionReservasPage() {
                         </div>
                         <div>
                             <p className="text-sm uppercase tracking-wide text-white/80">Hapag-Lloyd</p>
-                            <p className="text-xs text-white/70">Gestión de Ganpis</p>
+                            <p className="text-xs text-white/70">Gestión de Reservas</p>
                         </div>
                     </div>
 
