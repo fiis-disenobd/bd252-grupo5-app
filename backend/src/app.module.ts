@@ -7,6 +7,7 @@ import { MonitoreoModule } from './monitoreo/monitoreo.module';
 import { AuthModule } from './auth/auth.module';
 import { GestionMaritimaModule } from './gestion_maritima/gestion_maritima.module';
 import { GestionReservaModule } from './gestion_reserva/gestion_reserva.module';
+import { GestionPortuariaModule } from './gestion_portuaria/gestion_portuaria.module';
 
 @Module({
   imports: [
@@ -57,6 +58,7 @@ import { GestionReservaModule } from './gestion_reserva/gestion_reserva.module';
     MonitoreoModule,
     GestionMaritimaModule,
     GestionReservaModule,
+    GestionPortuariaModule,
   ],
   controllers: [AppController],
   providers: [AppService],

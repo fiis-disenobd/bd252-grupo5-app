@@ -13,6 +13,7 @@ import { Puerto } from './puerto.entity';
 import { Muelle } from './muelle.entity';
 import { OperacionEquipoPortuario } from './operacion-equipo-portuario.entity';
 import { Estiba } from './estiba.entity';
+import { TipoOperacionPortuaria } from '../../shared/entities/tipo-operacion-portuaria.entity';
 
 @Entity({ schema: 'gestion_maritima', name: 'operacionportuaria' })
 @Unique('uq_operacion_portuaria_operacion', ['id_operacion'])
@@ -54,6 +55,10 @@ export class OperacionPortuaria {
   @ManyToOne(() => Buque)
   @JoinColumn({ name: 'id_buque' })
   buque: Buque;
+
+  @ManyToOne(() => TipoOperacionPortuaria)
+  @JoinColumn({ name: 'id_tipo_operacion_portuaria' })
+  tipo_operacion_portuaria: TipoOperacionPortuaria;
 
   @OneToMany(
     () => OperacionEquipoPortuario,
