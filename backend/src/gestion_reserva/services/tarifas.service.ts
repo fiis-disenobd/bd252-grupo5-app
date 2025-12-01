@@ -31,19 +31,6 @@ export class TarifasService {
 
       const rutas = await this.rutaMaritimaRepository.query(query);
 
-      // Obtener puertos intermedios para cada ruta
-      for (const ruta of rutas) {
-        const intermediosQuery = `
-          SELECT p.nombre
-          FROM gestion_maritima.rutapuertointermedio rpi
-          JOIN gestion_maritima.puerto p ON rpi.id_puerto = p.id_puerto
-          WHERE rpi.id_ruta_maritima = $1
-          ORDER BY rpi.orden ASC
-        `;
-        const intermedios = await this.rutaMaritimaRepository.query(intermediosQuery, [ruta.id_ruta_maritima]);
-        ruta.puertosIntermedios = intermedios.map((i: any) => i.nombre);
-      }
-
       return rutas.map((ruta: any) => ({
         id: ruta.id_ruta_maritima,
         id_ruta: ruta.id_ruta,
@@ -53,7 +40,6 @@ export class TarifasService {
         tarifa: ruta.tarifa,
         puerto_origen: ruta.puerto_origen,
         puerto_destino: ruta.puerto_destino,
-        puertosIntermedios: ruta.puertosIntermedios || [],
       }));
     } catch (error) {
       console.error('Error al obtener tarifas:', error);
