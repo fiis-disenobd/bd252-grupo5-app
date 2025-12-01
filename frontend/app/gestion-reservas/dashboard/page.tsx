@@ -11,6 +11,8 @@ export default function Dashboard() {
   const [clientes, setClientes] = useState<any[]>([]);
   const [showAllBuques, setShowAllBuques] = useState(false);
   const [showAllRutas, setShowAllRutas] = useState(false);
+  const [currentPageClientes, setCurrentPageClientes] = useState(1);
+  const clientesPorPagina = 10;
 
   useEffect(() => {
     const fetchData = async () => {
@@ -77,7 +79,7 @@ export default function Dashboard() {
               <p className="text-sm text-gray-600 mb-1">Total Reservas</p>
               <p className="text-3xl font-bold text-gray-900">{loading ? "..." : stats?.total || 0}</p>
               <p className="text-xs text-green-600 mt-1">
-                {reservas.length} activas
+                {stats?.porEstado?.find((e: any) => e.estado === "En Proceso")?.cantidad || 0} En Proceso
               </p>
             </div>
           </div>
@@ -91,9 +93,9 @@ export default function Dashboard() {
             </div>
             <div className="flex-1">
               <p className="text-sm text-gray-600 mb-1">Total Contenedores</p>
-              <p className="text-3xl font-bold text-gray-900">{loading ? "..." : reservas.reduce((acc, r) => acc + (r.contenedores?.length || 0), 0)}</p>
+              <p className="text-3xl font-bold text-gray-900">{loading ? "..." : stats?.totalContenedores || 0}</p>
               <p className="text-xs text-green-600 mt-1">
-                En reservas activas
+                En el sistema
               </p>
             </div>
           </div>
@@ -106,9 +108,9 @@ export default function Dashboard() {
               <span className="material-symbols-outlined text-blue-600 text-3xl">directions_boat</span>
             </div>
             <div className="flex-1">
-              <p className="text-sm text-gray-600 mb-1">Buques en Operación</p>
-              <p className="text-3xl font-bold text-gray-900">{loading ? "..." : buques.length}</p>
-              <p className="text-xs text-gray-600 mt-1">Registrados en sistema</p>
+              <p className="text-sm text-gray-600 mb-1">Total Buques</p>
+              <p className="text-3xl font-bold text-gray-900">{loading ? "..." : stats?.totalBuques || 0}</p>
+              <p className="text-xs text-green-600 mt-1">{stats?.buquesOperativos || 0} Operativos</p>
             </div>
           </div>
         </div>
@@ -196,13 +198,13 @@ export default function Dashboard() {
                 {(() => {
                   // Ordenar rutas por número de reservas descendente
                   const rutasOrdenadas = [...rutas].sort((a, b) => {
-                    const reservasA = reservas.filter(r => r.id_ruta === a.id_ruta).length;
-                    const reservasB = reservas.filter(r => r.id_ruta === b.id_ruta).length;
+                    const reservasA = reservas.filter(r => r.ruta?.id_ruta === a.id_ruta).length;
+                    const reservasB = reservas.filter(r => r.ruta?.id_ruta === b.id_ruta).length;
                     return reservasB - reservasA;
                   });
                   
                   return (showAllRutas ? rutasOrdenadas : rutasOrdenadas.slice(0, 5)).map((ruta, idx) => {
-                    const reservasConRuta = reservas.filter(r => r.id_ruta === ruta.id_ruta).length;
+                    const reservasConRuta = reservas.filter(r => r.ruta?.id_ruta === ruta.id_ruta).length;
                     return (
                       <div key={ruta.id || idx} className="flex justify-between items-center">
                         <div className="flex-1">
@@ -264,25 +266,66 @@ export default function Dashboard() {
                   <td colSpan={4} className="text-center py-8 text-gray-500">No hay clientes disponibles</td>
                 </tr>
               ) : (
-                clientes.map((cliente, idx) => {
-                  const reservasCount = reservas.filter(r => r.ruc_cliente === cliente.ruc).length;
-                  return (
-                    <tr key={cliente.ruc || idx} className="border-b border-gray-100 hover:bg-gray-50">
-                      <td className="py-3 px-4 text-sm text-gray-900">{cliente.razon_social}</td>
-                      <td className="py-3 px-4 text-sm text-gray-600">{cliente.ruc}</td>
-                      <td className="py-3 px-4">
-                        <span className="inline-flex items-center justify-center w-10 h-10 rounded-full bg-green-100 text-green-700 font-semibold text-sm">
-                          {reservasCount}
-                        </span>
-                      </td>
-                      <td className="py-3 px-4 text-sm text-gray-600">{cliente.email || "N/A"}</td>
-                    </tr>
-                  );
-                })
+                (() => {
+                  // Ordenar clientes por cantidad de reservas activas (descendente)
+                  const clientesOrdenados = [...clientes].sort((a, b) => {
+                    const reservasA = reservas.filter(r => r.ruc_cliente === a.ruc).length;
+                    const reservasB = reservas.filter(r => r.ruc_cliente === b.ruc).length;
+                    return reservasB - reservasA;
+                  });
+
+                  // Paginación
+                  const totalPagesClientes = Math.ceil(clientesOrdenados.length / clientesPorPagina);
+                  const indexInicioClientes = (currentPageClientes - 1) * clientesPorPagina;
+                  const clientesPaginados = clientesOrdenados.slice(indexInicioClientes, indexInicioClientes + clientesPorPagina);
+
+                  return clientesPaginados.map((cliente, idx) => {
+                    const reservasCount = reservas.filter(r => r.ruc_cliente === cliente.ruc).length;
+                    return (
+                      <tr key={cliente.ruc || idx} className="border-b border-gray-100 hover:bg-gray-50">
+                        <td className="py-3 px-4 text-sm text-gray-900">{cliente.razon_social}</td>
+                        <td className="py-3 px-4 text-sm text-gray-600">{cliente.ruc}</td>
+                        <td className="py-3 px-4">
+                          <span className="inline-flex items-center justify-center w-10 h-10 rounded-full bg-green-100 text-green-700 font-semibold text-sm">
+                            {reservasCount}
+                          </span>
+                        </td>
+                        <td className="py-3 px-4 text-sm text-gray-600">{cliente.email || "N/A"}</td>
+                      </tr>
+                    );
+                  });
+                })()
               )}
             </tbody>
           </table>
         </div>
+        {/* Paginación */}
+        {clientes.length > 0 && (
+          <div className="flex items-center justify-between px-4 py-4 border-t border-gray-200 mt-4">
+            <span className="text-sm text-gray-600">
+              Mostrando {((currentPageClientes - 1) * clientesPorPagina) + 1} - {Math.min(currentPageClientes * clientesPorPagina, clientes.length)} de {clientes.length} clientes
+            </span>
+            <div className="flex gap-2">
+              <button
+                onClick={() => setCurrentPageClientes((p) => Math.max(1, p - 1))}
+                disabled={currentPageClientes === 1}
+                className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                Anterior
+              </button>
+              <span className="flex items-center px-4 py-2 text-sm text-gray-700">
+                Página {currentPageClientes} de {Math.ceil(clientes.length / clientesPorPagina)}
+              </span>
+              <button
+                onClick={() => setCurrentPageClientes((p) => Math.min(Math.ceil(clientes.length / clientesPorPagina), p + 1))}
+                disabled={currentPageClientes === Math.ceil(clientes.length / clientesPorPagina)}
+                className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                Siguiente
+              </button>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );

@@ -5,6 +5,8 @@ import { useEffect, useState } from "react";
 export default function GestionTarifas() {
   const [loading, setLoading] = useState(true);
   const [rutas, setRutas] = useState<any[]>([]);
+  const [currentPage, setCurrentPage] = useState(1);
+  const tarifasPorPagina = 10;
 
   useEffect(() => {
     const fetchTarifas = async () => {
@@ -23,6 +25,10 @@ export default function GestionTarifas() {
 
     fetchTarifas();
   }, []);
+
+  const totalPages = Math.ceil(rutas.length / tarifasPorPagina);
+  const indexInicio = (currentPage - 1) * tarifasPorPagina;
+  const tarifasPaginadas = rutas.slice(indexInicio, indexInicio + tarifasPorPagina);
 
   return (
     <div className="p-8">
@@ -51,12 +57,12 @@ export default function GestionTarifas() {
               <tr>
                 <td colSpan={4} className="text-center py-8 text-gray-500">Cargando...</td>
               </tr>
-            ) : rutas.length === 0 ? (
+            ) : tarifasPaginadas.length === 0 ? (
               <tr>
                 <td colSpan={4} className="text-center py-8 text-gray-500">No hay tarifas disponibles</td>
               </tr>
             ) : (
-              rutas.map((ruta: any) => (
+              tarifasPaginadas.map((ruta: any) => (
                 <tr key={ruta.id} className="border-b border-gray-100 hover:bg-gray-50">
                   <td className="py-4 px-6 text-sm text-gray-900">
                     {ruta.codigo || "N/A"}
@@ -75,6 +81,33 @@ export default function GestionTarifas() {
             )}
           </tbody>
         </table>
+        {/* Paginación */}
+        {rutas.length > 0 && (
+          <div className="flex items-center justify-between px-6 py-4 border-t border-gray-200">
+            <span className="text-sm text-gray-600">
+              Mostrando {indexInicio + 1} - {Math.min(indexInicio + tarifasPorPagina, rutas.length)} de {rutas.length} tarifas
+            </span>
+            <div className="flex gap-2">
+              <button
+                onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+                disabled={currentPage === 1}
+                className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                Anterior
+              </button>
+              <span className="flex items-center px-4 py-2 text-sm text-gray-700">
+                Página {currentPage} de {totalPages}
+              </span>
+              <button
+                onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
+                disabled={currentPage === totalPages}
+                className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                Siguiente
+              </button>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );

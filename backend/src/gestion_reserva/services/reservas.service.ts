@@ -466,10 +466,33 @@ export class ReservasService {
     `;
     const ingresoResult = await this.reservaRepository.query(ingresoQuery);
 
+    // Total de contenedores asignados a reservas
+    const contenedoresQuery = `
+      SELECT COUNT(*) as total 
+      FROM shared.contenedor
+    `;
+    const contenedoresResult = await this.reservaRepository.query(contenedoresQuery);
+
+    // Total de buques
+    const buquesTotalQuery = `SELECT COUNT(*) as total FROM shared.buque`;
+    const buquesTotalResult = await this.reservaRepository.query(buquesTotalQuery);
+
+    // Buques operativos
+    const buquesOperativosQuery = `
+      SELECT COUNT(*) as total 
+      FROM shared.buque b
+      JOIN shared.estadoembarcacion ee ON b.id_estado_embarcacion = ee.id_estado_embarcacion
+      WHERE ee.nombre = 'Operativo'
+    `;
+    const buquesOperativosResult = await this.reservaRepository.query(buquesOperativosQuery);
+
     return {
       total: parseInt(totalResult[0].total, 10),
       porEstado: porEstadoResult,
       ingresoTotal: parseFloat(ingresoResult[0].total),
+      totalContenedores: parseInt(contenedoresResult[0].total, 10),
+      totalBuques: parseInt(buquesTotalResult[0].total, 10),
+      buquesOperativos: parseInt(buquesOperativosResult[0].total, 10),
     };
   }
 }

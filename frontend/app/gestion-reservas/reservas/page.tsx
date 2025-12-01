@@ -14,6 +14,8 @@ export default function ReservasActivas() {
   const [clientes, setClientes] = useState<any[]>([]);
   const [estados, setEstados] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [currentPage, setCurrentPage] = useState(1);
+  const reservasPorPagina = 10;
 
   // Cargar datos iniciales (clientes, estados y reservas)
   useEffect(() => {
@@ -48,6 +50,7 @@ export default function ReservasActivas() {
 
   // Buscar por código usando el endpoint del backend
   const handleSearchByCodigo = async () => {
+    setCurrentPage(1);
     if (!searchTerm.trim()) {
       // Si está vacío, cargar todas las reservas
       const res = await fetch("http://localhost:3001/gestion-reserva/reservas");
@@ -77,6 +80,7 @@ export default function ReservasActivas() {
   // Filtrar por cliente usando el endpoint del backend
   const handleFilterByCliente = async (rucCliente: string) => {
     setFilterCliente(rucCliente);
+    setCurrentPage(1);
     setLoading(true);
     
     try {
@@ -122,6 +126,10 @@ export default function ReservasActivas() {
     return true;
   });
 
+  const totalPages = Math.ceil(filteredReservas.length / reservasPorPagina);
+  const indexInicio = (currentPage - 1) * reservasPorPagina;
+  const reservasPaginadas = filteredReservas.slice(indexInicio, indexInicio + reservasPorPagina);
+
   const getEstadoBadge = (estado: string) => {
     const styles: Record<string, string> = {
       Confirmada: "bg-green-100 text-green-700",
@@ -139,6 +147,7 @@ export default function ReservasActivas() {
     setFilterFechaDesde("");
     setFilterFechaHasta("");
     setFilterEstado("");
+    setCurrentPage(1);
     
     setLoading(true);
     try {
@@ -213,7 +222,10 @@ export default function ReservasActivas() {
               <input
                 type="date"
                 value={filterFechaDesde}
-                onChange={(e) => setFilterFechaDesde(e.target.value)}
+                onChange={(e) => {
+                  setFilterFechaDesde(e.target.value);
+                  setCurrentPage(1);
+                }}
                 className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white text-gray-700"
               />
             </div>
@@ -224,7 +236,10 @@ export default function ReservasActivas() {
               <input
                 type="date"
                 value={filterFechaHasta}
-                onChange={(e) => setFilterFechaHasta(e.target.value)}
+                onChange={(e) => {
+                  setFilterFechaHasta(e.target.value);
+                  setCurrentPage(1);
+                }}
                 className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white text-gray-700"
               />
             </div>
@@ -233,7 +248,10 @@ export default function ReservasActivas() {
             <div className="relative">
               <select
                 value={filterEstado}
-                onChange={(e) => setFilterEstado(e.target.value)}
+                onChange={(e) => {
+                  setFilterEstado(e.target.value);
+                  setCurrentPage(1);
+                }}
                 className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 appearance-none bg-white text-gray-700"
               >
                 <option value="">Todos los estados</option>
@@ -277,12 +295,12 @@ export default function ReservasActivas() {
                 <tr>
                   <td colSpan={4} className="text-center py-8 text-gray-500">Cargando...</td>
                 </tr>
-              ) : filteredReservas.length === 0 ? (
+              ) : reservasPaginadas.length === 0 ? (
                 <tr>
                   <td colSpan={4} className="text-center py-8 text-gray-500">No se encontraron reservas</td>
                 </tr>
               ) : (
-                filteredReservas.map((reserva) => (
+                reservasPaginadas.map((reserva) => (
                   <tr key={reserva.id_reserva} className="border-b border-gray-100 hover:bg-gray-50">
                     <td className="py-4 px-6 text-sm font-medium text-blue-600 hover:text-blue-800 cursor-pointer">
                       {reserva.codigo}
@@ -303,6 +321,33 @@ export default function ReservasActivas() {
               )}
             </tbody>
           </table>
+          {/* Paginación */}
+          {filteredReservas.length > 0 && (
+            <div className="flex items-center justify-between px-6 py-4 border-t border-gray-200">
+              <span className="text-sm text-gray-600">
+                Mostrando {indexInicio + 1} - {Math.min(indexInicio + reservasPorPagina, filteredReservas.length)} de {filteredReservas.length} reservas
+              </span>
+              <div className="flex gap-2">
+                <button
+                  onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+                  disabled={currentPage === 1}
+                  className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  Anterior
+                </button>
+                <span className="flex items-center px-4 py-2 text-sm text-gray-700">
+                  Página {currentPage} de {totalPages}
+                </span>
+                <button
+                  onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
+                  disabled={currentPage === totalPages}
+                  className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  Siguiente
+                </button>
+              </div>
+            </div>
+          )}
         </div>
       </div>
     </div>
