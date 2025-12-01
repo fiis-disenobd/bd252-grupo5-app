@@ -44,7 +44,7 @@ export default function LoginGestionReservasPage() {
             setAuthData(data.access_token, data.usuario);
 
             // Redirigir a gestión de reservas
-            router.push("/gestion-reservas");
+            router.push("/gestion-reservas/nueva-reserva");
 
         } catch (err: any) {
             setError(err.message);

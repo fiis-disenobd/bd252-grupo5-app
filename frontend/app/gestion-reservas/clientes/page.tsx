@@ -8,6 +8,8 @@ export default function GestionClientes() {
   const [clientes, setClientes] = useState<any[]>([]);
   const [reservas, setReservas] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [currentPage, setCurrentPage] = useState(1);
+  const clientesPorPagina = 10;
 
   useEffect(() => {
     const fetchData = async () => {
@@ -45,6 +47,10 @@ export default function GestionClientes() {
       c.ruc.includes(searchTerm)
   );
 
+  const totalPages = Math.ceil(filteredClientes.length / clientesPorPagina);
+  const indexInicio = (currentPage - 1) * clientesPorPagina;
+  const clientesPaginados = filteredClientes.slice(indexInicio, indexInicio + clientesPorPagina);
+
   const historialReservas = selectedCliente
     ? reservas.filter(r => r.ruc_cliente === selectedCliente.ruc)
     : [];
@@ -70,7 +76,10 @@ export default function GestionClientes() {
                 type="text"
                 placeholder="Buscar por nombre o RUC"
                 value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
+                onChange={(e) => {
+                  setSearchTerm(e.target.value);
+                  setCurrentPage(1);
+                }}
                 className="w-full pl-10 pr-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-700"
               />
             </div>
@@ -93,12 +102,12 @@ export default function GestionClientes() {
                   <tr>
                     <td colSpan={5} className="text-center py-8 text-gray-500">Cargando...</td>
                   </tr>
-                ) : filteredClientes.length === 0 ? (
+                ) : clientesPaginados.length === 0 ? (
                   <tr>
                     <td colSpan={5} className="text-center py-8 text-gray-500">No se encontraron clientes</td>
                   </tr>
                 ) : (
-                  filteredClientes.map((cliente) => {
+                  clientesPaginados.map((cliente) => {
                     const reservasCliente = reservas.filter(r => r.ruc_cliente === cliente.ruc);
                     const ultimaReserva = reservasCliente.length > 0
                       ? new Date(reservasCliente[0].fecha_registro).toLocaleDateString("es-PE")
@@ -139,6 +148,33 @@ export default function GestionClientes() {
                 )}
               </tbody>
             </table>
+            {/* Paginación */}
+            {filteredClientes.length > 0 && (
+              <div className="flex items-center justify-between px-6 py-4 border-t border-gray-200">
+                <span className="text-sm text-gray-600">
+                  Mostrando {indexInicio + 1} - {Math.min(indexInicio + clientesPorPagina, filteredClientes.length)} de {filteredClientes.length} clientes
+                </span>
+                <div className="flex gap-2">
+                  <button
+                    onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+                    disabled={currentPage === 1}
+                    className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    Anterior
+                  </button>
+                  <span className="flex items-center px-4 py-2 text-sm text-gray-700">
+                    Página {currentPage} de {totalPages}
+                  </span>
+                  <button
+                    onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
+                    disabled={currentPage === totalPages}
+                    className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    Siguiente
+                  </button>
+                </div>
+              </div>
+            )}
           </div>
 
           {/* Historial de Reservas */}
@@ -170,8 +206,14 @@ export default function GestionClientes() {
                           {new Date(reserva.fecha_registro).toLocaleDateString("es-PE")}
                         </td>
                         <td className="py-4 px-6">
-                          <span className="inline-flex px-3 py-1 rounded-full text-xs font-semibold bg-blue-100 text-blue-700">
-                            Activa
+                          <span className={`inline-flex px-3 py-1 rounded-full text-xs font-semibold ${
+                            reserva.estado_reserva?.nombre === "Confirmada" ? "bg-green-100 text-green-700" :
+                            reserva.estado_reserva?.nombre === "Pendiente" ? "bg-yellow-100 text-yellow-700" :
+                            reserva.estado_reserva?.nombre === "Cancelada" ? "bg-red-100 text-red-700" :
+                            reserva.estado_reserva?.nombre === "Completada" ? "bg-blue-100 text-blue-700" :
+                            "bg-gray-100 text-gray-700"
+                          }`}>
+                            {reserva.estado_reserva?.nombre || "Sin estado"}
                           </span>
                         </td>
                       </tr>

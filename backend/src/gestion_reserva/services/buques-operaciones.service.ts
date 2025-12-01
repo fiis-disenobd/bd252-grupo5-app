@@ -16,19 +16,22 @@ export class BuquesOperacionesService {
   async findBuquesConOperaciones(): Promise<any[]> {
     try {
       const query = `
-        SELECT DISTINCT ON (b.id_buque)
-          b.id_buque,
-          b.nombre,
-          b.matricula,
-          b.capacidad,
-          om.porcentaje_trayecto,
-          eo.nombre AS estado_operacion
-        FROM shared.buque b
-        JOIN shared.operacionmaritima om ON b.id_buque = om.id_buque
-        JOIN shared.operacion o ON om.id_operacion = o.id_operacion
-        JOIN shared.estadooperacion eo ON o.id_estado_operacion = eo.id_estado_operacion
-        WHERE eo.nombre IN ('En Curso', 'Programada')
-        ORDER BY b.id_buque, om.porcentaje_trayecto DESC
+        SELECT * FROM (
+          SELECT DISTINCT ON (b.id_buque)
+            b.id_buque,
+            b.nombre,
+            b.matricula,
+            b.capacidad,
+            om.porcentaje_trayecto,
+            eo.nombre AS estado_operacion
+          FROM shared.buque b
+          JOIN shared.operacionmaritima om ON b.id_buque = om.id_buque
+          JOIN shared.operacion o ON om.id_operacion = o.id_operacion
+          JOIN shared.estadooperacion eo ON o.id_estado_operacion = eo.id_estado_operacion
+          WHERE eo.nombre IN ('En Curso', 'Programada')
+          ORDER BY b.id_buque, om.porcentaje_trayecto DESC
+        ) AS buques
+        ORDER BY porcentaje_trayecto DESC
       `;
 
       const result = await this.buqueRepository.query(query);
