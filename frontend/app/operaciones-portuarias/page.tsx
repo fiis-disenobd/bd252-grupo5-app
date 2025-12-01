@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { Header } from "@/components/Header";
+import Link from "next/link";
 
 type ResumenResponse = {
   pendientes: number;
@@ -64,12 +65,14 @@ export default function OperacionesPortuariasPage() {
         {/* Contenedor 1: Título + botón */}
         <div className="flex items-center justify-between">
           <h1 className="text-2xl font-bold">Dashboard Operaciones Portuarias</h1>
-          <button
-            type="button"
-            className="rounded-md bg-purple-600 px-4 py-2 text-sm font-semibold text-white shadow hover:bg-purple-700"
-          >
-            Nueva operación portuaria
-          </button>
+          <Link href="/operaciones-portuarias/nueva">
+            <button
+              type="button"
+              className="rounded-md bg-purple-600 px-4 py-2 text-sm font-semibold text-white shadow hover:bg-purple-700"
+            >
+              Nueva operación portuaria
+            </button>
+          </Link>
         </div>
 
         {/* Contenedor 2: Resumen de estados */}
