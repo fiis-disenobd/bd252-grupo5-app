@@ -43,7 +43,7 @@ export default function LoginOperacionesPortuariasPage() {
             // Actualizar el contexto de autenticación
             setAuthData(data.access_token, data.usuario);
 
-            // Redirigir a operaciones portuarias
+            // Redirigir a operaciones portuarias (placeholder por ahora)
             router.push("/operaciones-portuarias");
 
         } catch (err: any) {
