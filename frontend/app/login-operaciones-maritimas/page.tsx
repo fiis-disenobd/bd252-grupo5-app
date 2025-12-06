@@ -59,7 +59,13 @@ export default function LoginOperacionesMaritimasPage() {
                 <div>
                     <div className="flex items-center space-x-4 mb-16">
                         <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-white/15 backdrop-blur">
-                            <span className="material-symbols-outlined text-2xl">directions_boat</span>
+                                      <Image
+                                        src="/favicon/favicon-96x96.png"
+                                        alt="Hapag-Lloyd"
+                                        width={32}
+                                        height={32}
+                                        className="h-8 w-8 rounded-md"
+                                      />
                         </div>
                         <div>
                             <p className="text-sm uppercase tracking-wide text-white/80">Hapag-Lloyd</p>

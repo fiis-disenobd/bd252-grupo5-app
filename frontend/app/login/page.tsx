@@ -28,8 +28,8 @@ export default function LoginPage() {
 
   return (
     <div className="flex min-h-screen bg-white">
-      {/* Panel Izquierdo - Branding Unificado */}
-      <div className="hidden lg:flex lg:w-1/2 flex-col justify-between p-12 text-white bg-gradient-to-br from-orange-500 to-orange-300">
+      {/* Panel Izquierdo - Branding Monitoreo */}
+      <div className="hidden lg:flex lg:w-1/2 flex-col justify-between p-12 text-white bg-gradient-to-br from-purple-600 to-indigo-500">
         <div>
           <div className="flex items-center space-x-4 mb-16">
             <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-white/15 backdrop-blur">
@@ -43,43 +43,37 @@ export default function LoginPage() {
             </div>
             <div>
               <p className="text-sm uppercase tracking-wide text-white/80">Hapag-Lloyd</p>
-              <p className="text-xs text-white/70">Plataforma interna unificada</p>
+              <p className="text-xs text-white/70">Módulo de Monitoreo</p>
             </div>
           </div>
 
           <h2 className="text-5xl font-bold leading-tight mb-6">
-            Acceso Unificado al Sistema
+            Monitoreo de Operaciones
           </h2>
           <p className="text-lg opacity-90 max-w-xl">
-            Gestión centralizada para todos los módulos internos de la compañía.
+            Panel especializado para el seguimiento y control de operaciones en tiempo real.
           </p>
 
           <div className="mt-16 space-y-8 max-w-xl">
             <div className="flex items-start space-x-4">
-              <span className="material-symbols-outlined text-3xl opacity-90 mt-1">hub</span>
+              <span className="material-symbols-outlined text-3xl opacity-90 mt-1">monitoring</span>
               <div>
-                <h3 className="font-bold text-lg">Plataforma Única</h3>
-                <p className="opacity-85 text-sm">
-                  Un solo inicio de sesión para monitoreo, reservas, gestión y más.
-                </p>
+                <h3 className="font-bold text-lg">Vista Centralizada</h3>
+                <p className="opacity-85 text-sm">Consolida la información clave de la operación en un solo lugar.</p>
               </div>
             </div>
             <div className="flex items-start space-x-4">
-              <span className="material-symbols-outlined text-3xl opacity-90 mt-1">stream</span>
+              <span className="material-symbols-outlined text-3xl opacity-90 mt-1">timeline</span>
               <div>
-                <h3 className="font-bold text-lg">Flujos de Trabajo Optimizados</h3>
-                <p className="opacity-85 text-sm">
-                  Mejora la eficiencia y colaboración entre departamentos.
-                </p>
+                <h3 className="font-bold text-lg">Seguimiento en Tiempo Real</h3>
+                <p className="opacity-85 text-sm">Supervisa el estado de las operaciones y detecta incidencias oportunamente.</p>
               </div>
             </div>
             <div className="flex items-start space-x-4">
               <span className="material-symbols-outlined text-3xl opacity-90 mt-1">security</span>
               <div>
-                <h3 className="font-bold text-lg">Acceso Seguro y Centralizado</h3>
-                <p className="opacity-85 text-sm">
-                  Seguridad robusta para la información crítica de la compañía.
-                </p>
+                <h3 className="font-bold text-lg">Acceso Seguro</h3>
+                <p className="opacity-85 text-sm">Protección de la información crítica asociada al monitoreo de la operación.</p>
               </div>
             </div>
           </div>
@@ -97,7 +91,7 @@ export default function LoginPage() {
           <div className="text-center lg:text-left mb-10">
             <h2 className="text-3xl font-bold text-gray-900">Bienvenido</h2>
             <p className="text-gray-600 mt-2">
-              Ingresa tus credenciales para acceder al sistema.
+              Ingresa tus credenciales para acceder al módulo de Monitoreo.
             </p>
           </div>
 
@@ -182,7 +176,7 @@ export default function LoginPage() {
               <span className="material-symbols-outlined text-blue-500 mr-3 mt-1">info</span>
               <div>
                 <p className="text-sm text-blue-700">
-                  Este sistema es para uso exclusivo del personal autorizado y registrado de Hapag-Lloyd.
+                  Este módulo de monitoreo es para uso exclusivo del personal autorizado y registrado de Hapag-Lloyd.
                 </p>
               </div>
             </div>
