@@ -1,7 +1,8 @@
 "use client";
 
 import { Header } from "@/components/Header";
-import { useState, useEffect } from "react";
+import { Suspense, useState, useEffect } from "react";
+
 import { useRouter, useSearchParams } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
@@ -229,393 +230,401 @@ export default function NuevaOperacionPortuariaPage({}: NuevaOperacionPortuariaP
   const vesselUbicacion = buqueSeleccionado?.ubicacion_actual ?? "-";
 
   return (
-    <div className="flex min-h-screen flex-col bg-[#f5f7f8] text-gray-900 dark:bg-[#0f1923] dark:text-gray-100">
-      <Header />
-      <main className="flex-1 p-4 md:p-8 lg:p-10 overflow-y-auto">
-        <div className="max-w-7xl mx-auto">
-          <header className="mb-8">
-            <div className="flex flex-wrap items-start justify-between gap-4">
-              <div>
-                <h1 className="text-3xl font-bold text-[#0459af]">
-                  Registro de Operación Portuaria
-                </h1>
-                <div className="mt-6 flex flex-wrap items-center gap-x-6 gap-y-4 text-sm text-gray-600 dark:text-gray-400">
-                  <div className="flex items-center gap-2">
-                    <span className="material-symbols-outlined text-lg">calendar_today</span>
-                    <span>{new Date().toLocaleDateString()} (Automático)</span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <span className="material-symbols-outlined text-lg">schedule</span>
-                    <span>{new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })} (Automático)</span>
+    <Suspense
+      fallback={
+        <div className="flex min-h-screen items-center justify-center bg-[#f5f7f8] dark:bg-[#0f1923]">
+          Cargando datos de la nueva operación portuaria...
+        </div>
+      }
+    >
+      <div className="flex min-h-screen flex-col bg-[#f5f7f8] text-gray-900 dark:bg-[#0f1923] dark:text-gray-100">
+        <Header />
+        <main className="flex-1 p-4 md:p-8 lg:p-10 overflow-y-auto">
+          <div className="max-w-7xl mx-auto">
+            <header className="mb-8">
+              <div className="flex flex-wrap items-start justify-between gap-4">
+                <div>
+                  <h1 className="text-3xl font-bold text-[#0459af]">
+                    Registro de Operación Portuaria
+                  </h1>
+                  <div className="mt-6 flex flex-wrap items-center gap-x-6 gap-y-4 text-sm text-gray-600 dark:text-gray-400">
+                    <div className="flex items-center gap-2">
+                      <span className="material-symbols-outlined text-lg">calendar_today</span>
+                      <span>{new Date().toLocaleDateString()} (Automático)</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <span className="material-symbols-outlined text-lg">schedule</span>
+                      <span>{new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })} (Automático)</span>
+                    </div>
                   </div>
                 </div>
-              </div>
-              <div className="flex items-center space-x-4">
-                <span className="text-sm text-gray-600 dark:text-gray-400 flex items-center gap-2">
-                  <span className="font-semibold">Nº Operación:</span>
-                  <span className="bg-gray-200 dark:bg-slate-700 px-3 py-1.5 rounded-md text-xs">
-                    {formData.codigo}
+                <div className="flex items-center space-x-4">
+                  <span className="text-sm text-gray-600 dark:text-gray-400 flex items-center gap-2">
+                    <span className="font-semibold">Nº Operación:</span>
+                    <span className="bg-gray-200 dark:bg-slate-700 px-3 py-1.5 rounded-md text-xs">
+                      {formData.codigo}
+                    </span>
                   </span>
-                </span>
-                <Image
-                  alt="User avatar"
-                  className="h-10 w-10 rounded-full"
-                  src="https://lh3.googleusercontent.com/aida-public/AB6AXuB2dLT5BTromXioK4wV6ALN_C3AVwem9YEyECyzr_g3OdNVYl29mRg_6k022s4sGJGUPmlez7iw5trFen4hklRqRY85XMGGVh1bNX5XfDzQ5fAFGB3xTSrFmpQYHAnVxdP-ofkPK6KDtFp6o_NBTU64w2YgfwgxNgV6QaQKq6po2IH5eLSanYNkRWZVsgrJz6qYh44KXZ_LDkYQPDGqWKsF9hoLNi3Jwdpdey2IzmWgcPLgQxoUG3d4y9Ve9oqaLIcQAdurOi2jYSzJ"
-                  height={40}
-                  width={40}
-                />
-              </div>
-            </div>
-          </header>
-
-          <div className="grid grid-cols-1 xl:grid-cols-5 gap-8">
-            {/* Parte Izquierda - Personal y Equipo Asignado */}
-            <div className="xl:col-span-3 space-y-8">
-              {/* Personal Asignado */}
-              <div className="bg-white dark:bg-slate-800 p-6 rounded-xl shadow-lg border border-gray-200 dark:border-slate-700">
-                <div className="flex justify-between items-center mb-6">
-                  <h2 className="text-xl font-semibold flex items-center gap-3">
-                    <span className="material-symbols-outlined text-[#0459af] text-2xl">groups</span>
-                    Personal Asignado
-                  </h2>
-                  <Link
-                    href="/operaciones-portuarias/nueva/asignar-personal"
-                    className="flex items-center gap-2 px-4 py-2 bg-[#0459af] text-white text-sm font-semibold rounded-lg hover:bg-[#0459af]/90 transition-colors"
-                  >
-                    <span className="material-symbols-outlined text-lg">
-                      person_add
-                    </span>
-                    Asignar
-                  </Link>
+                  <Image
+                    alt="User avatar"
+                    className="h-10 w-10 rounded-full"
+                    src="https://lh3.googleusercontent.com/aida-public/AB6AXuB2dLT5BTromXioK4wV6ALN_C3AVwem9YEyECyzr_g3OdNVYl29mRg_6k022s4sGJGUPmlez7iw5trFen4hklRqRY85XMGGVh1bNX5XfDzQ5fAFGB3xTSrFmpQYHAnVxdP-ofkPK6KDtFp6o_NBTU64w2YgfwgxNgV6QaQKq6po2IH5eLSanYNkRWZVsgrJz6qYh44KXZ_LDkYQPDGqWKsF9hoLNi3Jwdpdey2IzmWgcPLgQxoUG3d4y9Ve9oqaLIcQAdurOi2jYSzJ"
+                    height={40}
+                    width={40}
+                  />
                 </div>
-                
-                <div className="space-y-4">
-                  <div className="max-h-60 overflow-y-auto space-y-2 border border-gray-200 dark:border-slate-700 rounded-lg p-3">
-                    {Array.isArray(trabajadoresDisponibles) && trabajadoresDisponibles.length > 0 ? (
-                      trabajadoresDisponibles.map((trabajador) => {
-                        const isAssigned = trabajadoresAsignados.some((t) => t.id_trabajador_portuario === trabajador.id_trabajador_portuario);
-                        return (
-                          <div
-                            key={trabajador.id_trabajador_portuario}
-                            className={`flex items-center justify-between p-3 rounded-lg border cursor-pointer transition-colors ${
-                              isAssigned
-                                ? "bg-blue-50 dark:bg-blue-900/30 border-blue-200 dark:border-blue-800"
-                                : "bg-gray-50 dark:bg-slate-700/50 border-gray-100 dark:border-slate-700 hover:bg-gray-100 dark:hover:bg-slate-700"
-                            }`}
-                            onClick={() => handleTrabajadorToggle(trabajador)}
-                          >
-                            <div className="flex items-center gap-3">
-                              <div className="h-8 w-8 rounded-full bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center text-blue-600 dark:text-blue-400 font-semibold text-xs">
-                                {trabajador.empleado.nombre.charAt(0)}
-                                {trabajador.empleado.apellido.charAt(0)}
-                              </div>
-                              <div>
-                                <p className="text-sm font-medium text-gray-900 dark:text-white">
-                                  {trabajador.empleado.nombre} {trabajador.empleado.apellido}
-                                </p>
-                                <p className="text-xs text-gray-500 dark:text-gray-400">
-                                  {trabajador.empleado.codigo} • Turno: {trabajador.turno}
-                                </p>
-                              </div>
-                            </div>
-                            <div className="flex items-center gap-2">
-                              <span className={`px-2 py-1 text-xs rounded-full ${
-                                trabajador.disponibilidad
-                                  ? "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400"
-                                  : "bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400"
-                              }`}>
-                                {trabajador.disponibilidad ? "Disponible" : "No disponible"}
-                              </span>
-                              <span className={`material-symbols-outlined text-lg ${
-                                isAssigned ? "text-blue-600 dark:text-blue-400" : "text-gray-400"
-                              }`}>
-                                {isAssigned ? "check_circle" : "radio_button_unchecked"}
-                              </span>
-                            </div>
-                          </div>
-                        );
-                      })
-                    ) : (
-                      <p className="text-sm text-gray-600 dark:text-gray-400 text-center py-4">
-                        No hay trabajadores portuarios disponibles
-                      </p>
-                    )}
+              </div>
+            </header>
+
+            <div className="grid grid-cols-1 xl:grid-cols-5 gap-8">
+              {/* Parte Izquierda - Personal y Equipo Asignado */}
+              <div className="xl:col-span-3 space-y-8">
+                {/* Personal Asignado */}
+                <div className="bg-white dark:bg-slate-800 p-6 rounded-xl shadow-lg border border-gray-200 dark:border-slate-700">
+                  <div className="flex justify-between items-center mb-6">
+                    <h2 className="text-xl font-semibold flex items-center gap-3">
+                      <span className="material-symbols-outlined text-[#0459af] text-2xl">groups</span>
+                      Personal Asignado
+                    </h2>
+                    <Link
+                      href="/operaciones-portuarias/nueva/asignar-personal"
+                      className="flex items-center gap-2 px-4 py-2 bg-[#0459af] text-white text-sm font-semibold rounded-lg hover:bg-[#0459af]/90 transition-colors"
+                    >
+                      <span className="material-symbols-outlined text-lg">
+                        person_add
+                      </span>
+                      Asignar
+                    </Link>
                   </div>
                   
-                  <div className="text-sm text-gray-600 dark:text-gray-400">
-                    Seleccionados: {trabajadoresAsignados.length} trabajador(es)
-                  </div>
-                </div>
-              </div>
-
-              {/* Equipo Portuario Asignado */}
-              <div className="bg-white dark:bg-slate-800 p-6 rounded-xl shadow-lg border border-gray-200 dark:border-slate-700">
-                <div className="flex justify-between items-center mb-6">
-                  <h2 className="text-xl font-semibold flex items-center gap-3">
-                    <span className="material-symbols-outlined text-[#0459af] text-2xl">engineering</span>
-                    Equipo Portuario Asignado
-                  </h2>
-                  <Link
-                    href="/operaciones-portuarias/nueva/equipos-portuarios"
-                    className="flex items-center gap-2 px-4 py-2 bg-[#0459af] text-white text-sm font-semibold rounded-lg hover:bg-[#0459af]/90 transition-colors"
-                  >
-                    <span className="material-symbols-outlined text-lg">
-                      construction
-                    </span>
-                    Asignar
-                  </Link>
-                </div>
-                
-                <div className="space-y-4">
-                  <div className="max-h-60 overflow-y-auto space-y-2 border border-gray-200 dark:border-slate-700 rounded-lg p-3">
-                    {Array.isArray(equiposDisponibles) && equiposDisponibles.length > 0 ? (
-                      equiposDisponibles.map((equipo) => {
-                        const isAssigned = equiposAsignados.some((e) => e.id_equipo_portuario === equipo.id_equipo_portuario);
-                        return (
-                          <div
-                            key={equipo.id_equipo_portuario}
-                            className={`flex items-center justify-between p-3 rounded-lg border cursor-pointer transition-colors ${
-                              isAssigned
-                                ? "bg-blue-50 dark:bg-blue-900/30 border-blue-200 dark:border-blue-800"
-                                : "bg-gray-50 dark:bg-slate-700/50 border-gray-100 dark:border-slate-700 hover:bg-gray-100 dark:hover:bg-slate-700"
-                            }`}
-                            onClick={() => handleEquipoToggle(equipo)}
-                          >
-                            <div className="flex items-center gap-3">
-                              <div className="h-8 w-8 rounded-full bg-orange-100 dark:bg-orange-900/30 flex items-center justify-center text-orange-600 dark:text-orange-400 font-semibold text-xs">
-                                {equipo.codigo.charAt(0)}
+                  <div className="space-y-4">
+                    <div className="max-h-60 overflow-y-auto space-y-2 border border-gray-200 dark:border-slate-700 rounded-lg p-3">
+                      {Array.isArray(trabajadoresDisponibles) && trabajadoresDisponibles.length > 0 ? (
+                        trabajadoresDisponibles.map((trabajador) => {
+                          const isAssigned = trabajadoresAsignados.some((t) => t.id_trabajador_portuario === trabajador.id_trabajador_portuario);
+                          return (
+                            <div
+                              key={trabajador.id_trabajador_portuario}
+                              className={`flex items-center justify-between p-3 rounded-lg border cursor-pointer transition-colors ${
+                                isAssigned
+                                  ? "bg-blue-50 dark:bg-blue-900/30 border-blue-200 dark:border-blue-800"
+                                  : "bg-gray-50 dark:bg-slate-700/50 border-gray-100 dark:border-slate-700 hover:bg-gray-100 dark:hover:bg-slate-700"
+                              }`}
+                              onClick={() => handleTrabajadorToggle(trabajador)}
+                            >
+                              <div className="flex items-center gap-3">
+                                <div className="h-8 w-8 rounded-full bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center text-blue-600 dark:text-blue-400 font-semibold text-xs">
+                                  {trabajador.empleado.nombre.charAt(0)}
+                                  {trabajador.empleado.apellido.charAt(0)}
+                                </div>
+                                <div>
+                                  <p className="text-sm font-medium text-gray-900 dark:text-white">
+                                    {trabajador.empleado.nombre} {trabajador.empleado.apellido}
+                                  </p>
+                                  <p className="text-xs text-gray-500 dark:text-gray-400">
+                                    {trabajador.empleado.codigo} • Turno: {trabajador.turno}
+                                  </p>
+                                </div>
                               </div>
-                              <div>
-                                <p className="text-sm font-medium text-gray-900 dark:text-white">
-                                  {equipo.codigo}
-                                </p>
-                                <p className="text-xs text-gray-500 dark:text-gray-400">
-                                  {equipo.tipo_equipo_portuario} • Capacidad: {equipo.capacidad}
-                                </p>
-                              </div>
-                            </div>
-                            <div className="flex items-center gap-2">
-                              {equipo.ubicacion && (
-                                <span className="text-xs text-gray-500 dark:text-gray-400">
-                                  {equipo.ubicacion}
+                              <div className="flex items-center gap-2">
+                                <span className={`px-2 py-1 text-xs rounded-full ${
+                                  trabajador.disponibilidad
+                                    ? "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400"
+                                    : "bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400"
+                                }`}>
+                                  {trabajador.disponibilidad ? "Disponible" : "No disponible"}
                                 </span>
-                              )}
-                              <span className={`material-symbols-outlined text-lg ${
-                                isAssigned ? "text-blue-600 dark:text-blue-400" : "text-gray-400"
-                              }`}>
-                                {isAssigned ? "check_circle" : "radio_button_unchecked"}
-                              </span>
+                                <span className={`material-symbols-outlined text-lg ${
+                                  isAssigned ? "text-blue-600 dark:text-blue-400" : "text-gray-400"
+                                }`}>
+                                  {isAssigned ? "check_circle" : "radio_button_unchecked"}
+                                </span>
+                              </div>
                             </div>
-                          </div>
-                        );
-                      })
-                    ) : (
-                      <p className="text-sm text-gray-600 dark:text-gray-400 text-center py-4">
-                        No hay equipos portuarios disponibles
-                      </p>
-                    )}
+                          );
+                        })
+                      ) : (
+                        <p className="text-sm text-gray-600 dark:text-gray-400 text-center py-4">
+                          No hay trabajadores portuarios disponibles
+                        </p>
+                      )}
+                    </div>
+                    
+                    <div className="text-sm text-gray-600 dark:text-gray-400">
+                      Seleccionados: {trabajadoresAsignados.length} trabajador(es)
+                    </div>
+                  </div>
+                </div>
+
+                {/* Equipo Portuario Asignado */}
+                <div className="bg-white dark:bg-slate-800 p-6 rounded-xl shadow-lg border border-gray-200 dark:border-slate-700">
+                  <div className="flex justify-between items-center mb-6">
+                    <h2 className="text-xl font-semibold flex items-center gap-3">
+                      <span className="material-symbols-outlined text-[#0459af] text-2xl">engineering</span>
+                      Equipo Portuario Asignado
+                    </h2>
+                    <Link
+                      href="/operaciones-portuarias/nueva/equipos-portuarios"
+                      className="flex items-center gap-2 px-4 py-2 bg-[#0459af] text-white text-sm font-semibold rounded-lg hover:bg-[#0459af]/90 transition-colors"
+                    >
+                      <span className="material-symbols-outlined text-lg">
+                        construction
+                      </span>
+                      Asignar
+                    </Link>
                   </div>
                   
-                  <div className="text-sm text-gray-600 dark:text-gray-400">
-                    Seleccionados: {equiposAsignados.length} equipo(s)
+                  <div className="space-y-4">
+                    <div className="max-h-60 overflow-y-auto space-y-2 border border-gray-200 dark:border-slate-700 rounded-lg p-3">
+                      {Array.isArray(equiposDisponibles) && equiposDisponibles.length > 0 ? (
+                        equiposDisponibles.map((equipo) => {
+                          const isAssigned = equiposAsignados.some((e) => e.id_equipo_portuario === equipo.id_equipo_portuario);
+                          return (
+                            <div
+                              key={equipo.id_equipo_portuario}
+                              className={`flex items-center justify-between p-3 rounded-lg border cursor-pointer transition-colors ${
+                                isAssigned
+                                  ? "bg-blue-50 dark:bg-blue-900/30 border-blue-200 dark:border-blue-800"
+                                  : "bg-gray-50 dark:bg-slate-700/50 border-gray-100 dark:border-slate-700 hover:bg-gray-100 dark:hover:bg-slate-700"
+                              }`}
+                              onClick={() => handleEquipoToggle(equipo)}
+                            >
+                              <div className="flex items-center gap-3">
+                                <div className="h-8 w-8 rounded-full bg-orange-100 dark:bg-orange-900/30 flex items-center justify-center text-orange-600 dark:text-orange-400 font-semibold text-xs">
+                                  {equipo.codigo.charAt(0)}
+                                </div>
+                                <div>
+                                  <p className="text-sm font-medium text-gray-900 dark:text-white">
+                                    {equipo.codigo}
+                                  </p>
+                                  <p className="text-xs text-gray-500 dark:text-gray-400">
+                                    {equipo.tipo_equipo_portuario} • Capacidad: {equipo.capacidad}
+                                  </p>
+                                </div>
+                              </div>
+                              <div className="flex items-center gap-2">
+                                {equipo.ubicacion && (
+                                  <span className="text-xs text-gray-500 dark:text-gray-400">
+                                    {equipo.ubicacion}
+                                  </span>
+                                )}
+                                <span className={`material-symbols-outlined text-lg ${
+                                  isAssigned ? "text-blue-600 dark:text-blue-400" : "text-gray-400"
+                                }`}>
+                                  {isAssigned ? "check_circle" : "radio_button_unchecked"}
+                                </span>
+                              </div>
+                            </div>
+                          );
+                        })
+                      ) : (
+                        <p className="text-sm text-gray-600 dark:text-gray-400 text-center py-4">
+                          No hay equipos portuarios disponibles
+                        </p>
+                      )}
+                    </div>
+                    
+                    <div className="text-sm text-gray-600 dark:text-gray-400">
+                      Seleccionados: {equiposAsignados.length} equipo(s)
+                    </div>
                   </div>
                 </div>
               </div>
-            </div>
 
-            {/* Parte Derecha - Información de Embarcación y Detalles de Operación */}
-            <div className="xl:col-span-2 space-y-8">
-              {/* Información de la Embarcación */}
-              <div className="bg-white dark:bg-slate-800 p-6 rounded-xl shadow-lg border border-gray-200 dark:border-slate-700">
-                <h2 className="text-xl font-semibold mb-6 flex items-center gap-3">
-                  <span className="material-symbols-outlined text-[#0459af] text-2xl">directions_boat</span>
-                  Información de la Embarcación
-                </h2>
-                
-                <div className="space-y-4">
-                  <div>
-                    <label className="block text-sm font-medium mb-2">Embarcación</label>
-                    <div className="flex gap-2">
+              {/* Parte Derecha - Información de Embarcación y Detalles de Operación */}
+              <div className="xl:col-span-2 space-y-8">
+                {/* Información de la Embarcación */}
+                <div className="bg-white dark:bg-slate-800 p-6 rounded-xl shadow-lg border border-gray-200 dark:border-slate-700">
+                  <h2 className="text-xl font-semibold mb-6 flex items-center gap-3">
+                    <span className="material-symbols-outlined text-[#0459af] text-2xl">directions_boat</span>
+                    Información de la Embarcación
+                  </h2>
+                  
+                  <div className="space-y-4">
+                    <div>
+                      <label className="block text-sm font-medium mb-2">Embarcación</label>
+                      <div className="flex gap-2">
+                        <select
+                          value={formData.id_buque}
+                          onChange={(e) => handleInputChange("id_buque", e.target.value)}
+                          className="flex-1 rounded-lg bg-[#f5f7f8] dark:bg-slate-700 border-gray-200 dark:border-slate-700 shadow-sm focus:border-[#0459af] focus:ring focus:ring-[#0459af] focus:ring-opacity-50 text-sm py-2.5 px-4"
+                        >
+                          <option value="">Seleccione una embarcación</option>
+                          {Array.isArray(buquesDisponibles) && buquesDisponibles.map((buque) => (
+                            <option key={buque.id_buque} value={buque.id_buque}>
+                              {buque.nombre} ({buque.matricula})
+                            </option>
+                          ))}
+                        </select>
+                        <Link
+                          href="/operaciones-portuarias/nueva/seleccionar-buque"
+                          className="flex items-center gap-2 px-4 py-2.5 bg-[#e6f0fa] text-[#0459af] text-sm font-semibold rounded-lg hover:bg-[#0459af]/20 transition-colors whitespace-nowrap"
+                        >
+                          <span className="material-symbols-outlined text-lg">
+                            search
+                          </span>
+                          Buscar
+                        </Link>
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div>
+                        <label className="block text-sm font-medium mb-2">Nombre</label>
+                        <p className="block w-full rounded-lg bg-gray-100 dark:bg-slate-700 border-transparent px-4 py-2.5 text-sm">
+                          {vesselNombre}
+                        </p>
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium mb-2">Matrícula</label>
+                        <p className="block w-full rounded-lg bg-gray-100 dark:bg-slate-700 border-transparent px-4 py-2.5 text-sm">
+                          {vesselMatricula}
+                        </p>
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium mb-2">Capacidad (TEUs)</label>
+                        <p className="block w-full rounded-lg bg-gray-100 dark:bg-slate-700 border-transparent px-4 py-2.5 text-sm">
+                          {vesselCapacidad}
+                        </p>
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium mb-2">Peso (t)</label>
+                        <p className="block w-full rounded-lg bg-gray-100 dark:bg-slate-700 border-transparent px-4 py-2.5 text-sm">
+                          {vesselPeso}
+                        </p>
+                      </div>
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-medium mb-2">Ubicación actual</label>
+                      <p className="block w-full rounded-lg bg-gray-100 dark:bg-slate-700 border-transparent px-4 py-2.5 text-sm">
+                        {vesselUbicacion}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Detalles de la Operación */}
+                <div className="bg-white dark:bg-slate-800 p-6 rounded-xl shadow-lg border border-gray-200 dark:border-slate-700">
+                  <h2 className="text-xl font-semibold mb-6 flex items-center gap-3">
+                    <span className="material-symbols-outlined text-[#0459af] text-2xl">list_alt</span>
+                    Detalles de la Operación
+                  </h2>
+                  
+                  <div className="space-y-4">
+                    <div>
+                      <label className="block text-sm font-medium mb-2">Puerto</label>
                       <select
-                        value={formData.id_buque}
-                        onChange={(e) => handleInputChange("id_buque", e.target.value)}
-                        className="flex-1 rounded-lg bg-[#f5f7f8] dark:bg-slate-700 border-gray-200 dark:border-slate-700 shadow-sm focus:border-[#0459af] focus:ring focus:ring-[#0459af] focus:ring-opacity-50 text-sm py-2.5 px-4"
+                        value={formData.id_puerto}
+                        onChange={(e) => handleInputChange("id_puerto", e.target.value)}
+                        className="block w-full rounded-lg bg-[#f5f7f8] dark:bg-slate-700 border-gray-200 dark:border-slate-700 shadow-sm focus:border-[#0459af] focus:ring focus:ring-[#0459af] focus:ring-opacity-50 text-sm py-2.5 px-4"
                       >
-                        <option value="">Seleccione una embarcación</option>
-                        {Array.isArray(buquesDisponibles) && buquesDisponibles.map((buque) => (
-                          <option key={buque.id_buque} value={buque.id_buque}>
-                            {buque.nombre} ({buque.matricula})
+                        <option value="">Seleccione un puerto</option>
+                        {Array.isArray(puertos) && puertos.map((puerto) => (
+                          <option key={puerto.id_puerto} value={puerto.id_puerto}>
+                            {puerto.nombre}
                           </option>
                         ))}
                       </select>
-                      <Link
-                        href="/operaciones-portuarias/nueva/seleccionar-buque"
-                        className="flex items-center gap-2 px-4 py-2.5 bg-[#e6f0fa] text-[#0459af] text-sm font-semibold rounded-lg hover:bg-[#0459af]/20 transition-colors whitespace-nowrap"
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-medium mb-2">Muelle</label>
+                      <select
+                        value={formData.id_muelle}
+                        onChange={(e) => handleInputChange("id_muelle", e.target.value)}
+                        disabled={!formData.id_puerto}
+                        className="block w-full rounded-lg bg-[#f5f7f8] dark:bg-slate-700 border-gray-200 dark:border-slate-700 shadow-sm focus:border-[#0459af] focus:ring focus:ring-[#0459af] focus:ring-opacity-50 text-sm py-2.5 px-4 disabled:opacity-50"
                       >
-                        <span className="material-symbols-outlined text-lg">
-                          search
-                        </span>
-                        Buscar
-                      </Link>
+                        <option value="">Seleccione un muelle</option>
+                        {Array.isArray(muelles) && muelles.map((muelle) => (
+                          <option key={muelle.id_muelle} value={muelle.id_muelle}>
+                            {muelle.nombre} ({muelle.codigo})
+                          </option>
+                        ))}
+                      </select>
                     </div>
-                  </div>
 
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
-                      <label className="block text-sm font-medium mb-2">Nombre</label>
-                      <p className="block w-full rounded-lg bg-gray-100 dark:bg-slate-700 border-transparent px-4 py-2.5 text-sm">
-                        {vesselNombre}
-                      </p>
+                      <label className="block text-sm font-medium mb-2">Tipo de Operación</label>
+                      <select
+                        value={formData.id_tipo_operacion_portuaria}
+                        onChange={(e) => handleInputChange("id_tipo_operacion_portuaria", e.target.value)}
+                        className="block w-full rounded-lg bg-[#f5f7f8] dark:bg-slate-700 border-gray-200 dark:border-slate-700 shadow-sm focus:border-[#0459af] focus:ring focus:ring-[#0459af] focus:ring-opacity-50 text-sm py-2.5 px-4"
+                      >
+                        <option value="">Seleccione un tipo</option>
+                        {Array.isArray(tiposOperacion) && tiposOperacion.map((tipo) => (
+                          <option key={tipo.id_tipo_operacion_portuaria} value={tipo.id_tipo_operacion_portuaria}>
+                            {tipo.nombre}
+                          </option>
+                        ))}
+                      </select>
                     </div>
+
                     <div>
-                      <label className="block text-sm font-medium mb-2">Matrícula</label>
-                      <p className="block w-full rounded-lg bg-gray-100 dark:bg-slate-700 border-transparent px-4 py-2.5 text-sm">
-                        {vesselMatricula}
-                      </p>
+                      <label className="block text-sm font-medium mb-2">Estado</label>
+                      <select
+                        value={formData.estado}
+                        onChange={(e) => handleInputChange("estado", e.target.value)}
+                        className="block w-full rounded-lg bg-[#f5f7f8] dark:bg-slate-700 border-gray-200 dark:border-slate-700 shadow-sm focus:border-[#0459af] focus:ring focus:ring-[#0459af] focus:ring-opacity-50 text-sm py-2.5 px-4"
+                      >
+                        <option value="">Seleccione un estado</option>
+                        {Array.isArray(estados) && estados.map((estado) => (
+                          <option key={estado.id_estado_operacion} value={estado.nombre}>
+                            {estado.nombre}
+                          </option>
+                        ))}
+                      </select>
                     </div>
+
                     <div>
-                      <label className="block text-sm font-medium mb-2">Capacidad (TEUs)</label>
-                      <p className="block w-full rounded-lg bg-gray-100 dark:bg-slate-700 border-transparent px-4 py-2.5 text-sm">
-                        {vesselCapacidad}
-                      </p>
+                      <label className="block text-sm font-medium mb-2">Fecha y hora de inicio</label>
+                      <input
+                        type="datetime-local"
+                        value={formData.fecha_inicio}
+                        onChange={(e) => handleInputChange("fecha_inicio", e.target.value)}
+                        className="block w-full rounded-lg bg-[#f5f7f8] dark:bg-slate-700 border-gray-200 dark:border-slate-700 shadow-sm focus:border-[#0459af] focus:ring focus:ring-[#0459af] focus:ring-opacity-50 text-sm py-2.5 px-4"
+                      />
                     </div>
+
                     <div>
-                      <label className="block text-sm font-medium mb-2">Peso (t)</label>
-                      <p className="block w-full rounded-lg bg-gray-100 dark:bg-slate-700 border-transparent px-4 py-2.5 text-sm">
-                        {vesselPeso}
-                      </p>
+                      <label className="block text-sm font-medium mb-2">Fecha y hora de fin (opcional)</label>
+                      <input
+                        type="datetime-local"
+                        value={formData.fecha_fin || ""}
+                        onChange={(e) => handleInputChange("fecha_fin", e.target.value)}
+                        className="block w-full rounded-lg bg-[#f5f7f8] dark:bg-slate-700 border-gray-200 dark:border-slate-700 shadow-sm focus:border-[#0459af] focus:ring focus:ring-[#0459af] focus:ring-opacity-50 text-sm py-2.5 px-4"
+                      />
                     </div>
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-medium mb-2">Ubicación actual</label>
-                    <p className="block w-full rounded-lg bg-gray-100 dark:bg-slate-700 border-transparent px-4 py-2.5 text-sm">
-                      {vesselUbicacion}
-                    </p>
-                  </div>
-                </div>
-              </div>
-
-              {/* Detalles de la Operación */}
-              <div className="bg-white dark:bg-slate-800 p-6 rounded-xl shadow-lg border border-gray-200 dark:border-slate-700">
-                <h2 className="text-xl font-semibold mb-6 flex items-center gap-3">
-                  <span className="material-symbols-outlined text-[#0459af] text-2xl">list_alt</span>
-                  Detalles de la Operación
-                </h2>
-                
-                <div className="space-y-4">
-                  <div>
-                    <label className="block text-sm font-medium mb-2">Puerto</label>
-                    <select
-                      value={formData.id_puerto}
-                      onChange={(e) => handleInputChange("id_puerto", e.target.value)}
-                      className="block w-full rounded-lg bg-[#f5f7f8] dark:bg-slate-700 border-gray-200 dark:border-slate-700 shadow-sm focus:border-[#0459af] focus:ring focus:ring-[#0459af] focus:ring-opacity-50 text-sm py-2.5 px-4"
-                    >
-                      <option value="">Seleccione un puerto</option>
-                      {Array.isArray(puertos) && puertos.map((puerto) => (
-                        <option key={puerto.id_puerto} value={puerto.id_puerto}>
-                          {puerto.nombre}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-medium mb-2">Muelle</label>
-                    <select
-                      value={formData.id_muelle}
-                      onChange={(e) => handleInputChange("id_muelle", e.target.value)}
-                      disabled={!formData.id_puerto}
-                      className="block w-full rounded-lg bg-[#f5f7f8] dark:bg-slate-700 border-gray-200 dark:border-slate-700 shadow-sm focus:border-[#0459af] focus:ring focus:ring-[#0459af] focus:ring-opacity-50 text-sm py-2.5 px-4 disabled:opacity-50"
-                    >
-                      <option value="">Seleccione un muelle</option>
-                      {Array.isArray(muelles) && muelles.map((muelle) => (
-                        <option key={muelle.id_muelle} value={muelle.id_muelle}>
-                          {muelle.nombre} ({muelle.codigo})
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-medium mb-2">Tipo de Operación</label>
-                    <select
-                      value={formData.id_tipo_operacion_portuaria}
-                      onChange={(e) => handleInputChange("id_tipo_operacion_portuaria", e.target.value)}
-                      className="block w-full rounded-lg bg-[#f5f7f8] dark:bg-slate-700 border-gray-200 dark:border-slate-700 shadow-sm focus:border-[#0459af] focus:ring focus:ring-[#0459af] focus:ring-opacity-50 text-sm py-2.5 px-4"
-                    >
-                      <option value="">Seleccione un tipo</option>
-                      {Array.isArray(tiposOperacion) && tiposOperacion.map((tipo) => (
-                        <option key={tipo.id_tipo_operacion_portuaria} value={tipo.id_tipo_operacion_portuaria}>
-                          {tipo.nombre}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-medium mb-2">Estado</label>
-                    <select
-                      value={formData.estado}
-                      onChange={(e) => handleInputChange("estado", e.target.value)}
-                      className="block w-full rounded-lg bg-[#f5f7f8] dark:bg-slate-700 border-gray-200 dark:border-slate-700 shadow-sm focus:border-[#0459af] focus:ring focus:ring-[#0459af] focus:ring-opacity-50 text-sm py-2.5 px-4"
-                    >
-                      <option value="">Seleccione un estado</option>
-                      {Array.isArray(estados) && estados.map((estado) => (
-                        <option key={estado.id_estado_operacion} value={estado.nombre}>
-                          {estado.nombre}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-medium mb-2">Fecha y hora de inicio</label>
-                    <input
-                      type="datetime-local"
-                      value={formData.fecha_inicio}
-                      onChange={(e) => handleInputChange("fecha_inicio", e.target.value)}
-                      className="block w-full rounded-lg bg-[#f5f7f8] dark:bg-slate-700 border-gray-200 dark:border-slate-700 shadow-sm focus:border-[#0459af] focus:ring focus:ring-[#0459af] focus:ring-opacity-50 text-sm py-2.5 px-4"
-                    />
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-medium mb-2">Fecha y hora de fin (opcional)</label>
-                    <input
-                      type="datetime-local"
-                      value={formData.fecha_fin || ""}
-                      onChange={(e) => handleInputChange("fecha_fin", e.target.value)}
-                      className="block w-full rounded-lg bg-[#f5f7f8] dark:bg-slate-700 border-gray-200 dark:border-slate-700 shadow-sm focus:border-[#0459af] focus:ring focus:ring-[#0459af] focus:ring-opacity-50 text-sm py-2.5 px-4"
-                    />
                   </div>
                 </div>
               </div>
             </div>
-          </div>
 
-          {/* Footer con botones */}
-          <footer className="mt-10 pt-6 border-t border-gray-200 dark:border-slate-700 flex flex-wrap items-center justify-end gap-4">
-            <button
-              type="button"
-              className="px-6 py-2.5 bg-gray-200 dark:bg-slate-700 text-gray-900 dark:text-gray-100 text-sm font-medium rounded-lg hover:bg-gray-300 dark:hover:bg-slate-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500 transition-colors"
-              onClick={() => router.back()}
-            >
-              Cancelar
-            </button>
-            <button
-              type="button"
-              className="flex items-center gap-2 px-6 py-2.5 bg-[#10b981] text-white text-sm font-bold rounded-lg hover:bg-[#10b981]/90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#10b981] disabled:bg-gray-400 dark:disabled:bg-slate-600 disabled:cursor-not-allowed transition-colors"
-              disabled={loading}
-              onClick={handleSubmit}
-            >
-              <span className="material-symbols-outlined text-lg">
-                {loading ? 'hourglass_empty' : 'save'}
-              </span>
-              {loading ? 'Guardando...' : 'Crear Operación'}
-            </button>
-          </footer>
-        </div>
-      </main>
-    </div>
+            {/* Footer con botones */}
+            <footer className="mt-10 pt-6 border-t border-gray-200 dark:border-slate-700 flex flex-wrap items-center justify-end gap-4">
+              <button
+                type="button"
+                className="px-6 py-2.5 bg-gray-200 dark:bg-slate-700 text-gray-900 dark:text-gray-100 text-sm font-medium rounded-lg hover:bg-gray-300 dark:hover:bg-slate-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500 transition-colors"
+                onClick={() => router.back()}
+              >
+                Cancelar
+              </button>
+              <button
+                type="button"
+                className="flex items-center gap-2 px-6 py-2.5 bg-[#10b981] text-white text-sm font-bold rounded-lg hover:bg-[#10b981]/90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#10b981] disabled:bg-gray-400 dark:disabled:bg-slate-600 disabled:cursor-not-allowed transition-colors"
+                disabled={loading}
+                onClick={handleSubmit}
+              >
+                <span className="material-symbols-outlined text-lg">
+                  {loading ? 'hourglass_empty' : 'save'}
+                </span>
+                {loading ? 'Guardando...' : 'Crear Operación'}
+              </button>
+            </footer>
+          </div>
+        </main>
+      </div>
+    </Suspense>
   );
 }
